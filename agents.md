@@ -34,6 +34,11 @@
 8. **O arquivo `imple.md` é a fonte da verdade** - Sempre consultá-lo para saber o estado atual do projeto
 9. **NUNCA assumir/adivinhar** - Se tiver dúvida sobre a existência de algo (bucket, tabela, coluna, etc), **PERGUNTAR ao desenvolvedor ANTES** de fazer qualquer mudança
 10. **Buckets do Supabase Storage usam RLS** - NÃO são públicos por padrão. Usar URLs assinadas quando necessário
+11. **SEMPRE subir para o GitHub** ao finalizar uma tarefa: `git push -u origin main`
+12. **SEMPRE gerar build Android** ao finalizar uma tarefa, executando na ordem:
+    - `npm run build`
+    - `npx cap sync android`
+    - `cd android && ./gradlew assembleDebug`
 
 ### 🗄️ Banco de Dados (Supabase)
 
