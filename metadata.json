@@ -1,0 +1,7 @@
+{
+  "name": "Pega ou Passa",
+  "description": "Um aplicativo de namoro estilo TikTok, imersivo e divertido. Encontre seu par ideal deslizando para a direita (Pega) ou esquerda (Passa).",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}

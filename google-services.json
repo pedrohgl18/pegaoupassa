@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "71516571776",
+    "project_id": "pega-ou-passa-206a5",
+    "storage_bucket": "pega-ou-passa-206a5.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:71516571776:android:6f27fe9aedd548b3de7e65",
+        "android_client_info": {
+          "package_name": "com.pegaoupassa.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDrJiZS1-dZkTaQUKT3ss8pJzjjAAlrTs4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

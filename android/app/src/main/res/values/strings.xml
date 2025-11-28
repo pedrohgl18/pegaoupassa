@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Pega ou Passa</string>
+    <string name="title_activity_main">Pega ou Passa</string>
+    <string name="package_name">com.pegaoupassa.app</string>
+    <string name="custom_url_scheme">com.pegaoupassa.app</string>
+</resources>
