@@ -38,7 +38,9 @@
 12. **SEMPRE gerar build Android** ao finalizar uma tarefa, executando na ordem:
     - `npm run build`
     - `npx cap sync android`
-    - `cd android && ./gradlew assembleDebug`
+    - `cd android`
+    - Definir JAVA_HOME: `$env:JAVA_HOME = "C:\Program Files\Android\Android Studio\jbr"`
+    - `./gradlew assembleDebug`
 
 ### 🗄️ Banco de Dados (Supabase)
 
