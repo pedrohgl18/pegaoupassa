@@ -163,7 +163,7 @@ const EditProfile: React.FC<EditProfileProps> = ({ userId, onBack, onSave, onLog
   return (
     <div className="flex flex-col h-full w-full bg-zinc-50 animate-in slide-in-from-right">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 bg-white border-b border-zinc-200 sticky top-0 z-10">
+      <div className="flex items-center justify-between p-4 pt-8 bg-white border-b border-zinc-200 sticky top-0 z-10">
         <button onClick={onBack} className="p-2 -ml-2 text-zinc-500 hover:bg-zinc-100 rounded-full">
           <ArrowLeft size={24} />
         </button>

@@ -23,30 +23,31 @@ const Profile: React.FC<ProfileProps> = ({
     onShowFilter
 }) => {
     const avatarUrl = user?.user_metadata?.avatar_url || profile?.photos?.[0]?.url || "https://picsum.photos/seed/me/400/400";
-    const coverUrl = profile?.photos?.[0]?.url || avatarUrl;
+    // Use second photo for cover if available, otherwise use a gradient style (handled in render)
+    const hasCoverPhoto = profile?.photos?.length > 1;
+    const coverUrl = hasCoverPhoto ? profile.photos[1].url : null;
 
     return (
         <div className="flex flex-col h-full w-full bg-zinc-50 animate-fade-in overflow-y-auto no-scrollbar pb-24">
 
             {/* Premium Header */}
-            <div className="relative w-full h-72 shrink-0">
-                {/* Cover Image with Gradient Overlay */}
-                <img
-                    src={coverUrl}
-                    className="w-full h-full object-cover"
-                    alt="Cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-zinc-50" />
-
-                {/* Top Actions */}
-                <div className="absolute top-4 right-4 flex gap-2">
-                    <button
-                        onClick={() => onNavigate(ScreenState.EDIT_PROFILE)}
-                        className="w-10 h-10 rounded-full bg-black/20 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-black/40 transition-colors"
-                    >
-                        <Settings size={20} />
-                    </button>
-                </div>
+            <div className="relative w-full h-72 shrink-0 bg-zinc-900">
+                {/* Cover Image or Gradient */}
+                {hasCoverPhoto ? (
+                    <>
+                        <img
+                            src={coverUrl}
+                            className="w-full h-full object-cover opacity-80"
+                            alt="Cover"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-zinc-50" />
+                    </>
+                ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-brasil-blue via-brasil-green to-brasil-yellow opacity-80">
+                        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20" />
+                        <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-zinc-50" />
+                    </div>
+                )}
 
                 {/* Profile Info Overlay */}
                 <div className="absolute -bottom-12 left-0 right-0 px-6 flex flex-col items-center">
@@ -122,7 +123,7 @@ const Profile: React.FC<ProfileProps> = ({
                 </div>
 
                 {/* Menu Actions */}
-                <div className="w-full space-y-3">
+                <div className="w-full space-y-2">
                     <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-wider ml-1">Menu</h3>
 
                     <button
