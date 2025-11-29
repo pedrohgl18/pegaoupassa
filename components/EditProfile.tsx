@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Loader2, Plus, X, Briefcase, GraduationCap, Ruler, Sparkles } from 'lucide-react';
+import { ArrowLeft, Loader2, Plus, X, Briefcase, GraduationCap, Ruler, Sparkles, Settings as SettingsIcon } from 'lucide-react';
 import Button from './Button';
 import { profiles, photos as photosApi } from '../lib/supabase';
+import { Settings } from './Settings';
 
 const ZODIAC_SIGNS = [
-  'Áries', 'Touro', 'Gêmeos', 'Câncer', 'Leão', 'Virgem', 
+  'Áries', 'Touro', 'Gêmeos', 'Câncer', 'Leão', 'Virgem',
   'Libra', 'Escorpião', 'Sagitário', 'Capricórnio', 'Aquário', 'Peixes'
 ];
 
@@ -24,12 +25,14 @@ interface EditProfileProps {
   userId: string;
   onBack: () => void;
   onSave: () => void;
+  onLogout: () => void;
 }
 
-const EditProfile: React.FC<EditProfileProps> = ({ userId, onBack, onSave }) => {
+const EditProfile: React.FC<EditProfileProps> = ({ userId, onBack, onSave, onLogout }) => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   // Form State
   const [name, setName] = useState('');
@@ -38,9 +41,9 @@ const EditProfile: React.FC<EditProfileProps> = ({ userId, onBack, onSave }) => 
   const [education, setEducation] = useState('');
   const [height, setHeight] = useState('');
   const [zodiacSign, setZodiacSign] = useState('');
-  
-  const [photoUrls, setPhotoUrls] = useState<{id: string, url: string, position: number}[]>([]);
-  
+
+  const [photoUrls, setPhotoUrls] = useState<{ id: string, url: string, position: number }[]>([]);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -50,7 +53,7 @@ const EditProfile: React.FC<EditProfileProps> = ({ userId, onBack, onSave }) => 
   const fetchProfile = async () => {
     setLoading(true);
     const { data, error } = await profiles.getByIdWithRelations(userId);
-    
+
     if (data) {
       setName(data.name || '');
       setBio(data.bio || '');
@@ -58,7 +61,7 @@ const EditProfile: React.FC<EditProfileProps> = ({ userId, onBack, onSave }) => 
       setEducation(data.education || '');
       setHeight(data.height ? data.height.toString() : '');
       setZodiacSign(data.zodiac_sign || '');
-      
+
       if (data.photos) {
         setPhotoUrls(data.photos.sort((a: any, b: any) => a.position - b.position));
       }
@@ -82,9 +85,9 @@ const EditProfile: React.FC<EditProfileProps> = ({ userId, onBack, onSave }) => 
       // We actually need the ID to delete later. 
       // Let's just re-fetch photos after upload for now to be safe and simple
       const { url, error } = await photosApi.upload(userId, file, photoUrls.length);
-      
-      if (error) { 
-        alert('Erro no upload.'); 
+
+      if (error) {
+        alert('Erro no upload.');
       } else {
         // Refresh profile to get new photo with ID
         const { data } = await profiles.getByIdWithRelations(userId);
@@ -106,11 +109,11 @@ const EditProfile: React.FC<EditProfileProps> = ({ userId, onBack, onSave }) => 
 
     // Extract filename from URL for storage deletion
     // URL format: .../photos/USER_ID/TIMESTAMP_POS.ext
-    const fileName = photo.url.split('/').pop(); 
+    const fileName = photo.url.split('/').pop();
     const fullPath = `${userId}/${fileName}`;
 
     const { error } = await photosApi.delete(userId, photo.id, fullPath);
-    
+
     if (error) {
       alert('Erro ao deletar foto.');
     } else {
@@ -153,6 +156,10 @@ const EditProfile: React.FC<EditProfileProps> = ({ userId, onBack, onSave }) => 
     );
   }
 
+  if (showSettings) {
+    return <Settings onClose={() => setShowSettings(false)} onLogout={onLogout} />;
+  }
+
   return (
     <div className="flex flex-col h-full w-full bg-zinc-50 animate-in slide-in-from-right">
       {/* Header */}
@@ -161,28 +168,36 @@ const EditProfile: React.FC<EditProfileProps> = ({ userId, onBack, onSave }) => 
           <ArrowLeft size={24} />
         </button>
         <h1 className="text-lg font-bold text-zinc-900">Editar Perfil</h1>
-        <button 
-          onClick={handleSave} 
-          disabled={saving}
-          className="text-brasil-blue font-bold text-sm hover:bg-blue-50 px-3 py-1 rounded-lg transition-colors disabled:opacity-50"
-        >
-          {saving ? <Loader2 size={18} className="animate-spin" /> : 'Salvar'}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowSettings(true)}
+            className="p-2 text-zinc-500 hover:bg-zinc-100 rounded-full"
+          >
+            <SettingsIcon size={24} />
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="text-brasil-blue font-bold text-sm hover:bg-blue-50 px-3 py-1 rounded-lg transition-colors disabled:opacity-50"
+          >
+            {saving ? <Loader2 size={18} className="animate-spin" /> : 'Salvar'}
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto p-6 space-y-8">
-        
+
         {/* Photos Section */}
         <section>
           <h2 className="text-sm font-bold text-zinc-500 uppercase mb-3 tracking-wider">Fotos</h2>
           <div className="grid grid-cols-3 gap-3">
-            {[0,1,2,3,4,5].map((i) => (
-              <div key={i} className={`relative aspect-[3/4] rounded-xl overflow-hidden bg-zinc-200 shadow-sm ${i===0?'col-span-2 row-span-2':''}`}>
+            {[0, 1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className={`relative aspect-[3/4] rounded-xl overflow-hidden bg-zinc-200 shadow-sm ${i === 0 ? 'col-span-2 row-span-2' : ''}`}>
                 {photoUrls[i] ? (
                   <>
-                    <img src={photoUrls[i].url} className="w-full h-full object-cover" alt={`Foto ${i+1}`} />
-                    <button 
-                      onClick={() => handleRemovePhoto(i)} 
+                    <img src={photoUrls[i].url} className="w-full h-full object-cover" alt={`Foto ${i + 1}`} />
+                    <button
+                      onClick={() => handleRemovePhoto(i)}
                       className="absolute top-2 right-2 w-8 h-8 bg-red-500/80 hover:bg-red-600 rounded-full flex items-center justify-center backdrop-blur-sm transition-colors"
                     >
                       <X size={16} className="text-white" />
@@ -194,14 +209,13 @@ const EditProfile: React.FC<EditProfileProps> = ({ userId, onBack, onSave }) => 
                     )}
                   </>
                 ) : (
-                  <button 
-                    onClick={() => fileInputRef.current?.click()} 
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
                     disabled={uploadingPhoto || i !== photoUrls.length}
-                    className={`w-full h-full border-2 border-dashed flex flex-col items-center justify-center transition-colors ${
-                      i === photoUrls.length 
-                        ? 'border-brasil-blue bg-brasil-blue/5 hover:bg-brasil-blue/10 cursor-pointer' 
-                        : 'border-zinc-300 bg-zinc-100 cursor-not-allowed'
-                    }`}
+                    className={`w-full h-full border-2 border-dashed flex flex-col items-center justify-center transition-colors ${i === photoUrls.length
+                      ? 'border-brasil-blue bg-brasil-blue/5 hover:bg-brasil-blue/10 cursor-pointer'
+                      : 'border-zinc-300 bg-zinc-100 cursor-not-allowed'
+                      }`}
                   >
                     {uploadingPhoto && i === photoUrls.length ? (
                       <Loader2 size={24} className="animate-spin text-brasil-blue" />
@@ -220,12 +234,12 @@ const EditProfile: React.FC<EditProfileProps> = ({ userId, onBack, onSave }) => 
         {/* Basic Info */}
         <section className="space-y-4">
           <h2 className="text-sm font-bold text-zinc-500 uppercase tracking-wider">Sobre Mim</h2>
-          
+
           <div className="space-y-1">
             <label className="text-sm font-bold text-zinc-700">Nome</label>
-            <input 
-              type="text" 
-              value={name} 
+            <input
+              type="text"
+              value={name}
               onChange={(e) => setName(e.target.value)}
               className="w-full p-4 rounded-xl border-2 border-zinc-200 focus:border-brasil-blue bg-white font-bold text-lg text-zinc-900 outline-none transition-colors"
               placeholder="Seu nome"
@@ -234,8 +248,8 @@ const EditProfile: React.FC<EditProfileProps> = ({ userId, onBack, onSave }) => 
 
           <div className="space-y-1">
             <label className="text-sm font-bold text-zinc-700">Bio</label>
-            <textarea 
-              value={bio} 
+            <textarea
+              value={bio}
               onChange={(e) => setBio(e.target.value)}
               className="w-full h-32 p-4 rounded-xl border-2 border-zinc-200 focus:border-brasil-blue bg-white text-zinc-900 resize-none outline-none transition-colors"
               placeholder="Escreva algo sobre você..."
@@ -246,15 +260,15 @@ const EditProfile: React.FC<EditProfileProps> = ({ userId, onBack, onSave }) => 
         {/* Details */}
         <section className="space-y-4">
           <h2 className="text-sm font-bold text-zinc-500 uppercase tracking-wider">Detalhes</h2>
-          
+
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
               <label className="text-sm font-bold text-zinc-700 flex items-center gap-2">
                 <Briefcase size={16} className="text-brasil-green" /> Profissão
               </label>
-              <input 
-                type="text" 
-                value={profession} 
+              <input
+                type="text"
+                value={profession}
                 onChange={(e) => setProfession(e.target.value)}
                 className="w-full p-3 rounded-xl border-2 border-zinc-200 focus:border-brasil-blue bg-white text-zinc-900 outline-none"
                 placeholder="Ex: Designer"
@@ -265,9 +279,9 @@ const EditProfile: React.FC<EditProfileProps> = ({ userId, onBack, onSave }) => 
               <label className="text-sm font-bold text-zinc-700 flex items-center gap-2">
                 <Ruler size={16} className="text-brasil-green" /> Altura (cm)
               </label>
-              <input 
-                type="number" 
-                value={height} 
+              <input
+                type="number"
+                value={height}
                 onChange={(e) => setHeight(e.target.value)}
                 className="w-full p-3 rounded-xl border-2 border-zinc-200 focus:border-brasil-blue bg-white text-zinc-900 outline-none"
                 placeholder="Ex: 175"
@@ -279,8 +293,8 @@ const EditProfile: React.FC<EditProfileProps> = ({ userId, onBack, onSave }) => 
             <label className="text-sm font-bold text-zinc-700 flex items-center gap-2">
               <GraduationCap size={16} className="text-brasil-green" /> Escolaridade
             </label>
-            <select 
-              value={education} 
+            <select
+              value={education}
               onChange={(e) => setEducation(e.target.value)}
               className="w-full p-3 rounded-xl border-2 border-zinc-200 focus:border-brasil-blue bg-white text-zinc-900 outline-none appearance-none"
             >
@@ -295,8 +309,8 @@ const EditProfile: React.FC<EditProfileProps> = ({ userId, onBack, onSave }) => 
             <label className="text-sm font-bold text-zinc-700 flex items-center gap-2">
               <Sparkles size={16} className="text-brasil-green" /> Signo
             </label>
-            <select 
-              value={zodiacSign} 
+            <select
+              value={zodiacSign}
               onChange={(e) => setZodiacSign(e.target.value)}
               className="w-full p-3 rounded-xl border-2 border-zinc-200 focus:border-brasil-blue bg-white text-zinc-900 outline-none appearance-none"
             >
@@ -309,9 +323,9 @@ const EditProfile: React.FC<EditProfileProps> = ({ userId, onBack, onSave }) => 
         </section>
 
         <div className="pt-4 pb-10">
-           <Button fullWidth onClick={handleSave} disabled={saving}>
-             {saving ? 'Salvando...' : 'Salvar Alterações'}
-           </Button>
+          <Button fullWidth onClick={handleSave} disabled={saving}>
+            {saving ? 'Salvando...' : 'Salvar Alterações'}
+          </Button>
         </div>
 
       </div>

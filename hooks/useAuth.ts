@@ -24,7 +24,7 @@ export function useAuth() {
     loading: true,
     error: null,
   })
-  
+
   const isMountedRef = useRef(true)
   const profileLoadingRef = useRef(false)
 
@@ -32,7 +32,7 @@ export function useAuth() {
   const fetchProfileDirect = useCallback(async (userId: string, accessToken: string): Promise<Profile | null> => {
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
     const url = `${supabaseUrl}/rest/v1/profiles?id=eq.${userId}&select=*`
-    
+
     try {
       const response = await fetch(url, {
         method: 'GET',
@@ -43,9 +43,9 @@ export function useAuth() {
           'Accept': 'application/json',
         },
       })
-      
+
       if (!response.ok) return null
-      
+
       const data = await response.json()
       return data.length > 0 ? data[0] as Profile : null
     } catch (err: any) {
@@ -58,7 +58,7 @@ export function useAuth() {
   const createProfileDirect = useCallback(async (userId: string, email: string, accessToken: string): Promise<Profile | null> => {
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
     const url = `${supabaseUrl}/rest/v1/profiles`
-    
+
     const body = {
       id: userId,
       email: email,
@@ -66,7 +66,7 @@ export function useAuth() {
       onboarding_completed: false,
       is_active: false,
     }
-    
+
     try {
       const response = await fetch(url, {
         method: 'POST',
@@ -79,7 +79,7 @@ export function useAuth() {
         },
         body: JSON.stringify(body),
       })
-      
+
       if (!response.ok) {
         // Se erro 409 (duplicado), buscar o existente
         if (response.status === 409) {
@@ -87,7 +87,7 @@ export function useAuth() {
         }
         return null
       }
-      
+
       const data = await response.json()
       return data.length > 0 ? data[0] as Profile : data as Profile
     } catch (err: any) {
@@ -99,9 +99,9 @@ export function useAuth() {
   // Carregar perfil (com fallback para fetch direto no Android)
   const loadProfile = useCallback(async (user: User, accessToken: string): Promise<Profile | null> => {
     if (profileLoadingRef.current) return null
-    
+
     profileLoadingRef.current = true
-    
+
     try {
       // No Android, usar fetch direto para evitar problemas com o cliente Supabase
       if (isNative) {
@@ -111,17 +111,17 @@ export function useAuth() {
         }
         return profile
       }
-      
+
       // No web, usar cliente Supabase normalmente
       const { data: existingProfile, error } = await profiles.getById(user.id)
-      
+
       if (error) return null
       if (existingProfile) return existingProfile as Profile
-      
+
       // Criar se não existe
       const { data: newProfile, error: createError } = await profiles.upsertInitial(user.id, user.email || '')
       if (createError) return null
-      
+
       return newProfile as Profile
     } catch (err: any) {
       console.error('loadProfile error:', err)
@@ -140,48 +140,48 @@ export function useAuth() {
     } else if (url.includes('?')) {
       hashPart = url.split('?')[1] || ''
     }
-    
+
     if (!hashPart) return
-    
+
     const params = new URLSearchParams(hashPart)
     const accessToken = params.get('access_token')
     const refreshToken = params.get('refresh_token')
     const error = params.get('error')
-    
+
     if (error) {
       setState(prev => ({ ...prev, loading: false, error }))
       return
     }
-    
+
     if (!accessToken || !refreshToken) return
-    
+
     setState(prev => ({ ...prev, loading: true, error: null }))
-    
+
     try {
       // Definir sessão no cliente Supabase
       const { data, error: sessionError } = await supabase.auth.setSession({
         access_token: accessToken,
         refresh_token: refreshToken,
       })
-      
+
       if (sessionError) {
         setState(prev => ({ ...prev, loading: false, error: sessionError.message }))
         return
       }
-      
+
       if (!data.session || !data.user) {
         setState(prev => ({ ...prev, loading: false, error: 'Sessão inválida' }))
         return
       }
-      
+
       // Carregar perfil usando o accessToken diretamente
       const profile = await loadProfile(data.user, accessToken)
-      
+
       // Inicializar push se onboarding completo
       if (profile?.onboarding_completed) {
-        initPushNotifications(data.user.id).catch(() => {})
+        initPushNotifications(data.user.id).catch(() => { })
       }
-      
+
       if (isMountedRef.current) {
         setState(prev => ({
           ...prev,
@@ -201,23 +201,23 @@ export function useAuth() {
   useEffect(() => {
     isMountedRef.current = true
     let appUrlListener: any = null
-    
+
     const init = async () => {
       // Configurar deep link handler para Android
       if (isNative) {
         try {
           const { App } = await import('@capacitor/app')
           const { Browser } = await import('@capacitor/browser')
-          
+
           // Listener para URLs quando app está aberto
           appUrlListener = await App.addListener('appUrlOpen', async ({ url }) => {
-            try { await Browser.close() } catch {}
-            
+            try { await Browser.close() } catch { }
+
             if (url.includes('callback') || url.includes('access_token')) {
               await handleOAuthCallback(url)
             }
           })
-          
+
           // Verificar cold start
           const launchUrl = await App.getLaunchUrl()
           if (launchUrl?.url) {
@@ -230,23 +230,23 @@ export function useAuth() {
           console.error('Deep link setup error:', err)
         }
       }
-      
+
       // Verificar sessão existente
       try {
         const { data: { session }, error } = await supabase.auth.getSession()
-        
+
         if (error) {
           setState(prev => ({ ...prev, loading: false, error: error.message }))
           return
         }
-        
+
         if (session?.user && session.access_token) {
           const profile = await loadProfile(session.user, session.access_token)
-          
+
           if (profile?.onboarding_completed) {
-            initPushNotifications(session.user.id).catch(() => {})
+            initPushNotifications(session.user.id).catch(() => { })
           }
-          
+
           if (isMountedRef.current) {
             setState(prev => ({
               ...prev,
@@ -264,14 +264,14 @@ export function useAuth() {
         setState(prev => ({ ...prev, loading: false, error: err.message }))
       }
     }
-    
+
     init()
-    
+
     // Auth state change listener (principalmente para web e token refresh)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (!isMountedRef.current) return
-        
+
         if (event === 'SIGNED_OUT') {
           setState(prev => ({
             ...prev,
@@ -287,7 +287,7 @@ export function useAuth() {
         // SIGNED_IN e INITIAL_SESSION são tratados em init() e handleOAuthCallback()
       }
     )
-    
+
     return () => {
       isMountedRef.current = false
       subscription.unsubscribe()
@@ -298,12 +298,12 @@ export function useAuth() {
   // Login com Google
   const signInWithGoogle = useCallback(async () => {
     setState(prev => ({ ...prev, loading: true, error: null }))
-    
+
     try {
-      const redirectUrl = isNative 
+      const redirectUrl = isNative
         ? 'com.pegaoupassa.app://callback/'
         : window.location.origin + '/auth/callback'
-      
+
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -315,21 +315,21 @@ export function useAuth() {
           skipBrowserRedirect: isNative,
         },
       })
-      
+
       if (error) {
         setState(prev => ({ ...prev, loading: false, error: error.message }))
         return { error }
       }
-      
+
       // No Android, abrir browser manualmente
       if (isNative && data?.url) {
         const { Browser } = await import('@capacitor/browser')
-        await Browser.open({ 
+        await Browser.open({
           url: data.url,
           presentationStyle: 'popover',
         })
       }
-      
+
       // Parar loading (usuário pode cancelar)
       setState(prev => ({ ...prev, loading: false }))
       return { error: null }
@@ -342,14 +342,14 @@ export function useAuth() {
   // Logout
   const signOut = useCallback(async () => {
     setState(prev => ({ ...prev, loading: true }))
-    
+
     if (state.user) {
-      await removePushToken(state.user.id).catch(() => {})
-      await removePushListeners().catch(() => {})
+      await removePushToken(state.user.id).catch(() => { })
+      await removePushListeners().catch(() => { })
     }
-    
+
     const { error } = await supabase.auth.signOut()
-    
+
     setState({
       user: null,
       profile: null,
@@ -357,7 +357,7 @@ export function useAuth() {
       loading: false,
       error: error?.message || null,
     })
-    
+
     return { error }
   }, [state.user])
 
@@ -446,14 +446,14 @@ export function useAuth() {
     session: state.session,
     loading: state.loading,
     error: state.error,
-    
+
     // Computed
     isAuthenticated: !!state.user,
     hasProfile: !!state.profile,
     hasCompletedOnboarding: state.profile?.onboarding_completed || false,
     onboardingStep: state.profile?.onboarding_step || 0,
     isVip: state.profile?.is_vip || false,
-    
+
     // Actions
     signInWithGoogle,
     signOut,
@@ -461,5 +461,11 @@ export function useAuth() {
     updateProfile,
     updateOnboardingStep,
     refreshProfile,
+    loadProfile: async () => {
+      if (state.user && state.session?.access_token) {
+        const profile = await loadProfile(state.user, state.session.access_token)
+        setState(prev => ({ ...prev, profile }))
+      }
+    },
   }
 }
