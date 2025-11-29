@@ -938,7 +938,10 @@ const App: React.FC = () => {
           </div>
 
           {/* Floating Action Buttons - Redesigned Area */}
-          <div className="absolute bottom-[30px] right-4 z-20 flex flex-col gap-4 items-center">
+          <div
+            className="absolute right-4 z-20 flex flex-col gap-4 items-center"
+            style={{ bottom: 'calc(30px + env(safe-area-inset-bottom, 0px))' }}
+          >
             {/* Pega (Down) - Like */}
             <button
               onClick={() => handleSwipe('down')}

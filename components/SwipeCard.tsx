@@ -123,7 +123,7 @@ const SwipeCard: React.FC<SwipeCardProps> = ({ profile, isActive, swipeDirection
       </div>
 
       {/* Content - Layout Otimizado */}
-      <div className="absolute bottom-0 left-0 right-0 pointer-events-none" style={{ paddingBottom: 'calc(15px + env(safe-area-inset-bottom, 0px))' }}>
+      <div className="absolute bottom-0 left-0 right-0 pointer-events-none" style={{ paddingBottom: 'calc(20px + env(safe-area-inset-bottom, 0px))' }}>
         <div className="px-5 pb-1 flex flex-col gap-3 pr-[100px]">
 
           {/* Compatibilidade por Signo */}
