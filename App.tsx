@@ -907,53 +907,57 @@ const App: React.FC = () => {
             </div>
           )}
 
-          {/* Top Bar - Status VIP/Free */}
+          {/* Top Bar - Status VIP/Free - Redesigned */}
           <div className="absolute top-0 left-0 right-0 z-20 pointer-events-none">
-            <div className="flex justify-center pt-12 pb-4 bg-gradient-to-b from-black/80 to-transparent">
+            <div className="flex justify-center pt-8 pb-2 bg-gradient-to-b from-black/90 via-black/60 to-transparent">
               {!isVip ? (
-                <div className="flex flex-col items-center gap-1 pointer-events-auto">
-                  <div className="flex items-center gap-2 bg-zinc-900/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 shadow-lg">
-                    <span className="text-[10px] font-black text-white/60 uppercase tracking-widest">Likes</span>
-                    <div className="w-20 h-1.5 bg-zinc-800 rounded-full overflow-hidden border border-white/5">
+                <div className="flex items-center gap-2 pointer-events-auto bg-zinc-900/90 backdrop-blur-xl px-4 py-2 rounded-2xl border border-white/10 shadow-2xl scale-90 origin-top">
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center justify-between min-w-[120px]">
+                      <span className="text-[10px] font-black text-white/60 uppercase tracking-widest">Likes Diários</span>
+                      <span className="text-xs font-bold text-white">{swipeCount}/{DAILY_FREE_SWIPES}</span>
+                    </div>
+                    <div className="w-full h-2.5 bg-zinc-800 rounded-full overflow-hidden border border-white/5">
                       <div
                         className="h-full bg-gradient-to-r from-brasil-green to-emerald-400 transition-all duration-500 ease-out shadow-[0_0_10px_rgba(34,197,94,0.5)]"
                         style={{ width: `${Math.min((swipeCount / DAILY_FREE_SWIPES) * 100, 100)}%` }}
                       />
                     </div>
-                    <span className="text-[10px] font-bold text-white">{swipeCount}/{DAILY_FREE_SWIPES}</span>
                   </div>
+                  <div className="w-px h-8 bg-white/10 mx-1" />
                   <button
                     onClick={() => setCurrentScreen(ScreenState.VIP)}
-                    className="text-[10px] font-bold text-brasil-yellow hover:underline drop-shadow-md"
+                    className="flex flex-col items-center justify-center gap-0.5 group"
                   >
-                    Remover Limites
+                    <Crown size={18} className="text-brasil-yellow group-hover:scale-110 transition-transform" fill="#FFDF00" />
+                    <span className="text-[9px] font-bold text-brasil-yellow uppercase tracking-wide">Sem Limites</span>
                   </button>
                 </div>
               ) : (
-                <div className="flex items-center gap-2 bg-gradient-to-r from-brasil-yellow to-amber-400 backdrop-blur-md px-4 py-1.5 rounded-full pointer-events-auto shadow-lg shadow-amber-500/20">
-                  <Crown size={14} className="text-brasil-blue" fill="#002776" />
-                  <span className="text-[10px] font-black text-brasil-blue uppercase tracking-widest">VIP Ativo</span>
+                <div className="flex items-center gap-2 bg-gradient-to-r from-brasil-yellow to-amber-400 backdrop-blur-md px-6 py-2.5 rounded-full pointer-events-auto shadow-xl shadow-amber-500/20 border border-white/20">
+                  <Crown size={18} className="text-brasil-blue" fill="#002776" />
+                  <span className="text-xs font-black text-brasil-blue uppercase tracking-widest">VIP Ativo</span>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Floating Action Buttons - Tamanhos equilibrados */}
-          <div className="absolute bottom-28 right-6 z-20 flex flex-col gap-4">
+          {/* Floating Action Buttons - Redesigned Area */}
+          <div className="absolute bottom-[90px] right-4 z-20 flex flex-col gap-4 items-center">
             {/* Pega (Down) - Like */}
             <button
               onClick={() => handleSwipe('down')}
-              className="w-16 h-16 rounded-full bg-brasil-green flex items-center justify-center shadow-xl shadow-brasil-green/40 hover:scale-110 active:scale-95 transition-all border-4 border-white/10 group"
+              className="w-[70px] h-[70px] rounded-full bg-brasil-green flex items-center justify-center shadow-2xl shadow-brasil-green/40 hover:scale-105 active:scale-95 transition-all border-4 border-white/10 group"
             >
-              <ThumbsUp size={32} className="text-white group-hover:rotate-12 transition-transform" fill="white" />
+              <ThumbsUp size={36} className="text-white group-hover:rotate-12 transition-transform" fill="white" />
             </button>
 
             {/* Passa (Up) - Pass */}
             <button
               onClick={() => handleSwipe('up')}
-              className="w-16 h-16 rounded-full bg-zinc-900/90 backdrop-blur-md flex items-center justify-center hover:bg-black active:scale-95 transition-all shadow-xl border border-white/10 group"
+              className="w-[70px] h-[70px] rounded-full bg-zinc-900/90 backdrop-blur-md flex items-center justify-center hover:bg-black active:scale-95 transition-all shadow-2xl border border-white/10 group"
             >
-              <X size={32} className="text-white/80 group-hover:text-white transition-colors" strokeWidth={3} />
+              <X size={36} className="text-white/80 group-hover:text-white transition-colors" strokeWidth={3} />
             </button>
           </div>
         </div>

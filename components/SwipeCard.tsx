@@ -85,16 +85,17 @@ const SwipeCard: React.FC<SwipeCardProps> = ({ profile, isActive, swipeDirection
         style={{ backgroundImage: `url(${photos[currentPhotoIndex]})` }}
       />
 
-      {/* Gradient Overlay - mais sutil, apenas na parte inferior */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />
+      {/* Gradient Overlay - Suave e Linear (70% -> 0%) */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none" />
+      <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black via-black/60 to-transparent pointer-events-none" />
 
-      {/* Photo Indicators - Ajustado para não colidir com status bar */}
+      {/* Photo Indicators - Ajustado */}
       {photos.length > 1 && (
-        <div className="absolute top-20 left-4 right-4 flex gap-1.5 z-30">
+        <div className="absolute top-2 left-4 right-4 flex gap-1.5 z-30">
           {photos.map((_, index) => (
             <div
               key={index}
-              className={`h-1 rounded-full flex-1 transition-all duration-300 ${index === currentPhotoIndex ? 'bg-white shadow-sm' : 'bg-white/40'
+              className={`h-1 rounded-full flex-1 transition-all duration-300 ${index === currentPhotoIndex ? 'bg-white shadow-sm' : 'bg-white/30'
                 }`}
             />
           ))}
@@ -106,8 +107,8 @@ const SwipeCard: React.FC<SwipeCardProps> = ({ profile, isActive, swipeDirection
         className="absolute inset-0 bg-brasil-green/30 flex items-center justify-center z-20 pointer-events-none transition-opacity duration-200"
         style={{ opacity: likeOpacity }}
       >
-        <div className="bg-white/20 backdrop-blur-md p-6 rounded-full border-4 border-white">
-          <ThumbsUp size={72} className="text-white" fill="white" />
+        <div className="bg-white/20 backdrop-blur-md p-8 rounded-full border-4 border-white shadow-2xl">
+          <ThumbsUp size={80} className="text-white" fill="white" />
         </div>
       </div>
 
@@ -116,47 +117,48 @@ const SwipeCard: React.FC<SwipeCardProps> = ({ profile, isActive, swipeDirection
         className="absolute inset-0 bg-red-500/30 flex items-center justify-center z-20 pointer-events-none transition-opacity duration-200"
         style={{ opacity: passOpacity }}
       >
-        <div className="bg-white/20 backdrop-blur-md p-6 rounded-full border-4 border-white">
-          <X size={72} className="text-white" />
+        <div className="bg-white/20 backdrop-blur-md p-8 rounded-full border-4 border-white shadow-2xl">
+          <X size={80} className="text-white" />
         </div>
       </div>
 
-      {/* Content - Ancorado na parte inferior, com mais espaço do BottomNav */}
-      <div className="absolute bottom-0 left-0 right-0 pointer-events-none" style={{ paddingBottom: 'calc(90px + env(safe-area-inset-bottom, 20px))' }}>
-        <div className="px-5 pb-6 flex flex-col gap-2 bg-gradient-to-t from-black/90 via-black/50 to-transparent pt-24">
+      {/* Content - Layout Otimizado */}
+      <div className="absolute bottom-0 left-0 right-0 pointer-events-none" style={{ paddingBottom: 'calc(20px + env(safe-area-inset-bottom, 0px))' }}>
+        <div className="px-5 pb-4 flex flex-col gap-3 pr-[100px]">
 
           {/* Compatibilidade por Signo */}
           {myZodiacSign && profile.zodiacSign && compatibility > 0 && (
-            <div className={`self-start flex items-center gap-2 px-3 py-1.5 rounded-full backdrop-blur-md border border-white/10 shadow-lg mb-1 ${compatibility >= 75 ? 'bg-brasil-green/90' :
-                compatibility >= 50 ? 'bg-brasil-yellow/90' : 'bg-orange-500/90'
+            <div className={`self-start flex items-center gap-2 px-3 py-1.5 rounded-full backdrop-blur-md border border-white/10 shadow-lg ${compatibility >= 75 ? 'bg-brasil-green/90' :
+              compatibility >= 50 ? 'bg-brasil-yellow/90' : 'bg-orange-500/90'
               }`}>
-              <Heart className="w-3 h-3 text-white" fill="white" />
+              <Heart className="w-3.5 h-3.5 text-white" fill="white" />
               <span className="text-white text-[10px] font-black uppercase tracking-wide">{compatibility}% Match</span>
             </div>
           )}
 
-          {/* Nome e Idade */}
-          <div className="flex items-end gap-2">
-            <h2 className="text-3xl font-black text-white tracking-tighter drop-shadow-xl leading-none">
+          {/* Nome e Idade - Alto Contraste */}
+          <div className="flex items-end gap-2 drop-shadow-lg">
+            <h2 className="text-4xl font-black text-white tracking-tight leading-none">
               {profile.name}
             </h2>
-            <span className="text-xl font-medium text-white/90 mb-0.5 drop-shadow-md">{profile.age}</span>
+            <span className="text-2xl font-bold text-white/90 mb-0.5">{profile.age}</span>
             {profile.verified && (
-              <BadgeCheck className="w-6 h-6 text-brasil-blue fill-white mb-0.5 drop-shadow-lg" />
+              <BadgeCheck className="w-7 h-7 text-brasil-blue fill-white mb-0.5 drop-shadow-md" />
             )}
           </div>
 
-          {/* Badges de informação - estilo unificado e premium */}
+          {/* Badges de informação - Padronizados */}
           <div className="flex flex-wrap items-center gap-2">
+            {/* Badge Base Style */}
             {/* Distância */}
-            <div className="flex items-center gap-1.5 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/10">
-              <MapPin className="w-3.5 h-3.5 text-white/80" />
+            <div className="flex items-center gap-1.5 bg-white/10 backdrop-blur-md px-3 h-8 rounded-lg border border-white/10 shadow-sm">
+              <MapPin className="w-3.5 h-3.5 text-white" />
               <span className="text-white text-xs font-bold">{profile.distance} km</span>
             </div>
 
             {/* Signo */}
             {profile.zodiacSign && (
-              <div className="flex items-center gap-1.5 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/10">
+              <div className="flex items-center gap-1.5 bg-white/10 backdrop-blur-md px-3 h-8 rounded-lg border border-white/10 shadow-sm">
                 <Sparkles className="w-3.5 h-3.5 text-brasil-yellow" />
                 <span className="text-white text-xs font-bold">{profile.zodiacSign}</span>
               </div>
@@ -164,32 +166,32 @@ const SwipeCard: React.FC<SwipeCardProps> = ({ profile, isActive, swipeDirection
 
             {/* Altura */}
             {profile.height && (
-              <div className="flex items-center gap-1.5 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/10">
-                <Ruler className="w-3.5 h-3.5 text-white/80" />
+              <div className="flex items-center gap-1.5 bg-white/10 backdrop-blur-md px-3 h-8 rounded-lg border border-white/10 shadow-sm">
+                <Ruler className="w-3.5 h-3.5 text-white" />
                 <span className="text-white text-xs font-bold">{profile.height} cm</span>
               </div>
             )}
 
             {/* Profissão */}
             {profile.profession && (
-              <div className="flex items-center gap-1.5 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/10">
-                <Briefcase className="w-3.5 h-3.5 text-white/80" />
+              <div className="flex items-center gap-1.5 bg-white/10 backdrop-blur-md px-3 h-8 rounded-lg border border-white/10 shadow-sm">
+                <Briefcase className="w-3.5 h-3.5 text-white" />
                 <span className="text-white text-xs font-bold">{profile.profession}</span>
               </div>
             )}
 
             {/* Educação */}
             {profile.education && (
-              <div className="flex items-center gap-1.5 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/10">
-                <GraduationCap className="w-3.5 h-3.5 text-white/80" />
+              <div className="flex items-center gap-1.5 bg-white/10 backdrop-blur-md px-3 h-8 rounded-lg border border-white/10 shadow-sm">
+                <GraduationCap className="w-3.5 h-3.5 text-white" />
                 <span className="text-white text-xs font-bold">{profile.education}</span>
               </div>
             )}
           </div>
 
-          {/* Bio */}
-          {profile.bio && (
-            <p className="text-white/80 text-sm leading-relaxed font-medium drop-shadow-md line-clamp-3 max-w-[90%]">
+          {/* Bio - Melhor Leitura */}
+          {profile.bio && profile.bio !== 'Teste' && (
+            <p className="text-white/90 text-sm leading-relaxed font-medium drop-shadow-md line-clamp-3 max-w-full">
               {profile.bio}
             </p>
           )}
