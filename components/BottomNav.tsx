@@ -35,19 +35,19 @@ const BottomNav: React.FC<BottomNavProps> = ({ currentScreen, onNavigate }) => {
             <button
               key={item.id}
               onClick={() => onNavigate(item.id)}
-              className={`flex flex-col items-center justify-center gap-0.5 py-2 px-4 rounded-xl transition-all duration-200 min-w-[80px] ${isActive
+              className={`flex flex-col items-center justify-center gap-1 py-2 px-4 rounded-xl transition-all duration-200 min-w-[80px] ${isActive
                 ? 'bg-brasil-blue/10'
                 : 'hover:bg-zinc-50 active:bg-zinc-100'
                 }`}
             >
               <Icon
-                size={24}
+                size={28}
                 strokeWidth={isActive ? 2.5 : 2}
                 className={`transition-colors duration-200 ${isActive ? 'text-brasil-blue' : 'text-zinc-400'
                   }`}
                 fill={isActive ? 'currentColor' : 'none'}
               />
-              <span className={`text-[10px] font-bold transition-colors duration-200 ${isActive ? 'text-brasil-blue' : 'text-zinc-400'
+              <span className={`text-xs font-bold transition-colors duration-200 ${isActive ? 'text-brasil-blue' : 'text-zinc-400'
                 }`}>
                 {item.label}
               </span>

@@ -908,6 +908,7 @@ const App: React.FC = () => {
           )}
 
           {/* Top Bar - Status VIP/Free - Redesigned */}
+          {/* Top Bar - Status VIP/Free - Redesigned */}
           <div className="absolute top-0 left-0 right-0 z-20 pointer-events-none">
             <div className="flex justify-center pt-8 pb-2 bg-gradient-to-b from-black/90 via-black/60 to-transparent">
               {!isVip && (
@@ -940,7 +941,7 @@ const App: React.FC = () => {
           {/* Floating Action Buttons - Redesigned Area */}
           <div
             className="absolute right-4 z-20 flex flex-col gap-4 items-center"
-            style={{ bottom: 'calc(30px + env(safe-area-inset-bottom, 0px))' }}
+            style={{ bottom: 'calc(15px + env(safe-area-inset-bottom, 0px))' }}
           >
             {/* Pega (Down) - Like */}
             <button
@@ -958,34 +959,34 @@ const App: React.FC = () => {
               <X size={36} className="text-white/80 group-hover:text-white transition-colors" strokeWidth={3} />
             </button>
           </div>
+
+          {/* Tutorial Overlay */}
+          {showTutorial && (
+            <div
+              className="absolute inset-0 z-50 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center text-white"
+              onClick={dismissTutorial}
+            >
+              <div className="flex flex-col items-center animate-bounce mb-8">
+                <ChevronUp size={48} className="text-white/50" />
+                <span className="font-bold text-xl mb-2">PASSAR</span>
+                <span className="text-sm text-zinc-400">Deslize para cima</span>
+              </div>
+
+              <div className="w-20 h-32 border-2 border-white/30 rounded-full flex items-center justify-center relative my-4">
+                <div className="w-16 h-16 bg-white/20 rounded-full absolute animate-ping" />
+                <Hand size={40} />
+              </div>
+
+              <div className="flex flex-col items-center animate-bounce mt-8">
+                <span className="text-sm text-zinc-400">Deslize para baixo</span>
+                <span className="font-bold text-xl mt-2 text-brasil-green">PEGAR</span>
+                <ChevronDown size={48} className="text-brasil-green/50" />
+              </div>
+
+              <p className="absolute bottom-28 text-sm text-white/50">Toque para começar</p>
+            </div>
+          )}
         </div>
-
-        {/* Tutorial Overlay */}
-        {showTutorial && (
-          <div
-            className="absolute inset-0 z-50 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center text-white"
-            onClick={dismissTutorial}
-          >
-            <div className="flex flex-col items-center animate-bounce mb-8">
-              <ChevronUp size={48} className="text-white/50" />
-              <span className="font-bold text-xl mb-2">PASSAR</span>
-              <span className="text-sm text-zinc-400">Deslize para cima</span>
-            </div>
-
-            <div className="w-20 h-32 border-2 border-white/30 rounded-full flex items-center justify-center relative my-4">
-              <div className="w-16 h-16 bg-white/20 rounded-full absolute animate-ping" />
-              <Hand size={40} />
-            </div>
-
-            <div className="flex flex-col items-center animate-bounce mt-8">
-              <span className="text-sm text-zinc-400">Deslize para baixo</span>
-              <span className="font-bold text-xl mt-2 text-brasil-green">PEGAR</span>
-              <ChevronDown size={48} className="text-brasil-green/50" />
-            </div>
-
-            <p className="absolute bottom-28 text-sm text-white/50">Toque para começar</p>
-          </div>
-        )}
       </div>
     );
   };
