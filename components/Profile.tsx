@@ -30,54 +30,34 @@ const Profile: React.FC<ProfileProps> = ({
     return (
         <div className="flex flex-col h-full w-full bg-zinc-50 animate-fade-in overflow-y-auto no-scrollbar pb-24">
 
-            {/* Premium Header */}
-            <div className="relative w-full h-72 shrink-0 bg-zinc-900">
-                {/* Cover Image or Gradient */}
-                {hasCoverPhoto ? (
-                    <>
+            {/* Simple Header with Avatar */}
+            <div className="relative w-full pt-20 pb-6 flex flex-col items-center bg-zinc-50">
+                <div className="relative">
+                    <div className="w-32 h-32 rounded-full p-1 bg-white shadow-xl">
                         <img
-                            src={coverUrl}
-                            className="w-full h-full object-cover opacity-80"
-                            alt="Cover"
+                            src={avatarUrl}
+                            className="w-full h-full rounded-full object-cover"
+                            alt="Avatar"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-zinc-50" />
-                    </>
-                ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-brasil-blue via-brasil-green to-brasil-yellow opacity-80">
-                        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20" />
-                        <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-zinc-50" />
                     </div>
-                )}
-
-                {/* Profile Info Overlay */}
-                <div className="absolute -bottom-12 left-0 right-0 px-6 flex flex-col items-center">
-                    <div className="relative">
-                        <div className="w-32 h-32 rounded-full p-1 bg-white shadow-xl">
-                            <img
-                                src={avatarUrl}
-                                className="w-full h-full rounded-full object-cover"
-                                alt="Avatar"
-                            />
+                    {isVip && (
+                        <div className="absolute -top-2 -right-2 w-10 h-10 bg-gradient-to-br from-yellow-300 to-yellow-500 rounded-full border-4 border-white flex items-center justify-center shadow-lg animate-bounce-slow">
+                            <Crown size={18} className="text-white" fill="white" />
                         </div>
-                        {isVip && (
-                            <div className="absolute -top-2 -right-2 w-10 h-10 bg-gradient-to-br from-yellow-300 to-yellow-500 rounded-full border-4 border-white flex items-center justify-center shadow-lg animate-bounce-slow">
-                                <Crown size={18} className="text-white" fill="white" />
-                            </div>
-                        )}
-                        {!isVip && (
-                            <button
-                                onClick={() => onNavigate(ScreenState.VIP)}
-                                className="absolute bottom-0 right-0 w-8 h-8 bg-zinc-800 rounded-full border-2 border-white flex items-center justify-center text-white shadow-lg"
-                            >
-                                <Star size={14} fill="white" />
-                            </button>
-                        )}
-                    </div>
+                    )}
+                    {!isVip && (
+                        <button
+                            onClick={() => onNavigate(ScreenState.VIP)}
+                            className="absolute bottom-0 right-0 w-8 h-8 bg-zinc-800 rounded-full border-2 border-white flex items-center justify-center text-white shadow-lg"
+                        >
+                            <Star size={14} fill="white" />
+                        </button>
+                    )}
                 </div>
             </div>
 
             {/* Main Content */}
-            <div className="mt-14 px-6 flex flex-col items-center gap-6">
+            <div className="mt-2 px-6 flex flex-col items-center gap-6">
 
                 {/* Name & Bio */}
                 <div className="text-center space-y-1">

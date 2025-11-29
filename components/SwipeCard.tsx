@@ -86,8 +86,8 @@ const SwipeCard: React.FC<SwipeCardProps> = ({ profile, isActive, swipeDirection
       />
 
       {/* Gradient Overlay - Suave e Linear (70% -> 0%) */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none" />
-      <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black via-black/60 to-transparent pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />
+      <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black via-black/40 to-transparent pointer-events-none" />
 
       {/* Photo Indicators - Ajustado */}
       {photos.length > 1 && (
@@ -123,8 +123,8 @@ const SwipeCard: React.FC<SwipeCardProps> = ({ profile, isActive, swipeDirection
       </div>
 
       {/* Content - Layout Otimizado */}
-      <div className="absolute bottom-0 left-0 right-0 pointer-events-none" style={{ paddingBottom: 'calc(20px + env(safe-area-inset-bottom, 0px))' }}>
-        <div className="px-5 pb-4 flex flex-col gap-3 pr-[100px]">
+      <div className="absolute bottom-0 left-0 right-0 pointer-events-none" style={{ paddingBottom: 'calc(15px + env(safe-area-inset-bottom, 0px))' }}>
+        <div className="px-5 pb-1 flex flex-col gap-3 pr-[100px]">
 
           {/* Compatibilidade por Signo */}
           {myZodiacSign && profile.zodiacSign && compatibility > 0 && (

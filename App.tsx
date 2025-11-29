@@ -910,7 +910,7 @@ const App: React.FC = () => {
           {/* Top Bar - Status VIP/Free - Redesigned */}
           <div className="absolute top-0 left-0 right-0 z-20 pointer-events-none">
             <div className="flex justify-center pt-8 pb-2 bg-gradient-to-b from-black/90 via-black/60 to-transparent">
-              {!isVip ? (
+              {!isVip && (
                 <div className="flex items-center gap-2 pointer-events-auto bg-zinc-900/90 backdrop-blur-xl px-4 py-2 rounded-2xl border border-white/10 shadow-2xl scale-90 origin-top">
                   <div className="flex flex-col gap-1">
                     <div className="flex items-center justify-between min-w-[120px]">
@@ -933,17 +933,12 @@ const App: React.FC = () => {
                     <span className="text-[9px] font-bold text-brasil-yellow uppercase tracking-wide">Sem Limites</span>
                   </button>
                 </div>
-              ) : (
-                <div className="flex items-center gap-2 bg-gradient-to-r from-brasil-yellow to-amber-400 backdrop-blur-md px-6 py-2.5 rounded-full pointer-events-auto shadow-xl shadow-amber-500/20 border border-white/20">
-                  <Crown size={18} className="text-brasil-blue" fill="#002776" />
-                  <span className="text-xs font-black text-brasil-blue uppercase tracking-widest">VIP Ativo</span>
-                </div>
               )}
             </div>
           </div>
 
           {/* Floating Action Buttons - Redesigned Area */}
-          <div className="absolute bottom-[90px] right-4 z-20 flex flex-col gap-4 items-center">
+          <div className="absolute bottom-[30px] right-4 z-20 flex flex-col gap-4 items-center">
             {/* Pega (Down) - Like */}
             <button
               onClick={() => handleSwipe('down')}

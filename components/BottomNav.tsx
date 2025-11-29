@@ -14,7 +14,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ currentScreen, onNavigate }) => {
   }
 
   const navItems = [
-    { id: ScreenState.CHAT, icon: MessageCircle, label: 'Conversas' },
+    { id: ScreenState.CHAT, icon: MessageCircle, label: 'Contatinhos' },
     { id: ScreenState.HOME, icon: ThumbsUp, label: 'Descobrir' },
     { id: ScreenState.PROFILE, icon: User, label: 'Perfil' },
   ];
@@ -36,8 +36,8 @@ const BottomNav: React.FC<BottomNavProps> = ({ currentScreen, onNavigate }) => {
               key={item.id}
               onClick={() => onNavigate(item.id)}
               className={`flex flex-col items-center justify-center gap-0.5 py-2 px-4 rounded-xl transition-all duration-200 min-w-[80px] ${isActive
-                  ? 'bg-brasil-blue/10'
-                  : 'hover:bg-zinc-50 active:bg-zinc-100'
+                ? 'bg-brasil-blue/10'
+                : 'hover:bg-zinc-50 active:bg-zinc-100'
                 }`}
             >
               <Icon
