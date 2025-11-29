@@ -21,7 +21,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ currentScreen, onNavigate }) => {
 
   return (
     <div
-      className="w-full bg-white border-t border-zinc-100 z-50 shrink-0"
+      className="w-full bg-black/80 backdrop-blur-xl border-t border-white/10 z-50 shrink-0 absolute bottom-0 left-0 right-0"
       style={{
         paddingBottom: 'env(safe-area-inset-bottom, 0px)',
       }}
@@ -36,18 +36,18 @@ const BottomNav: React.FC<BottomNavProps> = ({ currentScreen, onNavigate }) => {
               key={item.id}
               onClick={() => onNavigate(item.id)}
               className={`flex flex-col items-center justify-center gap-1 py-2 px-4 rounded-xl transition-all duration-200 min-w-[80px] ${isActive
-                ? 'bg-brasil-blue/10'
-                : 'hover:bg-zinc-50 active:bg-zinc-100'
+                ? 'bg-white/10'
+                : 'hover:bg-white/5 active:bg-white/10'
                 }`}
             >
               <Icon
                 size={28}
                 strokeWidth={isActive ? 2.5 : 2}
-                className={`transition-colors duration-200 ${isActive ? 'text-brasil-blue' : 'text-zinc-400'
+                className={`transition-colors duration-200 ${isActive ? 'text-brasil-blue' : 'text-zinc-500'
                   }`}
                 fill={isActive ? 'currentColor' : 'none'}
               />
-              <span className={`text-xs font-bold transition-colors duration-200 ${isActive ? 'text-brasil-blue' : 'text-zinc-400'
+              <span className={`text-xs font-bold transition-colors duration-200 ${isActive ? 'text-brasil-blue' : 'text-zinc-500'
                 }`}>
                 {item.label}
               </span>

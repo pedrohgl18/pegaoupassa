@@ -908,30 +908,32 @@ const App: React.FC = () => {
           )}
 
           {/* Top Bar - Status VIP/Free - Redesigned */}
-          {/* Top Bar - Status VIP/Free - Redesigned */}
+          {/* Top Bar - Status VIP/Free - Minimalist */}
           <div className="absolute top-0 left-0 right-0 z-20 pointer-events-none">
-            <div className="flex justify-center pt-8 pb-2 bg-gradient-to-b from-black/90 via-black/60 to-transparent">
+            <div className="flex justify-center pt-12 pb-4 bg-gradient-to-b from-black/80 via-black/40 to-transparent">
               {!isVip && (
-                <div className="flex items-center gap-2 pointer-events-auto bg-zinc-900/90 backdrop-blur-xl px-4 py-2 rounded-2xl border border-white/10 shadow-2xl scale-90 origin-top">
-                  <div className="flex flex-col gap-1">
-                    <div className="flex items-center justify-between min-w-[120px]">
-                      <span className="text-[10px] font-black text-white/60 uppercase tracking-widest">Likes Diários</span>
-                      <span className="text-xs font-bold text-white">{swipeCount}/{DAILY_FREE_SWIPES}</span>
+                <div className="flex items-center gap-3 pointer-events-auto">
+                  {/* Progress Bar Minimal */}
+                  <div className="flex flex-col gap-1 w-32">
+                    <div className="flex justify-between items-end px-1">
+                      <span className="text-[10px] font-bold text-white/80 uppercase tracking-wider">Likes</span>
+                      <span className="text-[10px] font-bold text-white/80">{swipeCount}/{DAILY_FREE_SWIPES}</span>
                     </div>
-                    <div className="w-full h-2.5 bg-zinc-800 rounded-full overflow-hidden border border-white/5">
+                    <div className="w-full h-1.5 bg-white/20 rounded-full overflow-hidden backdrop-blur-sm">
                       <div
-                        className="h-full bg-gradient-to-r from-brasil-green to-emerald-400 transition-all duration-500 ease-out shadow-[0_0_10px_rgba(34,197,94,0.5)]"
+                        className="h-full bg-brasil-green shadow-[0_0_8px_rgba(34,197,94,0.8)]"
                         style={{ width: `${Math.min((swipeCount / DAILY_FREE_SWIPES) * 100, 100)}%` }}
                       />
                     </div>
                   </div>
-                  <div className="w-px h-8 bg-white/10 mx-1" />
+
+                  {/* Button Minimal */}
                   <button
                     onClick={() => setCurrentScreen(ScreenState.VIP)}
-                    className="flex flex-col items-center justify-center gap-0.5 group"
+                    className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 transition-all active:scale-95"
                   >
-                    <Crown size={18} className="text-brasil-yellow group-hover:scale-110 transition-transform" fill="#FFDF00" />
-                    <span className="text-[9px] font-bold text-brasil-yellow uppercase tracking-wide">Sem Limites</span>
+                    <Crown size={14} className="text-brasil-yellow" fill="#FFDF00" />
+                    <span className="text-[10px] font-bold text-white uppercase tracking-wide">Sem Limites</span>
                   </button>
                 </div>
               )}
@@ -941,7 +943,7 @@ const App: React.FC = () => {
           {/* Floating Action Buttons - Redesigned Area */}
           <div
             className="absolute right-4 z-20 flex flex-col gap-4 items-center"
-            style={{ bottom: 'calc(15px + env(safe-area-inset-bottom, 0px))' }}
+            style={{ bottom: 'calc(90px + env(safe-area-inset-bottom, 0px))' }}
           >
             {/* Pega (Down) - Like */}
             <button

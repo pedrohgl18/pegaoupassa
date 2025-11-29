@@ -110,7 +110,7 @@ const SwipeCard: React.FC<SwipeCardProps> = ({ profile, isActive, swipeDirection
       </div>
 
       {/* Content - Layout Otimizado */}
-      <div className="absolute bottom-0 left-0 right-0 pointer-events-none" style={{ paddingBottom: 'calc(5px + env(safe-area-inset-bottom, 0px))' }}>
+      <div className="absolute bottom-0 left-0 right-0 pointer-events-none" style={{ paddingBottom: 'calc(85px + env(safe-area-inset-bottom, 0px))' }}>
         <div className="px-5 pb-1 flex flex-col gap-3 pr-[100px]">
 
           {/* Compatibilidade por Signo */}
@@ -184,13 +184,13 @@ const SwipeCard: React.FC<SwipeCardProps> = ({ profile, isActive, swipeDirection
             </p>
           )}
 
-          {/* Photo Indicators - Moved to Bottom */}
+          {/* Photo Indicators - Full Width Bottom */}
           {photos.length > 1 && (
-            <div className="flex gap-1.5 mt-2 w-full max-w-[200px]">
+            <div className="flex gap-1.5 mt-3 w-full px-1">
               {photos.map((_, index) => (
                 <div
                   key={index}
-                  className={`h-1 rounded-full flex-1 transition-all duration-300 ${index === currentPhotoIndex ? 'bg-white shadow-sm' : 'bg-white/30'
+                  className={`h-1 rounded-full flex-1 transition-all duration-300 ${index === currentPhotoIndex ? 'bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)]' : 'bg-white/20'
                     }`}
                 />
               ))}
