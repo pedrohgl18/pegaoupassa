@@ -27,6 +27,7 @@ interface ChatScreenProps {
   otherUserIsVip?: boolean;
   onBack: () => void;
   onUnmatch: () => void;
+  onViewProfile?: () => void;
 }
 
 // Componente Lightbox para visualização em tela cheia
@@ -64,7 +65,8 @@ const ChatScreen: React.FC<ChatScreenProps> = ({
   otherUserPhoto,
   otherUserIsVip = false,
   onBack,
-  onUnmatch
+  onUnmatch,
+  onViewProfile
 }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
@@ -589,7 +591,10 @@ const ChatScreen: React.FC<ChatScreenProps> = ({
             <ArrowLeft size={24} />
           </button>
 
-          <div className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer active:opacity-70 transition-opacity">
+          <div
+            className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer active:opacity-70 transition-opacity"
+            onClick={() => onViewProfile && onViewProfile()}
+          >
             <div className="relative flex-shrink-0">
               <img src={otherUserPhoto} alt={otherUserName} className="w-10 h-10 rounded-full object-cover border border-zinc-200 shadow-sm" />
               {otherUserOnline && (

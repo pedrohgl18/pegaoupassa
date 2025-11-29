@@ -909,43 +909,51 @@ const App: React.FC = () => {
 
           {/* Top Bar - Status VIP/Free */}
           <div className="absolute top-0 left-0 right-0 z-20 pointer-events-none">
-            <div className="flex justify-center pt-12 pb-2">
+            <div className="flex justify-center pt-12 pb-4 bg-gradient-to-b from-black/80 to-transparent">
               {!isVip ? (
-                <div className="flex items-center gap-2 bg-black/40 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 pointer-events-auto">
-                  <span className="text-xs font-bold text-white/80">Grátis</span>
-                  <div className="w-20 h-1.5 bg-white/20 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-brasil-green transition-all duration-300"
-                      style={{ width: `${Math.min((swipeCount / DAILY_FREE_SWIPES) * 100, 100)}%` }}
-                    />
+                <div className="flex flex-col items-center gap-1 pointer-events-auto">
+                  <div className="flex items-center gap-2 bg-zinc-900/80 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 shadow-lg">
+                    <span className="text-[10px] font-black text-white/60 uppercase tracking-widest">Likes Diários</span>
+                    <div className="w-24 h-2 bg-zinc-800 rounded-full overflow-hidden border border-white/5">
+                      <div
+                        className="h-full bg-gradient-to-r from-brasil-green to-emerald-400 transition-all duration-500 ease-out shadow-[0_0_10px_rgba(34,197,94,0.5)]"
+                        style={{ width: `${Math.min((swipeCount / DAILY_FREE_SWIPES) * 100, 100)}%` }}
+                      />
+                    </div>
+                    <span className="text-xs font-bold text-white">{swipeCount}/{DAILY_FREE_SWIPES}</span>
                   </div>
-                  <span className="text-xs font-medium text-white/60">{swipeCount}/{DAILY_FREE_SWIPES}</span>
+                  <button
+                    onClick={() => setCurrentScreen(ScreenState.VIP)}
+                    className="text-[10px] font-bold text-brasil-yellow hover:underline drop-shadow-md"
+                  >
+                    Remover Limites
+                  </button>
                 </div>
               ) : (
-                <div className="flex items-center gap-1.5 bg-brasil-yellow/90 backdrop-blur-md px-4 py-2 rounded-full pointer-events-auto">
-                  <Crown size={14} className="text-brasil-blue" fill="#002776" />
-                  <span className="text-xs font-bold text-brasil-blue uppercase tracking-wide">VIP</span>
+                <div className="flex items-center gap-2 bg-gradient-to-r from-brasil-yellow to-amber-400 backdrop-blur-md px-5 py-2 rounded-full pointer-events-auto shadow-lg shadow-amber-500/20">
+                  <Crown size={16} className="text-brasil-blue" fill="#002776" />
+                  <span className="text-xs font-black text-brasil-blue uppercase tracking-widest">VIP Ativo</span>
                 </div>
               )}
             </div>
           </div>
 
           {/* Floating Action Buttons - Tamanhos equilibrados */}
-          <div className="absolute bottom-20 right-4 z-20 flex flex-col gap-3">
+          <div className="absolute bottom-24 right-5 z-20 flex flex-col gap-4">
             {/* Pega (Down) - Like */}
             <button
               onClick={() => handleSwipe('down')}
-              className="w-14 h-14 rounded-full bg-brasil-green flex items-center justify-center shadow-lg shadow-brasil-green/30 hover:scale-105 active:scale-95 transition-transform border-2 border-white/20"
+              className="w-16 h-16 rounded-full bg-brasil-green flex items-center justify-center shadow-xl shadow-brasil-green/40 hover:scale-110 active:scale-95 transition-all border-4 border-white/10 group"
             >
-              <ThumbsUp size={26} className="text-white" fill="white" />
+              <ThumbsUp size={32} className="text-white group-hover:rotate-12 transition-transform" fill="white" />
             </button>
 
             {/* Passa (Up) - Pass */}
             <button
               onClick={() => handleSwipe('up')}
-              className="w-14 h-14 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center hover:bg-white active:scale-95 transition-all shadow-lg border border-zinc-200"
+              className="w-16 h-16 rounded-full bg-zinc-900/90 backdrop-blur-md flex items-center justify-center hover:bg-black active:scale-95 transition-all shadow-xl border border-white/10 group"
             >
-              <X size={26} className="text-zinc-600" strokeWidth={2.5} />
+              <X size={32} className="text-white/80 group-hover:text-white transition-colors" strokeWidth={3} />
             </button>
           </div>
         </div>
@@ -1203,6 +1211,25 @@ const App: React.FC = () => {
                 otherUserIsVip={activeChat.isVip}
                 onBack={() => setActiveChat(null)}
                 onUnmatch={() => handleUnmatchSuccess(activeChat.id)}
+                onViewProfile={() => {
+                  // Mock profile data from chat info since we don't have full profile
+                  // In a real app, we might fetch the full profile here
+                  const mockProfile: ProfileType = {
+                    id: activeChat.otherUserId,
+                    name: activeChat.name,
+                    age: 0, // We might not have this in chat object
+                    bio: '',
+                    imageUrl: activeChat.imageUrl,
+                    photos: [activeChat.imageUrl],
+                    distance: 0,
+                    verified: false,
+                    zodiacSign: '',
+                    profession: '',
+                    education: '',
+                    height: 0
+                  };
+                  setViewingProfile(mockProfile);
+                }}
               />
             ) : (
               <ChatList

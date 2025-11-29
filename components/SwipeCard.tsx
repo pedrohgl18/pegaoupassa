@@ -23,7 +23,7 @@ const SwipeCard: React.FC<SwipeCardProps> = ({ profile, isActive, swipeDirection
   const handleTap = (e: React.MouseEvent<HTMLDivElement>) => {
     if (Math.abs(dragOffset) > 10) return;
     if (!isActive) return;
-    
+
     const { clientX, currentTarget } = e;
     const { left, width } = currentTarget.getBoundingClientRect();
     const x = clientX - left;
@@ -56,8 +56,8 @@ const SwipeCard: React.FC<SwipeCardProps> = ({ profile, isActive, swipeDirection
     `,
     transformStyle: 'preserve-3d' as const,
     transition: dragOffset === 0 ? 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)' : 'none',
-    boxShadow: isActive && dragOffset !== 0 
-      ? `0 ${Math.abs(dragOffset) * 0.5}px ${Math.abs(dragOffset)}px rgba(0,0,0,0.3)` 
+    boxShadow: isActive && dragOffset !== 0
+      ? `0 ${Math.abs(dragOffset) * 0.5}px ${Math.abs(dragOffset)}px rgba(0,0,0,0.3)`
       : '0 10px 30px rgba(0,0,0,0.2)',
   };
 
@@ -73,19 +73,18 @@ const SwipeCard: React.FC<SwipeCardProps> = ({ profile, isActive, swipeDirection
   }, [isActive, photos.length]);
 
   return (
-    <div 
-      className={`absolute inset-0 w-full h-full bg-black overflow-hidden ${
-        isActive ? 'z-10' : 'z-0 scale-95 opacity-50'
-      }`}
+    <div
+      className={`absolute inset-0 w-full h-full bg-black overflow-hidden ${isActive ? 'z-10' : 'z-0 scale-95 opacity-50'
+        }`}
       style={cardStyle}
       onClick={handleTap}
     >
       {/* Background Image - Full screen */}
-      <div 
+      <div
         className="absolute inset-0 bg-cover bg-center transition-all duration-300"
         style={{ backgroundImage: `url(${photos[currentPhotoIndex]})` }}
       />
-      
+
       {/* Gradient Overlay - mais sutil, apenas na parte inferior */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />
 
@@ -93,18 +92,17 @@ const SwipeCard: React.FC<SwipeCardProps> = ({ profile, isActive, swipeDirection
       {photos.length > 1 && (
         <div className="absolute top-14 left-4 right-4 flex gap-1.5 z-30">
           {photos.map((_, index) => (
-            <div 
-              key={index} 
-              className={`h-1 rounded-full flex-1 transition-all duration-300 ${
-                index === currentPhotoIndex ? 'bg-white shadow-sm' : 'bg-white/40'
-              }`} 
+            <div
+              key={index}
+              className={`h-1 rounded-full flex-1 transition-all duration-300 ${index === currentPhotoIndex ? 'bg-white shadow-sm' : 'bg-white/40'
+                }`}
             />
           ))}
         </div>
       )}
 
       {/* Action Overlay - Like */}
-      <div 
+      <div
         className="absolute inset-0 bg-brasil-green/30 flex items-center justify-center z-20 pointer-events-none transition-opacity duration-200"
         style={{ opacity: likeOpacity }}
       >
@@ -112,9 +110,9 @@ const SwipeCard: React.FC<SwipeCardProps> = ({ profile, isActive, swipeDirection
           <ThumbsUp size={72} className="text-white" fill="white" />
         </div>
       </div>
-      
+
       {/* Action Overlay - Pass */}
-      <div 
+      <div
         className="absolute inset-0 bg-red-500/30 flex items-center justify-center z-20 pointer-events-none transition-opacity duration-200"
         style={{ opacity: passOpacity }}
       >
@@ -123,76 +121,75 @@ const SwipeCard: React.FC<SwipeCardProps> = ({ profile, isActive, swipeDirection
         </div>
       </div>
 
-      {/* Content - Ancorado na parte inferior, acima do BottomNav */}
-      <div className="absolute bottom-0 left-0 right-0 pointer-events-none" style={{ paddingBottom: 'calc(72px + env(safe-area-inset-bottom, 0px))' }}>
-        <div className="px-5 pb-4 flex flex-col gap-3">
-          
+      {/* Content - Ancorado na parte inferior, com mais espaço do BottomNav */}
+      <div className="absolute bottom-0 left-0 right-0 pointer-events-none" style={{ paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 20px))' }}>
+        <div className="px-5 pb-6 flex flex-col gap-3 bg-gradient-to-t from-black/90 via-black/40 to-transparent pt-20">
+
           {/* Compatibilidade por Signo */}
           {myZodiacSign && profile.zodiacSign && compatibility > 0 && (
-            <div className={`self-start flex items-center gap-2 px-3 py-1.5 rounded-full backdrop-blur-sm ${
-              compatibility >= 75 ? 'bg-brasil-green/80' : 
-              compatibility >= 50 ? 'bg-brasil-yellow/80' : 'bg-orange-500/80'
-            }`}>
-              <Heart className="w-4 h-4 text-white" fill="white" />
-              <span className="text-white text-sm font-bold">{compatibility}% compatível</span>
-              <span className="text-white/80 text-xs">{compatibilityText}</span>
+            <div className={`self-start flex items-center gap-2 px-3 py-1.5 rounded-full backdrop-blur-md border border-white/10 shadow-lg ${compatibility >= 75 ? 'bg-brasil-green/90' :
+                compatibility >= 50 ? 'bg-brasil-yellow/90' : 'bg-orange-500/90'
+              }`}>
+              <Heart className="w-3.5 h-3.5 text-white" fill="white" />
+              <span className="text-white text-xs font-black uppercase tracking-wide">{compatibility}% Match</span>
             </div>
           )}
 
           {/* Nome e Idade */}
-          <div className="flex items-center gap-2">
-            <h2 className="text-3xl font-bold text-white tracking-tight drop-shadow-lg">
-              {profile.name}, {profile.age}
+          <div className="flex items-end gap-3">
+            <h2 className="text-4xl font-black text-white tracking-tighter drop-shadow-xl leading-none">
+              {profile.name}
             </h2>
+            <span className="text-2xl font-medium text-white/90 mb-1 drop-shadow-md">{profile.age}</span>
             {profile.verified && (
-              <BadgeCheck className="w-7 h-7 text-brasil-yellow fill-brasil-blue flex-shrink-0" />
+              <BadgeCheck className="w-8 h-8 text-brasil-blue fill-white mb-0.5 drop-shadow-lg" />
             )}
           </div>
-          
-          {/* Badges de informação - estilo unificado */}
+
+          {/* Badges de informação - estilo unificado e premium */}
           <div className="flex flex-wrap items-center gap-2">
             {/* Distância */}
-            <div className="flex items-center gap-1.5 bg-black/50 backdrop-blur-sm px-3 py-1.5 rounded-full">
-              <MapPin className="w-3.5 h-3.5 text-brasil-yellow" />
-              <span className="text-white text-sm font-medium">{profile.distance} km</span>
+            <div className="flex items-center gap-1.5 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/10">
+              <MapPin className="w-3.5 h-3.5 text-white/80" />
+              <span className="text-white text-xs font-bold">{profile.distance} km</span>
             </div>
-            
+
             {/* Signo */}
             {profile.zodiacSign && (
-              <div className="flex items-center gap-1.5 bg-black/50 backdrop-blur-sm px-3 py-1.5 rounded-full">
+              <div className="flex items-center gap-1.5 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/10">
                 <Sparkles className="w-3.5 h-3.5 text-brasil-yellow" />
-                <span className="text-white text-sm font-medium">{profile.zodiacSign}</span>
+                <span className="text-white text-xs font-bold">{profile.zodiacSign}</span>
               </div>
             )}
 
             {/* Altura */}
             {profile.height && (
-              <div className="flex items-center gap-1.5 bg-black/50 backdrop-blur-sm px-3 py-1.5 rounded-full">
-                <Ruler className="w-3.5 h-3.5 text-brasil-yellow" />
-                <span className="text-white text-sm font-medium">{profile.height} cm</span>
+              <div className="flex items-center gap-1.5 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/10">
+                <Ruler className="w-3.5 h-3.5 text-white/80" />
+                <span className="text-white text-xs font-bold">{profile.height} cm</span>
               </div>
             )}
 
             {/* Profissão */}
             {profile.profession && (
-              <div className="flex items-center gap-1.5 bg-black/50 backdrop-blur-sm px-3 py-1.5 rounded-full">
-                <Briefcase className="w-3.5 h-3.5 text-brasil-yellow" />
-                <span className="text-white text-sm font-medium">{profile.profession}</span>
+              <div className="flex items-center gap-1.5 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/10">
+                <Briefcase className="w-3.5 h-3.5 text-white/80" />
+                <span className="text-white text-xs font-bold">{profile.profession}</span>
               </div>
             )}
 
             {/* Educação */}
             {profile.education && (
-              <div className="flex items-center gap-1.5 bg-black/50 backdrop-blur-sm px-3 py-1.5 rounded-full">
-                <GraduationCap className="w-3.5 h-3.5 text-brasil-yellow" />
-                <span className="text-white text-sm font-medium">{profile.education}</span>
+              <div className="flex items-center gap-1.5 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/10">
+                <GraduationCap className="w-3.5 h-3.5 text-white/80" />
+                <span className="text-white text-xs font-bold">{profile.education}</span>
               </div>
             )}
           </div>
 
           {/* Bio */}
           {profile.bio && (
-            <p className="text-white/90 text-base leading-relaxed font-medium drop-shadow-md line-clamp-2">
+            <p className="text-white/80 text-sm leading-relaxed font-medium drop-shadow-md line-clamp-3 max-w-[90%]">
               {profile.bio}
             </p>
           )}
