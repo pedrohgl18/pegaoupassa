@@ -120,7 +120,7 @@ export function Settings({ onClose, onLogout }: SettingsProps) {
     if (showBlocked) {
         return (
             <div className="fixed inset-0 bg-white z-50 flex flex-col animate-slide-in">
-                <div className="p-4 border-b flex items-center gap-4 bg-white shadow-sm">
+                <div className="p-4 pt-8 border-b flex items-center gap-4 bg-white shadow-sm">
                     <button onClick={() => setShowBlocked(false)} className="p-2 hover:bg-zinc-100 rounded-full">
                         <ArrowLeft className="w-6 h-6 text-zinc-700" />
                     </button>
@@ -160,6 +160,21 @@ export function Settings({ onClose, onLogout }: SettingsProps) {
                         </div>
                     )}
                 </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="fixed inset-0 bg-white z-50 flex flex-col animate-slide-in">
+            {/* Header */}
+            <div className="p-4 pt-8 border-b flex items-center gap-4 bg-white shadow-sm">
+                <button onClick={onClose} className="p-2 hover:bg-zinc-100 rounded-full">
+                    <ArrowLeft className="w-6 h-6 text-zinc-700" />
+                </button>
+                <h2 className="text-xl font-bold text-zinc-800">Configurações</h2>
+            </div>
+
+            <div className="flex-1 overflow-y-auto bg-zinc-50">
                 <div className="p-4 space-y-6">
 
                     {/* Notificações */}
@@ -287,6 +302,6 @@ export function Settings({ onClose, onLogout }: SettingsProps) {
 
                 </div>
             </div>
-        </div >
+        </div>
     );
-    }
+}
