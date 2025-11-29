@@ -11,6 +11,8 @@ import MatchModal from './components/MatchModal';
 import ChatScreen from './components/ChatScreen';
 import RangeSlider from './components/RangeSlider';
 import Profile from './components/Profile';
+import ChatList from './components/ChatList';
+import VipScreen from './components/VipScreen';
 import { useAuth } from './hooks/useAuth';
 import { profiles, swipes, matches, supabase } from './lib/supabase';
 import { Chat } from './types';
@@ -791,70 +793,12 @@ const App: React.FC = () => {
     </div>
   );
 
-  const renderVip = () => (
-    <div className="flex flex-col h-full w-full bg-brasil-blue relative overflow-y-auto animate-slide-up">
-      {/* Background decorative elements */}
-      <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-black/20 to-transparent pointer-events-none" />
 
-      <div className="relative z-10 flex flex-col items-center p-6 pt-12 flex-grow">
-        <div className="mb-6 relative">
-          <div className="absolute inset-0 bg-brasil-yellow blur-[50px] opacity-40 rounded-full" />
-          <Crown size={80} className="text-brasil-yellow relative drop-shadow-[0_0_15px_rgba(255,223,0,0.6)]" fill="#FFDF00" />
-        </div>
 
-        <h1 className="text-4xl font-extrabold text-white mb-2 tracking-tight">Seja VIP</h1>
-        <p className="text-blue-100 text-center mb-10 text-lg">Desbloqueie todo o seu potencial.</p>
-
-        <div className="w-full space-y-4 mb-8">
-          <div className="flex items-center gap-4 bg-white/10 p-4 rounded-2xl border border-white/10 backdrop-blur-sm">
-            <div className="w-12 h-12 rounded-full bg-brasil-yellow flex items-center justify-center shrink-0">
-              <Rocket className="text-brasil-blue" size={24} />
-            </div>
-            <div>
-              <h3 className="text-white font-bold text-lg">Pegas Ilimitados</h3>
-              <p className="text-blue-200 text-sm">Sem limite diário de curtidas.</p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4 bg-white/10 p-4 rounded-2xl border border-white/10 backdrop-blur-sm">
-            <div className="w-12 h-12 rounded-full bg-brasil-green flex items-center justify-center shrink-0">
-              <ThumbsUp className="text-white" size={24} fill="white" />
-            </div>
-            <div>
-              <h3 className="text-white font-bold text-lg">Veja quem te curtiu</h3>
-              <p className="text-blue-200 text-sm">Descubra seus admiradores.</p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4 bg-white/10 p-4 rounded-2xl border border-white/10 backdrop-blur-sm">
-            <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shrink-0">
-              <Ban className="text-brasil-blue" size={24} />
-            </div>
-            <div>
-              <h3 className="text-white font-bold text-lg">Sem Anúncios</h3>
-              <p className="text-blue-200 text-sm">Navegue sem interrupções.</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-auto w-full space-y-3 pb-8">
-          <div className="bg-brasil-green p-4 rounded-xl text-center shadow-lg">
-            <span className="text-green-100 text-sm font-semibold">Oferta Especial</span>
-            <div className="text-3xl font-bold text-white">{VIP_PRICE} <span className="text-base font-normal">/ mês</span></div>
-          </div>
-          <Button fullWidth onClick={handlePurchaseVip} className="!bg-brasil-yellow !text-brasil-blue hover:brightness-110">
-            ASSINAR AGORA
-          </Button>
-          <button
-            onClick={() => setCurrentScreen(ScreenState.HOME)}
-            className="w-full py-4 text-white/70 font-bold hover:text-white transition-colors"
-          >
-            Não, obrigado
-          </button>
-        </div>
-      </div>
-    </div>
-  );
+  const handleUnmatchSuccess = (matchId: string) => {
+    setMatchesList(prev => prev.filter(m => m.id !== matchId));
+    setActiveChat(null);
+  };
 
   const renderHome = () => {
     // Loading State
@@ -1016,189 +960,6 @@ const App: React.FC = () => {
             <p className="absolute bottom-28 text-sm text-white/50">Toque para começar</p>
           </div>
         )}
-      </div>
-    );
-  }; const handleUnmatchSuccess = (matchId: string) => {
-    setMatchesList(prev => prev.filter(m => m.id !== matchId));
-    setActiveChat(null);
-  };
-
-  const renderChat = () => {
-    if (activeChat && user) {
-      return (
-        <ChatScreen
-          conversationId={activeChat.conversationId}
-          matchId={activeChat.id}
-          currentUserId={user.id}
-          currentUserIsVip={isVip}
-          currentUserName={profile?.name || 'Alguém'}
-          otherUserId={activeChat.otherUserId}
-          otherUserName={activeChat.name}
-          otherUserPhoto={activeChat.imageUrl}
-          otherUserIsVip={activeChat.isVip}
-          onBack={() => setActiveChat(null)}
-          onUnmatch={() => handleUnmatchSuccess(activeChat.id)}
-        />
-      );
-    }
-
-    // Frases divertidas para o título
-    const chatTitles = [
-      "Quem será que te quer? 👀",
-      "Bora paquerar! 💬",
-      "Conversas quentes 🔥",
-      "Seus crushs 💕",
-      "Papo rola aqui 💭",
-    ];
-    const randomTitle = chatTitles[Math.floor(Math.random() * chatTitles.length)];
-
-    return (
-      <div className="flex flex-col h-full w-full bg-brasil-light animate-fade-in">
-        <div className="px-6 pt-12 pb-4 border-b border-zinc-200 flex justify-between items-center bg-gradient-to-r from-brasil-green to-teal-600 shadow-lg">
-          <div>
-            <h1 className="text-2xl font-bold text-white drop-shadow-md">{randomTitle}</h1>
-            <p className="text-white/80 text-sm mt-0.5">Suas conexões estão aqui</p>
-          </div>
-          <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur flex items-center justify-center text-white">
-            <Search size={20} />
-          </div>
-        </div>
-
-        <div className="overflow-y-auto flex-1 pb-24 no-scrollbar bg-white">
-          {loadingMatches && matchesList.length === 0 ? (
-            <div className="flex justify-center py-10">
-              <Loader2 className="animate-spin text-brasil-blue" />
-            </div>
-          ) : (
-            <>
-              {/* Received Likes Section (VIP Feature) */}
-              {receivedLikes.length > 0 && (
-                <div className="py-4 bg-white border-b border-zinc-100">
-                  <div className="px-6 flex justify-between items-center mb-3">
-                    <h2 className="text-sm font-bold text-brasil-yellow uppercase tracking-wider flex items-center gap-2">
-                      <Heart size={16} className="fill-brasil-yellow" />
-                      Curtiu Você
-                      <span className="bg-brasil-yellow text-brasil-blue text-[10px] px-1.5 py-0.5 rounded-full">{receivedLikes.length}</span>
-                    </h2>
-                    {!isVip && (
-                      <button onClick={() => setCurrentScreen(ScreenState.VIP)} className="text-xs font-bold text-brasil-blue">
-                        Ver todos
-                      </button>
-                    )}
-                  </div>
-
-                  <div className="flex gap-4 px-6 overflow-x-auto no-scrollbar pb-2">
-                    {receivedLikes.map((like) => (
-                      <div
-                        key={like.id}
-                        className="flex flex-col items-center gap-2 shrink-0 w-20 cursor-pointer relative"
-                        onClick={() => {
-                          if (isVip) {
-                            const p = like.profile;
-                            const mappedProfile: ProfileType = {
-                              id: p.id,
-                              name: p.name || 'Usuário',
-                              age: p.age || (p.birth_date ? calculateAge(p.birth_date) : 25),
-                              bio: p.bio || '',
-                              imageUrl: p.photos?.[0]?.url || 'https://picsum.photos/400/600',
-                              photos: p.photos?.map((ph: any) => ph.url) || ['https://picsum.photos/400/600'],
-                              distance: p.distance !== undefined ? Math.round(p.distance) : 0,
-                              verified: p.is_verified || false,
-                              zodiacSign: p.zodiac_sign,
-                              profession: p.profession,
-                              education: p.education,
-                              height: p.height,
-                            };
-                            setViewingProfile(mappedProfile);
-                          } else {
-                            setCurrentScreen(ScreenState.VIP);
-                          }
-                        }}
-                      >
-                        <div className="relative w-16 h-16">
-                          <img
-                            src={like.profile.photos?.[0]?.url || 'https://picsum.photos/200'}
-                            className={`w-full h-full rounded-2xl object-cover border-2 border-brasil-yellow ${!isVip ? 'blur-md' : ''}`}
-                            alt="Hidden"
-                          />
-                          {!isVip && (
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <Crown size={20} className="text-white drop-shadow-md" fill="#FFDF00" />
-                            </div>
-                          )}
-                        </div>
-                        <span className={`text-xs font-bold text-zinc-700 truncate w-full text-center ${!isVip ? 'blur-sm' : ''}`}>
-                          {isVip ? like.profile.name : 'Alguém'}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* New Matches Section */}
-              {matchesList.length > 0 && (
-                <div className="py-4 bg-gradient-to-b from-brasil-light to-white">
-                  <h2 className="px-6 text-sm font-bold text-brasil-green uppercase mb-3 tracking-wider">Seus Matches</h2>
-                  <div className="flex gap-4 px-6 overflow-x-auto no-scrollbar pb-2">
-                    {matchesList.map(chat => (
-                      <div
-                        key={chat.id}
-                        className="flex flex-col items-center gap-2 shrink-0 w-20 cursor-pointer"
-                        onClick={() => setActiveChat(chat)}
-                      >
-                        <div className="relative">
-                          <div className="w-16 h-16 rounded-2xl p-0.5 bg-gradient-to-tr from-brasil-yellow to-brasil-green shadow-md">
-                            <img src={chat.imageUrl} className="w-full h-full rounded-2xl object-cover border-2 border-white" alt={chat.name} />
-                          </div>
-                          <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-brasil-green rounded-full border-2 border-white" />
-                        </div>
-                        <span className="text-xs font-bold text-zinc-700 truncate w-full text-center">{chat.name}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Messages List */}
-              <div className="mt-2">
-                <h2 className="px-6 text-sm font-bold text-zinc-400 uppercase mb-3 tracking-wider">Mensagens</h2>
-                {matchesList.length === 0 ? (
-                  <div className="px-6 py-8 text-center text-zinc-400">
-                    <p>Nenhum match ainda.</p>
-                    <p className="text-sm mt-2">Vá para o feed e comece a dar likes!</p>
-                  </div>
-                ) : (
-                  <div className="flex flex-col">
-                    {matchesList.map(chat => (
-                      <div
-                        key={chat.id}
-                        className="px-6 py-4 flex items-center gap-4 hover:bg-zinc-50 active:bg-zinc-100 transition-colors cursor-pointer border-b border-zinc-100"
-                        onClick={() => setActiveChat(chat)}
-                      >
-                        <img src={chat.imageUrl} className="w-14 h-14 rounded-full object-cover bg-zinc-200" alt={chat.name} />
-                        <div className="flex-1 min-w-0">
-                          <div className="flex justify-between items-baseline mb-1">
-                            <h3 className="font-bold text-zinc-800 text-base truncate">{chat.name}</h3>
-                            <span className={`text-xs ${chat.unreadCount > 0 ? 'text-brasil-green font-bold' : 'text-zinc-400'}`}>{chat.timestamp}</span>
-                          </div>
-                          <p className={`text-sm truncate ${chat.unreadCount > 0 ? 'text-zinc-900 font-semibold' : 'text-zinc-500'}`}>
-                            {chat.lastMessage}
-                          </p>
-                        </div>
-                        {chat.unreadCount > 0 && (
-                          <div className="w-5 h-5 rounded-full bg-brasil-green flex items-center justify-center shrink-0">
-                            <span className="text-[10px] font-bold text-white">{chat.unreadCount}</span>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </>
-          )}
-        </div>
       </div>
     );
   };
@@ -1412,8 +1173,43 @@ const App: React.FC = () => {
             />
           )}
           {currentScreen === ScreenState.HOME && renderHome()}
-          {currentScreen === ScreenState.CHAT && renderChat()}
-          {currentScreen === ScreenState.VIP && renderVip()}
+          {currentScreen === ScreenState.CHAT && (
+            activeChat ? (
+              <ChatScreen
+                conversationId={activeChat.conversationId}
+                matchId={activeChat.id}
+                currentUserId={user.id}
+                currentUserIsVip={isVip}
+                currentUserName={profile?.name || 'Alguém'}
+                otherUserId={activeChat.otherUserId}
+                otherUserName={activeChat.name}
+                otherUserPhoto={activeChat.imageUrl}
+                otherUserIsVip={activeChat.isVip}
+                onBack={() => setActiveChat(null)}
+                onUnmatch={() => handleUnmatchSuccess(activeChat.id)}
+              />
+            ) : (
+              <ChatList
+                matchesList={matchesList}
+                receivedLikes={receivedLikes}
+                isVip={isVip}
+                loadingMatches={loadingMatches}
+                onChatSelect={setActiveChat}
+                onVipClick={() => setCurrentScreen(ScreenState.VIP)}
+                onViewProfile={(p) => {
+                  setViewingProfile(p);
+                  // Optionally navigate or just show modal
+                }}
+              />
+            )
+          )}
+          {currentScreen === ScreenState.VIP && (
+            <VipScreen
+              price={VIP_PRICE}
+              onPurchase={handlePurchaseVip}
+              onClose={() => setCurrentScreen(ScreenState.HOME)}
+            />
+          )}
           {currentScreen === ScreenState.PROFILE && (
             <Profile
               user={user}
