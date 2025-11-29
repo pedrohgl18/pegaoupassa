@@ -912,15 +912,15 @@ const App: React.FC = () => {
             <div className="flex justify-center pt-12 pb-4 bg-gradient-to-b from-black/80 to-transparent">
               {!isVip ? (
                 <div className="flex flex-col items-center gap-1 pointer-events-auto">
-                  <div className="flex items-center gap-2 bg-zinc-900/80 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 shadow-lg">
-                    <span className="text-[10px] font-black text-white/60 uppercase tracking-widest">Likes Diários</span>
-                    <div className="w-24 h-2 bg-zinc-800 rounded-full overflow-hidden border border-white/5">
+                  <div className="flex items-center gap-2 bg-zinc-900/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 shadow-lg">
+                    <span className="text-[10px] font-black text-white/60 uppercase tracking-widest">Likes</span>
+                    <div className="w-20 h-1.5 bg-zinc-800 rounded-full overflow-hidden border border-white/5">
                       <div
                         className="h-full bg-gradient-to-r from-brasil-green to-emerald-400 transition-all duration-500 ease-out shadow-[0_0_10px_rgba(34,197,94,0.5)]"
                         style={{ width: `${Math.min((swipeCount / DAILY_FREE_SWIPES) * 100, 100)}%` }}
                       />
                     </div>
-                    <span className="text-xs font-bold text-white">{swipeCount}/{DAILY_FREE_SWIPES}</span>
+                    <span className="text-[10px] font-bold text-white">{swipeCount}/{DAILY_FREE_SWIPES}</span>
                   </div>
                   <button
                     onClick={() => setCurrentScreen(ScreenState.VIP)}
@@ -930,16 +930,16 @@ const App: React.FC = () => {
                   </button>
                 </div>
               ) : (
-                <div className="flex items-center gap-2 bg-gradient-to-r from-brasil-yellow to-amber-400 backdrop-blur-md px-5 py-2 rounded-full pointer-events-auto shadow-lg shadow-amber-500/20">
-                  <Crown size={16} className="text-brasil-blue" fill="#002776" />
-                  <span className="text-xs font-black text-brasil-blue uppercase tracking-widest">VIP Ativo</span>
+                <div className="flex items-center gap-2 bg-gradient-to-r from-brasil-yellow to-amber-400 backdrop-blur-md px-4 py-1.5 rounded-full pointer-events-auto shadow-lg shadow-amber-500/20">
+                  <Crown size={14} className="text-brasil-blue" fill="#002776" />
+                  <span className="text-[10px] font-black text-brasil-blue uppercase tracking-widest">VIP Ativo</span>
                 </div>
               )}
             </div>
           </div>
 
           {/* Floating Action Buttons - Tamanhos equilibrados */}
-          <div className="absolute bottom-24 right-5 z-20 flex flex-col gap-4">
+          <div className="absolute bottom-28 right-6 z-20 flex flex-col gap-4">
             {/* Pega (Down) - Like */}
             <button
               onClick={() => handleSwipe('down')}

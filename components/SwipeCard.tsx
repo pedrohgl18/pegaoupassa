@@ -88,9 +88,9 @@ const SwipeCard: React.FC<SwipeCardProps> = ({ profile, isActive, swipeDirection
       {/* Gradient Overlay - mais sutil, apenas na parte inferior */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />
 
-      {/* Photo Indicators - no topo, abaixo da status bar */}
+      {/* Photo Indicators - Ajustado para não colidir com status bar */}
       {photos.length > 1 && (
-        <div className="absolute top-14 left-4 right-4 flex gap-1.5 z-30">
+        <div className="absolute top-20 left-4 right-4 flex gap-1.5 z-30">
           {photos.map((_, index) => (
             <div
               key={index}
@@ -122,27 +122,27 @@ const SwipeCard: React.FC<SwipeCardProps> = ({ profile, isActive, swipeDirection
       </div>
 
       {/* Content - Ancorado na parte inferior, com mais espaço do BottomNav */}
-      <div className="absolute bottom-0 left-0 right-0 pointer-events-none" style={{ paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 20px))' }}>
-        <div className="px-5 pb-6 flex flex-col gap-3 bg-gradient-to-t from-black/90 via-black/40 to-transparent pt-20">
+      <div className="absolute bottom-0 left-0 right-0 pointer-events-none" style={{ paddingBottom: 'calc(90px + env(safe-area-inset-bottom, 20px))' }}>
+        <div className="px-5 pb-6 flex flex-col gap-2 bg-gradient-to-t from-black/90 via-black/50 to-transparent pt-24">
 
           {/* Compatibilidade por Signo */}
           {myZodiacSign && profile.zodiacSign && compatibility > 0 && (
-            <div className={`self-start flex items-center gap-2 px-3 py-1.5 rounded-full backdrop-blur-md border border-white/10 shadow-lg ${compatibility >= 75 ? 'bg-brasil-green/90' :
+            <div className={`self-start flex items-center gap-2 px-3 py-1.5 rounded-full backdrop-blur-md border border-white/10 shadow-lg mb-1 ${compatibility >= 75 ? 'bg-brasil-green/90' :
                 compatibility >= 50 ? 'bg-brasil-yellow/90' : 'bg-orange-500/90'
               }`}>
-              <Heart className="w-3.5 h-3.5 text-white" fill="white" />
-              <span className="text-white text-xs font-black uppercase tracking-wide">{compatibility}% Match</span>
+              <Heart className="w-3 h-3 text-white" fill="white" />
+              <span className="text-white text-[10px] font-black uppercase tracking-wide">{compatibility}% Match</span>
             </div>
           )}
 
           {/* Nome e Idade */}
-          <div className="flex items-end gap-3">
-            <h2 className="text-4xl font-black text-white tracking-tighter drop-shadow-xl leading-none">
+          <div className="flex items-end gap-2">
+            <h2 className="text-3xl font-black text-white tracking-tighter drop-shadow-xl leading-none">
               {profile.name}
             </h2>
-            <span className="text-2xl font-medium text-white/90 mb-1 drop-shadow-md">{profile.age}</span>
+            <span className="text-xl font-medium text-white/90 mb-0.5 drop-shadow-md">{profile.age}</span>
             {profile.verified && (
-              <BadgeCheck className="w-8 h-8 text-brasil-blue fill-white mb-0.5 drop-shadow-lg" />
+              <BadgeCheck className="w-6 h-6 text-brasil-blue fill-white mb-0.5 drop-shadow-lg" />
             )}
           </div>
 
