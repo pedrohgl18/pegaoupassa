@@ -830,23 +830,39 @@ const App: React.FC = () => {
     // Empty State
     if (feedProfiles.length === 0) {
       return (
-        <div className="relative h-full w-full bg-zinc-900 flex flex-col items-center justify-center p-8 text-center animate-fade-in">
-          <div className="w-24 h-24 bg-zinc-800 rounded-full flex items-center justify-center mb-6">
-            <Search size={40} className="text-zinc-500" />
+        <div className="relative h-full w-full bg-zinc-950 flex flex-col items-center justify-center p-8 text-center animate-fade-in overflow-hidden">
+          {/* Background Effects */}
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute top-[-20%] left-[-20%] w-[80%] h-[80%] bg-brasil-blue/10 blur-[100px] rounded-full" />
+            <div className="absolute bottom-[-20%] right-[-20%] w-[80%] h-[80%] bg-brasil-green/5 blur-[100px] rounded-full" />
           </div>
-          <h2 className="text-2xl font-bold text-white mb-2">Acabaram os perfis</h2>
-          <p className="text-zinc-400 mb-8">
-            Não encontramos mais ninguém com seus filtros atuais. Tente aumentar a distância ou mudar a idade.
-          </p>
-          <Button onClick={() => setShowFilterModal(true)}>
-            Ajustar Filtros
-          </Button>
-          <button
-            onClick={fetchFeed}
-            className="mt-6 text-brasil-yellow font-bold text-sm hover:underline"
-          >
-            Tentar buscar novamente
-          </button>
+
+          <div className="relative z-10 flex flex-col items-center">
+            <div className="w-24 h-24 bg-zinc-900 rounded-3xl flex items-center justify-center mb-6 shadow-2xl shadow-black/50 border border-zinc-800 rotate-3 transform hover:rotate-6 transition-transform duration-500">
+              <Search size={40} className="text-zinc-500" />
+            </div>
+
+            <h2 className="text-3xl font-black text-white mb-3 tracking-tight">
+              Zerou o Game! <span className="text-2xl">🎮</span>
+            </h2>
+
+            <p className="text-zinc-400 mb-8 max-w-[280px] text-sm font-medium leading-relaxed">
+              Você já viu todo mundo por aqui. Que tal expandir seus horizontes?
+            </p>
+
+            <div className="flex flex-col gap-3 w-full max-w-[260px]">
+              <Button onClick={() => setShowFilterModal(true)} className="!bg-white !text-black hover:!bg-zinc-200 !font-black !h-12 shadow-lg shadow-white/5">
+                Ajustar Filtros
+              </Button>
+
+              <button
+                onClick={fetchFeed}
+                className="py-3 text-brasil-yellow font-bold text-xs uppercase tracking-widest hover:text-brasil-yellow/80 transition-colors"
+              >
+                Buscar Novamente
+              </button>
+            </div>
+          </div>
         </div>
       );
     }

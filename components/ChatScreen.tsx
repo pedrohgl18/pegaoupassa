@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Send, MoreVertical, Image as ImageIcon, Mic, Trash2, AlertTriangle, Crown, Loader2, StopCircle, X, ZoomIn, Flag, Reply, Smile } from 'lucide-react';
+import { ArrowLeft, Send, MoreVertical, Image as ImageIcon, Mic, Trash2, AlertTriangle, Crown, Loader2, StopCircle, X, ZoomIn, Flag, Reply, Smile, Check } from 'lucide-react';
 import { messages as messagesApi, matches as matchesApi, supabase, pushNotifications, reports, messageReactions } from '../lib/supabase';
 
 interface Message {
@@ -32,19 +32,19 @@ interface ChatScreenProps {
 // Componente Lightbox para visualização em tela cheia
 const ImageLightbox: React.FC<{ imageUrl: string; onClose: () => void }> = ({ imageUrl, onClose }) => {
   return (
-    <div 
+    <div
       className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center animate-in fade-in duration-200"
       onClick={onClose}
     >
-      <button 
+      <button
         onClick={onClose}
         className="absolute top-4 right-4 p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors z-10"
         style={{ top: 'calc(env(safe-area-inset-top, 16px) + 16px)' }}
       >
         <X size={28} />
       </button>
-      <img 
-        src={imageUrl} 
+      <img
+        src={imageUrl}
         alt="Imagem em tela cheia"
         className="max-w-full max-h-full object-contain p-4"
         onClick={(e) => e.stopPropagation()}
@@ -53,15 +53,15 @@ const ImageLightbox: React.FC<{ imageUrl: string; onClose: () => void }> = ({ im
   );
 };
 
-const ChatScreen: React.FC<ChatScreenProps> = ({ 
-  conversationId, 
+const ChatScreen: React.FC<ChatScreenProps> = ({
+  conversationId,
   matchId,
-  currentUserId, 
+  currentUserId,
   currentUserIsVip = false,
   currentUserName = 'Alguém',
   otherUserId,
-  otherUserName, 
-  otherUserPhoto, 
+  otherUserName,
+  otherUserPhoto,
   otherUserIsVip = false,
   onBack,
   onUnmatch
@@ -72,7 +72,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({
   const [showMenu, setShowMenu] = useState(false);
   const [showUnmatchConfirm, setShowUnmatchConfirm] = useState(false);
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
-  
+
   // Presence State
   const [otherUserOnline, setOtherUserOnline] = useState(false);
   const [otherUserTyping, setOtherUserTyping] = useState(false);
@@ -94,7 +94,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({
   const [showReportModal, setShowReportModal] = useState(false);
   const [reportReason, setReportReason] = useState('');
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
-  
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const channelRef = useRef<any>(null);
@@ -116,15 +116,15 @@ const ChatScreen: React.FC<ChatScreenProps> = ({
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setNewMessage(e.target.value);
-    
+
     // Typing indicator logic
     if (!isTyping) {
       setIsTyping(true);
       channelRef.current?.track({ online_at: new Date().toISOString(), typing: true });
     }
-    
+
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-    
+
     typingTimeoutRef.current = setTimeout(() => {
       setIsTyping(false);
       channelRef.current?.track({ online_at: new Date().toISOString(), typing: false });
@@ -137,7 +137,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({
 
   const handleUnmatch = async () => {
     if (!matchId) return;
-    
+
     const { error } = await matchesApi.unmatch(matchId);
     if (error) {
       alert('Erro ao desfazer match');
@@ -149,7 +149,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({
 
   useEffect(() => {
     fetchMessages();
-    
+
     // Subscribe to real-time changes (Messages + Presence)
     const channel = supabase.channel(`chat:${conversationId}`);
     channelRef.current = channel;
@@ -181,10 +181,10 @@ const ChatScreen: React.FC<ChatScreenProps> = ({
             presenceList.forEach(p => allPresences.push(p));
           }
         });
-        
+
         // Filter to get only OTHER user's presence (not mine)
         const otherUserPresences = allPresences.filter((p: any) => p.user_id === otherUserId);
-        
+
         if (otherUserPresences.length > 0) {
           setOtherUserOnline(true);
           // Check if the OTHER user is typing
@@ -197,10 +197,10 @@ const ChatScreen: React.FC<ChatScreenProps> = ({
       })
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED') {
-          await channel.track({ 
+          await channel.track({
             user_id: currentUserId,
-            online_at: new Date().toISOString(), 
-            typing: false 
+            online_at: new Date().toISOString(),
+            typing: false
           });
         }
       });
@@ -266,9 +266,9 @@ const ChatScreen: React.FC<ChatScreenProps> = ({
     if (!error) {
       setMessages(prev => prev.map(msg => {
         if (msg.id === messageId) {
-          return { 
-            ...msg, 
-            reactions: (msg.reactions || []).filter(r => r.user_id !== currentUserId) 
+          return {
+            ...msg,
+            reactions: (msg.reactions || []).filter(r => r.user_id !== currentUserId)
           };
         }
         return msg;
@@ -287,13 +287,13 @@ const ChatScreen: React.FC<ChatScreenProps> = ({
   // Delete Message Handler
   const handleDeleteMessage = async (messageId: string) => {
     if (!confirm('Apagar esta mensagem para todos?')) return;
-    
+
     const { error } = await supabase
       .from('messages')
       .delete()
       .eq('id', messageId)
       .eq('sender_id', currentUserId); // Só pode deletar próprias mensagens
-    
+
     if (error) {
       showToast('Erro ao apagar mensagem', 'error');
     } else {
@@ -309,7 +309,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({
       showToast('Selecione um motivo', 'error');
       return;
     }
-    
+
     const { error } = await reports.create(currentUserId, otherUserId, reportReason);
     if (error) {
       showToast('Erro ao enviar denúncia', 'error');
@@ -331,10 +331,10 @@ const ChatScreen: React.FC<ChatScreenProps> = ({
 
     const msgContent = content.trim();
     if (!mediaUrl) setNewMessage(''); // Clear input if text only
-    
+
     const replyToId = replyingTo?.id;
     setReplyingTo(null); // Clear reply state
-    
+
     // Optimistic UI Update
     const tempId = 'temp-' + Date.now();
     const tempMessage: Message = {
@@ -348,7 +348,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({
       reply_to_id: replyToId,
       reply_to: replyingTo ? { id: replyingTo.id, content: replyingTo.content, sender_id: replyingTo.sender_id } as Message : undefined
     };
-    
+
     setMessages(prev => [...prev, tempMessage]);
     scrollToBottom();
 
@@ -364,13 +364,13 @@ const ChatScreen: React.FC<ChatScreenProps> = ({
       })
       .select()
       .single();
-    
+
     if (error) {
       setMessages(prev => prev.filter(m => m.id !== tempId));
       showToast('Erro ao enviar mensagem', 'error');
     } else if (data) {
       setMessages(prev => prev.map(m => m.id === tempId ? { ...data as any, reply_to: tempMessage.reply_to } : m));
-      
+
       // Enviar push notification para o outro usuário (não bloqueia a UI)
       const preview = mediaType === 'image' ? '📷 Foto' : mediaType === 'audio' ? '🎤 Áudio' : (msgContent.length > 50 ? msgContent.substring(0, 50) + '...' : msgContent);
       pushNotifications.notifyMessage(otherUserId, currentUserName, preview, conversationId, currentUserId).catch(console.error);
@@ -396,7 +396,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({
   const handlePhotoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    
+
     if (file.size > 10 * 1024 * 1024) {
       alert('Arquivo muito grande (Max 10MB)');
       return;
@@ -406,9 +406,9 @@ const ChatScreen: React.FC<ChatScreenProps> = ({
     try {
       const fileExt = file.name.split('.').pop()?.toLowerCase() || 'jpg';
       const fileName = `${currentUserId}/${Date.now()}.${fileExt}`;
-      
+
       console.log('Iniciando upload:', fileName, 'Tipo:', file.type, 'Tamanho:', file.size);
-      
+
       const { error: uploadError, data: uploadData } = await supabase.storage
         .from('chat-media')
         .upload(fileName, file, {
@@ -440,7 +440,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({
       }
 
       console.log('Foto enviada - URL assinada:', signedUrlData.signedUrl);
-      
+
       // Enviar com texto "📷 Foto" para aparecer na lista de conversas
       await handleSend('📷 Foto', signedUrlData.signedUrl, 'image');
     } catch (error) {
@@ -483,11 +483,11 @@ const ChatScreen: React.FC<ChatScreenProps> = ({
         mediaRecorder.start();
         setIsRecording(true);
         setRecordingTime(0);
-        
+
         const interval = setInterval(() => {
           setRecordingTime(prev => prev + 1);
         }, 1000);
-        
+
         (mediaRecorder as any).timerInterval = interval;
         mediaRecorder.addEventListener('stop', () => clearInterval(interval));
 
@@ -502,7 +502,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({
     setUploadingMedia(true);
     try {
       const fileName = `${currentUserId}/${Date.now()}.webm`;
-      
+
       const { error: uploadError, data: uploadData } = await supabase.storage
         .from('chat-media')
         .upload(fileName, blob, {
@@ -551,17 +551,17 @@ const ChatScreen: React.FC<ChatScreenProps> = ({
         </div>
         <h2 className="text-2xl font-bold text-zinc-900 mb-2">Desfazer Match?</h2>
         <p className="text-zinc-500 mb-8">
-          Isso removerá {otherUserName} dos seus matches e apagará a conversa. 
+          Isso removerá {otherUserName} dos seus matches e apagará a conversa.
           Essa pessoa poderá aparecer novamente no seu feed.
         </p>
         <div className="flex flex-col gap-3 w-full">
-          <button 
+          <button
             onClick={handleUnmatch}
             className="w-full py-4 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 transition-colors"
           >
             Sim, desfazer match
           </button>
-          <button 
+          <button
             onClick={() => setShowUnmatchConfirm(false)}
             className="w-full py-4 bg-zinc-100 text-zinc-700 font-bold rounded-xl hover:bg-zinc-200 transition-colors"
           >
@@ -573,114 +573,137 @@ const ChatScreen: React.FC<ChatScreenProps> = ({
   }
 
   return (
-    <div className="flex flex-col h-full w-full bg-white animate-in slide-in-from-right duration-300 relative">
+    <div className="flex flex-col h-full w-full bg-zinc-50 animate-in slide-in-from-right duration-300 relative">
       {/* Lightbox para visualização de imagem em tela cheia */}
       {lightboxImage && (
         <ImageLightbox imageUrl={lightboxImage} onClose={() => setLightboxImage(null)} />
       )}
 
-      {/* Header */}
-      <div 
-        className="flex items-center justify-between px-4 py-3 border-b border-zinc-100 bg-white shadow-sm z-10"
+      {/* Header Premium */}
+      <div
+        className="flex items-center justify-between px-4 py-3 bg-white border-b border-zinc-100 shadow-sm z-20"
         style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 12px)' }}
       >
-        <div className="flex items-center gap-3 flex-1 min-w-0">
-          <button onClick={onBack} className="p-2 -ml-2 text-zinc-500 hover:bg-zinc-100 rounded-full flex-shrink-0 transition-colors">
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          <button onClick={onBack} className="p-2 -ml-2 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600 rounded-full flex-shrink-0 transition-all active:scale-95">
             <ArrowLeft size={24} />
           </button>
-          <div className="relative flex-shrink-0">
-            <img src={otherUserPhoto} alt={otherUserName} className="w-11 h-11 rounded-full object-cover border-2 border-zinc-100" />
-            {otherUserOnline && (
-              <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-white"></div>
-            )}
-          </div>
-          <div className="min-w-0 flex-1">
-            <h3 className="font-bold text-zinc-900 flex items-center gap-1.5 truncate">
-              {otherUserName}
-              {otherUserIsVip && <Crown size={14} className="text-brasil-yellow fill-brasil-yellow flex-shrink-0" />}
-            </h3>
-            <span className={`text-xs font-medium ${otherUserOnline ? 'text-green-600' : 'text-zinc-400'}`}>
-              {otherUserTyping ? 'Digitando...' : (otherUserOnline ? 'Online agora' : 'Offline')}
-            </span>
+
+          <div className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer active:opacity-70 transition-opacity">
+            <div className="relative flex-shrink-0">
+              <img src={otherUserPhoto} alt={otherUserName} className="w-10 h-10 rounded-full object-cover border border-zinc-200 shadow-sm" />
+              {otherUserOnline && (
+                <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white shadow-sm"></div>
+              )}
+            </div>
+            <div className="min-w-0 flex-1">
+              <h3 className="font-black text-zinc-900 flex items-center gap-1.5 truncate text-base tracking-tight">
+                {otherUserName}
+                {otherUserIsVip && <Crown size={14} className="text-brasil-yellow fill-brasil-yellow flex-shrink-0 drop-shadow-sm" />}
+              </h3>
+              <span className={`text-xs font-bold truncate block ${otherUserOnline ? 'text-green-600' : 'text-zinc-400'}`}>
+                {otherUserTyping ? 'Digitando...' : (otherUserOnline ? 'Online agora' : 'Toque para ver perfil')}
+              </span>
+            </div>
           </div>
         </div>
+
         <div className="relative flex-shrink-0">
-          <button 
+          <button
             onClick={() => setShowMenu(!showMenu)}
-            className="p-2.5 hover:bg-zinc-100 rounded-full text-zinc-500 transition-colors"
+            className="w-10 h-10 flex items-center justify-center hover:bg-zinc-100 rounded-full text-zinc-400 hover:text-zinc-600 transition-colors active:scale-95"
           >
-            <MoreVertical size={22} />
+            <MoreVertical size={20} />
           </button>
 
-          {/* Dropdown Menu */}
+          {/* Dropdown Menu Premium */}
           {showMenu && (
-            <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-zinc-100 overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-200">
-              <button 
-                onClick={() => {
-                  setShowMenu(false);
-                  setShowReportModal(true);
-                }}
-                className="w-full px-4 py-3 text-left text-amber-600 hover:bg-amber-50 flex items-center gap-3 font-medium text-sm border-b border-zinc-100"
-              >
-                <Flag size={18} />
-                Denunciar
-              </button>
-              <button 
-                onClick={() => {
-                  setShowMenu(false);
-                  setShowUnmatchConfirm(true);
-                }}
-                className="w-full px-4 py-3 text-left text-red-500 hover:bg-red-50 flex items-center gap-3 font-medium text-sm"
-              >
-                <Trash2 size={18} />
-                Desfazer Match
-              </button>
-            </div>
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)} />
+              <div className="absolute top-full right-0 mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-zinc-100 overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-200 origin-top-right">
+                <div className="p-1.5 space-y-0.5">
+                  <button
+                    onClick={() => {
+                      setShowMenu(false);
+                      setShowReportModal(true);
+                    }}
+                    className="w-full px-4 py-3 text-left text-amber-600 hover:bg-amber-50 rounded-xl flex items-center gap-3 font-bold text-sm transition-colors"
+                  >
+                    <Flag size={18} />
+                    Denunciar Usuário
+                  </button>
+                  <div className="h-px bg-zinc-100 mx-2 my-1" />
+                  <button
+                    onClick={() => {
+                      setShowMenu(false);
+                      setShowUnmatchConfirm(true);
+                    }}
+                    className="w-full px-4 py-3 text-left text-red-500 hover:bg-red-50 rounded-xl flex items-center gap-3 font-bold text-sm transition-colors"
+                  >
+                    <Trash2 size={18} />
+                    Desfazer Match
+                  </button>
+                </div>
+              </div>
+            </>
           )}
         </div>
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4 bg-zinc-50 space-y-4" onClick={() => { setShowMenu(false); setSelectedMessage(null); setShowReactionPicker(false); }}>
+      <div
+        className="flex-1 overflow-y-auto p-4 space-y-6 bg-zinc-50"
+        onClick={() => { setShowMenu(false); setSelectedMessage(null); setShowReactionPicker(false); }}
+      >
         {loading ? (
-          <div className="flex justify-center pt-10"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brasil-blue"></div></div>
+          <div className="flex justify-center pt-20">
+            <Loader2 className="animate-spin text-brasil-blue" size={32} />
+          </div>
         ) : messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-zinc-400 space-y-2">
-            <div className="w-20 h-20 bg-zinc-100 rounded-full flex items-center justify-center mb-2">
-               <span className="text-4xl"></span>
+          <div className="flex flex-col items-center justify-center h-full text-center px-8 pb-20 opacity-0 animate-fade-in" style={{ animationDelay: '0.2s', animationFillMode: 'forwards' }}>
+            <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center mb-6 shadow-xl shadow-zinc-200/50 border border-zinc-100">
+              <span className="text-5xl">👋</span>
             </div>
-            <p>Diga oi para {otherUserName}!</p>
+            <h3 className="text-xl font-black text-zinc-900 mb-2">Comece o papo!</h3>
+            <p className="text-zinc-400 font-medium text-sm max-w-[240px]">
+              Dê um "Oi" criativo para {otherUserName} e veja onde isso vai dar.
+            </p>
           </div>
         ) : (
-          messages.map((msg) => {
+          messages.map((msg, index) => {
             const isMe = msg.sender_id === currentUserId;
             const hasMedia = msg.media_url && msg.media_type;
             const isImageMessage = msg.media_type === 'image';
             const isAudioMessage = msg.media_type === 'audio';
-            const timestamp = new Date(msg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            const timestamp = new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             const isSelected = selectedMessage?.id === msg.id;
             const messageReactionsList = msg.reactions || [];
-            
+
+            // Grouping logic visual (se a msg anterior for do mesmo user)
+            const prevMsg = messages[index - 1];
+            const isSequence = prevMsg && prevMsg.sender_id === msg.sender_id;
+
             return (
-              <div key={msg.id} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
+              <div key={msg.id} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} ${isSequence ? 'mt-1' : 'mt-4'}`}>
                 {/* Reply Quote */}
                 {msg.reply_to && (
-                  <div className={`text-xs mb-1 px-3 py-1.5 rounded-lg max-w-[70%] ${
-                    isMe ? 'bg-blue-900/30 text-blue-200 mr-2' : 'bg-zinc-200 text-zinc-600 ml-2'
-                  }`}>
-                    <span className="font-medium block text-[10px] opacity-70">
-                      {msg.reply_to.sender_id === currentUserId ? 'Você' : otherUserName}
-                    </span>
-                    <span className="line-clamp-1">{msg.reply_to.content || '📷 Mídia'}</span>
+                  <div className={`text-xs mb-1 px-3 py-2 rounded-xl max-w-[85%] flex items-center gap-2 border-l-4 ${isMe ? 'bg-blue-50 text-blue-600 border-blue-400 mr-1' : 'bg-white text-zinc-600 border-zinc-300 ml-1 shadow-sm'
+                    }`}>
+                    <Reply size={12} className="opacity-50" />
+                    <div>
+                      <span className="font-bold block text-[10px] opacity-70 mb-0.5">
+                        {msg.reply_to.sender_id === currentUserId ? 'Você' : otherUserName}
+                      </span>
+                      <span className="line-clamp-1 font-medium">{msg.reply_to.content || (msg.reply_to.media_type ? '📷 Mídia' : 'Mensagem')}</span>
+                    </div>
                   </div>
                 )}
-                
-                <div 
-                  className={`relative max-w-[75%] rounded-2xl shadow-sm overflow-hidden ${
-                    isMe 
-                      ? 'bg-brasil-blue text-white' 
-                      : 'bg-white text-zinc-800 border border-zinc-200'
-                  } ${isSelected ? 'ring-2 ring-brasil-yellow' : ''}`}
+
+                <div
+                  className={`relative max-w-[80%] shadow-sm overflow-hidden group transition-all duration-200 ${isMe
+                    ? 'bg-brasil-blue text-white rounded-2xl rounded-tr-sm'
+                    : 'bg-white text-zinc-800 border border-zinc-100 rounded-2xl rounded-tl-sm'
+                    } ${isSelected ? 'ring-2 ring-brasil-yellow scale-[1.02] shadow-md z-10' : ''}`}
                   onContextMenu={(e) => {
                     e.preventDefault();
                     handleMessageLongPress(msg);
@@ -692,67 +715,59 @@ const ChatScreen: React.FC<ChatScreenProps> = ({
                     document.addEventListener('touchmove', clear, { once: true });
                   }}
                 >
-                  {/* Image Content - Thumbnail com altura máxima e clicável para lightbox */}
+                  {/* Image Content */}
                   {isImageMessage && msg.media_url && (
-                    <div 
-                      className="relative cursor-pointer group"
+                    <div
+                      className="relative cursor-pointer group/img"
                       onClick={() => setLightboxImage(msg.media_url!)}
                     >
-                      <img 
-                        src={msg.media_url} 
-                        alt="Foto enviada" 
-                        className="w-full max-h-[200px] object-cover"
+                      <img
+                        src={msg.media_url}
+                        alt="Foto enviada"
+                        className="w-full max-h-[280px] object-cover bg-zinc-100"
                         loading="lazy"
-                        onError={(e) => {
-                          const img = e.target as HTMLImageElement;
-                          img.onerror = null;
-                          img.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="150" viewBox="0 0 200 150"><rect fill="%23e5e7eb" width="200" height="150"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="%236b7280" font-size="14">Imagem indisponível</text></svg>';
-                          img.className = 'w-full h-auto opacity-60';
-                        }}
                       />
-                      {/* Indicador de zoom */}
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                        <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 rounded-full p-2">
-                          <ZoomIn size={20} className="text-white" />
-                        </div>
+                      <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/10 transition-colors flex items-center justify-center">
+                        <ZoomIn size={24} className="text-white opacity-0 group-hover/img:opacity-100 transition-opacity drop-shadow-md" />
                       </div>
                     </div>
                   )}
-                  
+
                   {/* Audio Content */}
                   {isAudioMessage && msg.media_url && (
-                    <div className="p-3">
-                      <audio controls src={msg.media_url} className="max-w-[200px]" />
+                    <div className="p-3 flex items-center gap-2 min-w-[200px]">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isMe ? 'bg-white/20' : 'bg-zinc-100'}`}>
+                        <Mic size={16} className={isMe ? 'text-white' : 'text-zinc-500'} />
+                      </div>
+                      <audio controls src={msg.media_url} className="h-8 w-full max-w-[180px]" />
                     </div>
                   )}
 
-                  {/* Text Content ou Timestamp para mídia */}
-                  <div className={`px-3 py-2 ${isImageMessage ? 'pt-1.5' : ''}`}>
-                    {/* Texto - só mostra se tiver conteúdo E não for apenas mídia */}
+                  {/* Text Content */}
+                  <div className={`px-4 py-2.5 ${isImageMessage ? 'pt-2' : ''}`}>
                     {msg.content && !hasMedia && (
-                      <p className="text-sm leading-relaxed">{msg.content}</p>
+                      <p className="text-[15px] leading-relaxed font-medium whitespace-pre-wrap">{msg.content}</p>
                     )}
-                    
-                    {/* Timestamp - sempre fora da imagem, no fundo da bolha */}
-                    <span className={`text-[10px] block text-right ${
-                      isMe ? 'text-blue-200' : 'text-zinc-400'
-                    } ${msg.content && !hasMedia ? 'mt-1' : ''}`}>
-                      {timestamp}
-                    </span>
+
+                    {/* Timestamp & Checks */}
+                    <div className={`flex items-center justify-end gap-1 mt-1 ${isMe ? 'text-blue-100' : 'text-zinc-300'}`}>
+                      <span className="text-[10px] font-bold">{timestamp}</span>
+                      {isMe && (
+                        msg.is_read ? <div className="flex"><Check size={12} strokeWidth={3} /><Check size={12} strokeWidth={3} className="-ml-1.5" /></div> : <Check size={12} strokeWidth={3} />
+                      )}
+                    </div>
                   </div>
                 </div>
 
                 {/* Reactions Display */}
                 {messageReactionsList.length > 0 && (
-                  <div className={`flex gap-0.5 mt-1 ${isMe ? 'mr-2' : 'ml-2'}`}>
+                  <div className={`flex gap-0.5 -mt-2 z-10 ${isMe ? 'mr-2' : 'ml-2'}`}>
                     {messageReactionsList.map((r, idx) => (
                       <button
                         key={idx}
                         onClick={() => r.user_id === currentUserId ? handleRemoveReaction(msg.id) : null}
-                        className={`text-sm px-1.5 py-0.5 rounded-full bg-white shadow-sm border border-zinc-100 ${
-                          r.user_id === currentUserId ? 'cursor-pointer hover:bg-zinc-100' : 'cursor-default'
-                        }`}
-                        title={r.user_id === currentUserId ? 'Clique para remover' : ''}
+                        className={`text-xs px-1.5 py-0.5 rounded-full bg-white shadow-md border border-zinc-100 flex items-center justify-center min-w-[24px] h-[24px] ${r.user_id === currentUserId ? 'cursor-pointer hover:bg-zinc-50 ring-1 ring-brasil-blue/20' : 'cursor-default'
+                          }`}
                       >
                         {r.reaction}
                       </button>
@@ -760,25 +775,25 @@ const ChatScreen: React.FC<ChatScreenProps> = ({
                   </div>
                 )}
 
-                {/* Reaction Picker - appears when message is selected */}
+                {/* Reaction Picker */}
                 {isSelected && showReactionPicker && (
-                  <div 
-                    className={`flex gap-1 mt-2 p-2 bg-white rounded-2xl shadow-xl border border-zinc-200 animate-in zoom-in-95 duration-200 ${isMe ? 'mr-2' : 'ml-2'}`}
+                  <div
+                    className={`flex items-center gap-1 mt-2 p-1.5 bg-white rounded-full shadow-xl border border-zinc-100 animate-in zoom-in-95 duration-200 ${isMe ? 'mr-0 origin-top-right' : 'ml-0 origin-top-left'}`}
                     onClick={(e) => e.stopPropagation()}
                   >
                     {REACTIONS.map((emoji) => (
                       <button
                         key={emoji}
                         onClick={() => handleAddReaction(msg.id, emoji)}
-                        className="text-xl p-1.5 hover:bg-zinc-100 rounded-full transition-colors"
+                        className="text-xl w-9 h-9 flex items-center justify-center hover:bg-zinc-100 rounded-full transition-transform hover:scale-110 active:scale-90"
                       >
                         {emoji}
                       </button>
                     ))}
-                    <div className="w-px bg-zinc-200 mx-1" />
+                    <div className="w-px h-6 bg-zinc-200 mx-1" />
                     <button
                       onClick={() => handleReply(msg)}
-                      className="p-1.5 hover:bg-zinc-100 rounded-full transition-colors text-zinc-600"
+                      className="w-9 h-9 flex items-center justify-center hover:bg-zinc-100 rounded-full transition-colors text-zinc-600"
                       title="Responder"
                     >
                       <Reply size={18} />
@@ -786,7 +801,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({
                     {isMe && (
                       <button
                         onClick={() => handleDeleteMessage(msg.id)}
-                        className="p-1.5 hover:bg-red-100 rounded-full transition-colors text-red-500"
+                        className="w-9 h-9 flex items-center justify-center hover:bg-red-50 rounded-full transition-colors text-red-500"
                         title="Apagar"
                       >
                         <Trash2 size={18} />
@@ -800,11 +815,11 @@ const ChatScreen: React.FC<ChatScreenProps> = ({
         )}
         {otherUserTyping && (
           <div className="flex justify-start">
-             <div className="bg-white border border-zinc-200 px-4 py-3 rounded-2xl shadow-sm flex items-center gap-1.5">
-                <div className="w-2 h-2 bg-zinc-400 rounded-full animate-bounce" style={{animationDelay: '0ms'}} />
-                <div className="w-2 h-2 bg-zinc-400 rounded-full animate-bounce" style={{animationDelay: '150ms'}} />
-                <div className="w-2 h-2 bg-zinc-400 rounded-full animate-bounce" style={{animationDelay: '300ms'}} />
-             </div>
+            <div className="bg-white border border-zinc-200 px-4 py-3 rounded-2xl shadow-sm flex items-center gap-1.5">
+              <div className="w-2 h-2 bg-zinc-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+              <div className="w-2 h-2 bg-zinc-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+              <div className="w-2 h-2 bg-zinc-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+            </div>
           </div>
         )}
         <div ref={messagesEndRef} />
@@ -824,7 +839,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({
               </span>
             </div>
           </div>
-          <button 
+          <button
             onClick={() => setReplyingTo(null)}
             className="p-1 hover:bg-zinc-200 rounded-full text-zinc-500"
           >
@@ -834,34 +849,33 @@ const ChatScreen: React.FC<ChatScreenProps> = ({
       )}
 
       {/* Input Area - com safe-area para evitar sobreposição com barra de navegação */}
-      <div 
+      <div
         className="bg-white border-t border-zinc-100 px-3 pt-3"
         style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 12px) + 12px)' }}
       >
-        <input 
-          type="file" 
-          ref={fileInputRef} 
-          accept="image/*" 
-          className="hidden" 
+        <input
+          type="file"
+          ref={fileInputRef}
+          accept="image/*"
+          className="hidden"
           onChange={handlePhotoSelect}
         />
-        
+
         <div className="flex items-end gap-2">
           {/* Botão de Foto - com fundo distinto */}
-          <button 
+          <button
             onClick={handlePhotoClick}
             disabled={uploadingMedia || isRecording}
-            className={`p-2.5 rounded-full transition-colors flex-shrink-0 ${
-              currentUserIsVip 
-                ? 'text-zinc-600 bg-zinc-100 hover:bg-zinc-200' 
-                : 'text-zinc-300 bg-zinc-50'
-            }`}
+            className={`p-2.5 rounded-full transition-colors flex-shrink-0 ${currentUserIsVip
+              ? 'text-zinc-600 bg-zinc-100 hover:bg-zinc-200'
+              : 'text-zinc-300 bg-zinc-50'
+              }`}
           >
             {uploadingMedia ? <Loader2 size={22} className="animate-spin" /> : <ImageIcon size={22} />}
           </button>
 
           {/* Campo de texto */}
-          <div 
+          <div
             className="flex-1 bg-zinc-100 rounded-2xl flex items-center min-h-[48px] px-4 py-2 cursor-text"
             onClick={handleInputFocus}
           >
@@ -871,7 +885,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({
                 Gravando... {formatTime(recordingTime)}
               </div>
             ) : (
-              <textarea 
+              <textarea
                 ref={textareaRef}
                 value={newMessage}
                 onChange={handleInputChange}
@@ -886,22 +900,21 @@ const ChatScreen: React.FC<ChatScreenProps> = ({
 
           {/* Botão de enviar ou microfone - com fundo distinto */}
           {newMessage.trim() ? (
-            <button 
+            <button
               onClick={() => handleSend()}
               className="p-2.5 bg-brasil-blue text-white rounded-full shadow-lg hover:bg-blue-700 transition-all active:scale-90 flex-shrink-0"
             >
               <Send size={22} />
             </button>
           ) : (
-            <button 
+            <button
               onClick={handleMicClick}
-              className={`p-2.5 rounded-full transition-colors flex-shrink-0 ${
-                isRecording 
-                  ? 'bg-red-500 text-white hover:bg-red-600 shadow-lg animate-pulse' 
-                  : (currentUserIsVip 
-                      ? 'text-zinc-600 bg-zinc-100 hover:bg-zinc-200' 
-                      : 'text-zinc-300 bg-zinc-50')
-              }`}
+              className={`p-2.5 rounded-full transition-colors flex-shrink-0 ${isRecording
+                ? 'bg-red-500 text-white hover:bg-red-600 shadow-lg animate-pulse'
+                : (currentUserIsVip
+                  ? 'text-zinc-600 bg-zinc-100 hover:bg-zinc-200'
+                  : 'text-zinc-300 bg-zinc-50')
+                }`}
             >
               {isRecording ? <StopCircle size={22} /> : <Mic size={22} />}
             </button>
@@ -920,7 +933,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({
             </div>
             <h3 className="text-xl font-bold text-center text-zinc-900 mb-2">Denunciar {otherUserName}</h3>
             <p className="text-sm text-zinc-500 text-center mb-6">Por que você quer denunciar esta pessoa?</p>
-            
+
             <div className="space-y-2 mb-6">
               {[
                 'Perfil falso',
@@ -933,17 +946,16 @@ const ChatScreen: React.FC<ChatScreenProps> = ({
                 <button
                   key={reason}
                   onClick={() => setReportReason(reason)}
-                  className={`w-full py-3 px-4 rounded-xl text-left text-sm font-medium transition-colors ${
-                    reportReason === reason
-                      ? 'bg-amber-100 text-amber-700 border-2 border-amber-400'
-                      : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200'
-                  }`}
+                  className={`w-full py-3 px-4 rounded-xl text-left text-sm font-medium transition-colors ${reportReason === reason
+                    ? 'bg-amber-100 text-amber-700 border-2 border-amber-400'
+                    : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200'
+                    }`}
                 >
                   {reason}
                 </button>
               ))}
             </div>
-            
+
             <div className="flex gap-3">
               <button
                 onClick={() => { setShowReportModal(false); setReportReason(''); }}
@@ -965,10 +977,9 @@ const ChatScreen: React.FC<ChatScreenProps> = ({
 
       {/* Toast Notification */}
       {toast && (
-        <div 
-          className={`absolute top-20 left-1/2 -translate-x-1/2 px-6 py-3 rounded-xl shadow-xl animate-in fade-in slide-in-from-top-5 duration-300 z-50 ${
-            toast.type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
-          }`}
+        <div
+          className={`absolute top-20 left-1/2 -translate-x-1/2 px-6 py-3 rounded-xl shadow-xl animate-in fade-in slide-in-from-top-5 duration-300 z-50 ${toast.type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+            }`}
         >
           <span className="font-medium text-sm">{toast.message}</span>
         </div>
