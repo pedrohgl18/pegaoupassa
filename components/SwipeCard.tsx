@@ -85,9 +85,8 @@ const SwipeCard: React.FC<SwipeCardProps> = ({ profile, isActive, swipeDirection
         style={{ backgroundImage: `url(${photos[currentPhotoIndex]})` }}
       />
 
-      {/* Gradient Overlay - Suave e Linear (70% -> 0%) */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />
-      <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black via-black/40 to-transparent pointer-events-none" />
+      {/* Gradient Overlay - Muito Mais Suave */}
+      <div className="absolute inset-x-0 bottom-0 h-[40%] bg-gradient-to-t from-black/60 via-black/20 to-transparent pointer-events-none" />
 
       {/* Action Overlay - Like */}
       <div
@@ -109,9 +108,22 @@ const SwipeCard: React.FC<SwipeCardProps> = ({ profile, isActive, swipeDirection
         </div>
       </div>
 
+      {/* Photo Indicators - Top Only (v2 - Single Bar) */}
+      {photos.length > 1 && (
+        <div className="absolute top-0 left-0 right-0 z-30 px-4 pt-3 flex gap-1.5">
+          {photos.map((_, index) => (
+            <div
+              key={index}
+              className={`h-1 rounded-full flex-1 transition-all duration-300 ${index === currentPhotoIndex ? 'bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)]' : 'bg-white/30'
+                }`}
+            />
+          ))}
+        </div>
+      )}
+
       {/* Content - Layout Otimizado */}
-      <div className="absolute bottom-0 left-0 right-0 pointer-events-none" style={{ paddingBottom: 'calc(85px + env(safe-area-inset-bottom, 0px))' }}>
-        <div className="px-5 pb-1 flex flex-col gap-3 pr-[100px]">
+      <div className="absolute bottom-0 left-0 right-0 pointer-events-none" style={{ paddingBottom: 'calc(110px + env(safe-area-inset-bottom, 0px))' }}>
+        <div className="px-5 pb-3 flex flex-col gap-3">
 
           {/* Compatibilidade por Signo */}
           {myZodiacSign && profile.zodiacSign && compatibility > 0 && (
@@ -182,19 +194,6 @@ const SwipeCard: React.FC<SwipeCardProps> = ({ profile, isActive, swipeDirection
             <p className="text-sm font-medium text-white/90 leading-relaxed drop-shadow-md line-clamp-2 max-w-full">
               {profile.bio}
             </p>
-          )}
-
-          {/* Photo Indicators - Full Width Bottom */}
-          {photos.length > 1 && (
-            <div className="flex gap-1.5 mt-3 w-full px-1">
-              {photos.map((_, index) => (
-                <div
-                  key={index}
-                  className={`h-1 rounded-full flex-1 transition-all duration-300 ${index === currentPhotoIndex ? 'bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)]' : 'bg-white/20'
-                    }`}
-                />
-              ))}
-            </div>
           )}
         </div>
       </div>

@@ -944,7 +944,7 @@ const App: React.FC = () => {
           {/* Floating Action Buttons - Redesigned Area */}
           <div
             className="absolute right-4 z-20 flex flex-col gap-4 items-center"
-            style={{ bottom: 'calc(90px + env(safe-area-inset-bottom, 0px))' }}
+            style={{ bottom: 'calc(100px + env(safe-area-inset-bottom, 0px))' }}
           >
             {/* Pega (Down) - Like */}
             <button

@@ -20,7 +20,10 @@ const BottomNav: React.FC<BottomNavProps> = ({ currentScreen, onNavigate }) => {
   ];
 
   return (
-    <div className="absolute bottom-6 left-0 right-0 z-50 flex justify-center pointer-events-none">
+    <div
+      className="absolute left-0 right-0 z-50 flex justify-center pointer-events-none"
+      style={{ bottom: 'calc(16px + env(safe-area-inset-bottom, 0px))' }}
+    >
       <div className="bg-black/90 backdrop-blur-2xl border border-white/10 rounded-full shadow-2xl shadow-black/80 px-6 py-3 flex items-center gap-8 pointer-events-auto transform transition-all duration-300 hover:scale-105">
         {navItems.map((item) => {
           const isActive = currentScreen === item.id;
@@ -34,14 +37,14 @@ const BottomNav: React.FC<BottomNavProps> = ({ currentScreen, onNavigate }) => {
             >
               {/* Active Indicator Background */}
               {isActive && (
-                <div className="absolute inset-0 bg-white/10 rounded-full blur-md animate-pulse" />
+                <div className="absolute inset-0 bg-brasil-yellow/20 rounded-full blur-md animate-pulse" />
               )}
 
               <Icon
                 size={28}
                 strokeWidth={isActive ? 2.5 : 2}
                 className={`transition-all duration-300 z-10 ${isActive
-                    ? 'text-brasil-yellow scale-110 drop-shadow-[0_0_10px_rgba(255,223,0,0.6)]'
+                    ? 'text-brasil-yellow scale-110 drop-shadow-[0_0_12px_rgba(255,223,0,0.8)]'
                     : 'text-zinc-500 group-hover:text-zinc-300'
                   }`}
                 fill={isActive && item.id === ScreenState.HOME ? 'currentColor' : 'none'}
@@ -49,7 +52,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ currentScreen, onNavigate }) => {
 
               {/* Dot Indicator */}
               {isActive && (
-                <div className="absolute -bottom-1 w-1.5 h-1.5 bg-brasil-yellow rounded-full shadow-[0_0_4px_#FFDF00]" />
+                <div className="absolute -bottom-1 w-1.5 h-1.5 bg-brasil-yellow rounded-full shadow-[0_0_6px_#FFDF00] animate-pulse" />
               )}
             </button>
           );
