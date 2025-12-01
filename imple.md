@@ -228,6 +228,7 @@
 | 28/11/2025 | **Correção Upload Fotos** | Alterado para usar URL assinada (signedUrl) em vez de URL pública, pois o bucket é privado. |
 | 28/11/2025 | **Menu Configurações** | Adicionado tela de configurações com Deletar Conta, Notificações e Privacidade. |
 | 28/11/2025 | **Refatoração Perfil** | Nova UI premium para a tela de perfil, com header imersivo e novos cards de estatísticas. |
+| 01/12/2025 | **Refatoração Visual** | Nova tela de carregamento (LoadingScreen) e menu inferior flutuante (BottomNav). |
 
 ---
 

@@ -13,6 +13,7 @@ import RangeSlider from './components/RangeSlider';
 import Profile from './components/Profile';
 import ChatList from './components/ChatList';
 import VipScreen from './components/VipScreen';
+import LoadingScreen from './components/LoadingScreen';
 import { useAuth } from './hooks/useAuth';
 import { profiles, swipes, matches, supabase } from './lib/supabase';
 import { Chat } from './types';
@@ -1146,19 +1147,7 @@ const App: React.FC = () => {
   // Main Render Switch
   // Tela de boot: mostrar enquanto authLoading for true
   if (authLoading) {
-    return (
-      <div className="w-full h-[100dvh] bg-black text-white overflow-hidden flex flex-col items-center justify-center font-sans">
-        <div className="w-full max-w-[480px] h-full relative bg-brasil-blue shadow-2xl overflow-hidden flex flex-col items-center justify-center px-4">
-          <div className="relative mb-4">
-            <div className="w-20 h-20 bg-gradient-to-tr from-brasil-yellow to-brasil-green rounded-[1.5rem] flex items-center justify-center rotate-6 border-4 border-white/20">
-              <ThumbsUp size={40} className="text-white -rotate-6" fill="white" />
-            </div>
-          </div>
-          <Loader2 size={28} className="text-white animate-spin mb-3" />
-          <p className="text-white/70 text-sm">Carregando...</p>
-        </div>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   // Mostra erro se houver problema com o banco

@@ -54,6 +54,11 @@ html, body, #root {
   .animate-scale-in {
     animation: scaleIn 0.2s ease-out forwards;
   }
+
+  .animate-gradient-xy {
+    animation: gradient-xy 6s ease infinite;
+    background-size: 400% 400%;
+  }
 }
 
 @keyframes fadeIn {
@@ -76,6 +81,12 @@ html, body, #root {
   to { transform: scale(1); opacity: 1; }
 }
 
+@keyframes gradient-xy {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
 /* Skeleton Loading Animation */
 .skeleton {
   background: linear-gradient(
@@ -94,11 +105,11 @@ html, body, #root {
 }
 
 @keyframes float {
-  0% { transform: translateY(0px) rotate(0deg); opacity: 0; }
-  20% { opacity: 1; }
-  100% { transform: translateY(-100px) rotate(360deg); opacity: 0; }
+  0% { transform: translateY(0px) rotate(6deg); }
+  50% { transform: translateY(-10px) rotate(3deg); }
+  100% { transform: translateY(0px) rotate(6deg); }
 }
 
 .animate-float {
-  animation: float 4s linear infinite;
+  animation: float 4s ease-in-out infinite;
 }
