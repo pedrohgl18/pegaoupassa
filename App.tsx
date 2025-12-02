@@ -15,7 +15,7 @@ import ChatList from './components/ChatList';
 import VipScreen from './components/VipScreen';
 import LoadingScreen from './components/LoadingScreen';
 import { useAuth } from './hooks/useAuth';
-import { profiles, swipes, matches, supabase } from './lib/supabase';
+import { profiles, swipes, matches, messages, supabase } from './lib/supabase';
 import { Chat } from './types';
 import { Capacitor } from '@capacitor/core';
 
@@ -542,18 +542,42 @@ const App: React.FC = () => {
         console.error('Erro ao registrar swipe:', error);
       }
 
+      // Se houve match, enviar push notification para ambos
       if (match) {
         console.log('MATCH ENCONTRADO!', match);
         // Fetch my photo for the modal
-        // Ideally this should be in the profile context, but for now we use a fallback or fetch
         const myPhoto = user.user_metadata.avatar_url || 'https://picsum.photos/200';
 
         setMatchModalData({
           isOpen: true,
           theirName: currentProfile.name,
           theirPhotoUrl: currentProfile.imageUrl,
-          myPhotoUrl: myPhoto, // We can improve this later to get the real photo from DB
+          myPhotoUrl: myPhoto,
         });
+
+        // Tentar enviar mensagem de quebra-gelo automática (Bio)
+        if (profile?.bio) {
+          console.log('Enviando quebra-gelo automático...');
+          // Aguardar um pouco para garantir que a trigger criou a conversa
+          setTimeout(async () => {
+            try {
+              const { data: conversation } = await supabase
+                .from('conversations')
+                .select('id')
+                .eq('match_id', match.id)
+                .single();
+
+              if (conversation) {
+                await messages.send(conversation.id, user.id, profile.bio, currentProfile.id);
+                console.log('Quebra-gelo enviado com sucesso!');
+              } else {
+                console.log('Conversa não encontrada para envio do quebra-gelo.');
+              }
+            } catch (err) {
+              console.error('Erro ao enviar quebra-gelo:', err);
+            }
+          }, 1000); // 1 segundo de delay
+        }
 
         // Refresh matches list in background
         fetchMatches();
@@ -893,6 +917,10 @@ const App: React.FC = () => {
                 swipeDirection={lastDirection}
                 dragOffset={dragOffset}
                 myZodiacSign={profile?.zodiac_sign}
+                activeFilters={{
+                  minHeight: minHeight,
+                  zodiac: filterZodiac
+                }}
               />
             </div>
           )}
@@ -1014,7 +1042,7 @@ const App: React.FC = () => {
           <div className="space-y-3">
             <div className="flex justify-between text-sm font-bold">
               <span className="text-zinc-500">Distância Máxima</span>
-              <span className="text-brasil-blue">{maxDistance}km</span>
+              <span className="text-brasil-blue">{maxDistance >= 100 ? '100km+' : `${maxDistance}km`}</span>
             </div>
             <input
               type="range"

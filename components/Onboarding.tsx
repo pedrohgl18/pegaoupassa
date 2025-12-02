@@ -25,7 +25,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ userId, profile }) => {
   const [gender, setGender] = useState<'male' | 'female' | 'other' | null>(profile?.gender || null);
   const [interestedIn, setInterestedIn] = useState<'male' | 'female' | 'both' | null>(profile?.looking_for || null);
   const [photoUrls, setPhotoUrls] = useState<string[]>([]);
-  
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Carregar fotos existentes do usuário ao montar
@@ -79,7 +79,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ userId, profile }) => {
   // Finalizar step 4: Localização e completar onboarding
   const handleFinish = async () => {
     setSaving(true);
-    
+
     // Tentar obter localização
     let locationData: Record<string, number> = {};
     if ('geolocation' in navigator) {
@@ -95,14 +95,14 @@ const Onboarding: React.FC<OnboardingProps> = ({ userId, profile }) => {
         console.log('Localização não disponível');
       }
     }
-    
+
     const { error } = await profiles.updateOnboarding(userId, {
       ...locationData,
       onboarding_completed: true,
       is_active: true,
     }, 4);
     setSaving(false);
-    
+
     if (error) { alert('Erro ao finalizar. Tente novamente.'); return; }
     // Recarrega a página para atualizar o estado do perfil
     window.location.reload();
@@ -133,11 +133,11 @@ const Onboarding: React.FC<OnboardingProps> = ({ userId, profile }) => {
         <div className="w-16 h-16 bg-brasil-yellow rounded-2xl flex items-center justify-center shadow-lg rotate-3">
           <MessageSquare size={32} className="text-brasil-blue" />
         </div>
-        <h2 className="text-3xl font-extrabold text-brasil-green">Fala tu!</h2>
-        <p className="text-zinc-500">Como você quer ser chamado(a)?</p>
+        <h2 className="text-3xl font-extrabold text-brasil-green">Fala tu! 🗣️</h2>
+        <p className="text-zinc-500 text-sm">Nós sabemos que todo mundo já tá de saco cheio das mesmas perguntas. Escreva aí o que você quer que compartilhemos na mensagem assim que você fizer um match:</p>
         <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Seu nome"
           className="w-full p-4 rounded-xl border-2 border-zinc-200 focus:border-brasil-blue bg-zinc-50 text-zinc-900 font-bold text-lg" />
-        <textarea value={bio} onChange={(e) => setBio(e.target.value)} placeholder="Uma bio legal pro seu perfil..."
+        <textarea value={bio} onChange={(e) => setBio(e.target.value)} placeholder="Sua mensagem de quebra-gelo..."
           className="w-full h-24 p-4 rounded-xl border-2 border-zinc-200 focus:border-brasil-blue bg-zinc-50 text-zinc-900 resize-none" />
       </div>
       <Button fullWidth onClick={handleStep1Complete} disabled={!name.trim() || saving}>
@@ -156,11 +156,11 @@ const Onboarding: React.FC<OnboardingProps> = ({ userId, profile }) => {
         <h2 className="text-3xl font-extrabold text-brasil-blue">Mostra a cara!</h2>
         <p className="text-zinc-500">Adicione pelo menos 1 foto (máximo 6)</p>
         <div className="grid grid-cols-3 gap-3">
-          {[0,1,2,3,4,5].map((i) => (
-            <div key={i} className={`relative aspect-[3/4] rounded-xl overflow-hidden ${i===0?'col-span-2 row-span-2':''}`}>
+          {[0, 1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className={`relative aspect-[3/4] rounded-xl overflow-hidden ${i === 0 ? 'col-span-2 row-span-2' : ''}`}>
               {photoUrls[i] ? (
                 <>
-                  <img src={photoUrls[i]} className="w-full h-full object-cover" alt={`Foto ${i+1}`} />
+                  <img src={photoUrls[i]} className="w-full h-full object-cover" alt={`Foto ${i + 1}`} />
                   <button onClick={() => handleRemovePhoto(i)} className="absolute top-2 right-2 w-8 h-8 bg-red-500 rounded-full flex items-center justify-center shadow-lg">
                     <X size={16} className="text-white" />
                   </button>
@@ -172,8 +172,8 @@ const Onboarding: React.FC<OnboardingProps> = ({ userId, profile }) => {
                 </>
               ) : (
                 <button onClick={() => fileInputRef.current?.click()} disabled={uploadingPhoto || i !== photoUrls.length}
-                  className={`w-full h-full border-2 border-dashed rounded-xl flex items-center justify-center transition-all ${i===photoUrls.length?'border-brasil-blue bg-brasil-blue/5 hover:bg-brasil-blue/10':'border-zinc-200 bg-zinc-50'}`}>
-                  {uploadingPhoto && i===photoUrls.length ? <Loader2 size={24} className="animate-spin text-brasil-blue" /> : <Plus size={20} className={i===photoUrls.length?'text-brasil-blue':'text-zinc-400'} />}
+                  className={`w-full h-full border-2 border-dashed rounded-xl flex items-center justify-center transition-all ${i === photoUrls.length ? 'border-brasil-blue bg-brasil-blue/5 hover:bg-brasil-blue/10' : 'border-zinc-200 bg-zinc-50'}`}>
+                  {uploadingPhoto && i === photoUrls.length ? <Loader2 size={24} className="animate-spin text-brasil-blue" /> : <Plus size={20} className={i === photoUrls.length ? 'text-brasil-blue' : 'text-zinc-400'} />}
                 </button>
               )}
             </div>
@@ -182,7 +182,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ userId, profile }) => {
         <input ref={fileInputRef} type="file" accept="image/*" onChange={handlePhotoSelect} className="hidden" />
         <p className="text-sm text-zinc-500 text-center">{photoUrls.length}/6 fotos</p>
       </div>
-      <Button fullWidth onClick={handleStep2Complete} disabled={photoUrls.length===0 || uploadingPhoto || saving}>
+      <Button fullWidth onClick={handleStep2Complete} disabled={photoUrls.length === 0 || uploadingPhoto || saving}>
         {saving ? <Loader2 size={20} className="animate-spin mr-2" /> : null}
         Próximo <ChevronRight size={20} />
       </Button>
@@ -201,16 +201,16 @@ const Onboarding: React.FC<OnboardingProps> = ({ userId, profile }) => {
         <div className="space-y-2">
           <label className="text-sm font-bold text-brasil-green flex items-center gap-2"><User size={16} />Você se identifica como</label>
           <div className="grid grid-cols-3 gap-2">
-            {[{id:'male',label:'Ele'},{id:'female',label:'Ela'},{id:'other',label:'Outro'}].map(o => (
-              <button key={o.id} onClick={() => setGender(o.id as any)} className={`p-3 rounded-lg border-2 font-bold transition-all ${gender===o.id?'border-brasil-blue bg-brasil-blue text-white':'border-zinc-200 text-zinc-400 hover:border-brasil-blue/50'}`}>{o.label}</button>
+            {[{ id: 'male', label: 'Ele' }, { id: 'female', label: 'Ela' }, { id: 'other', label: 'Outro' }].map(o => (
+              <button key={o.id} onClick={() => setGender(o.id as any)} className={`p-3 rounded-lg border-2 font-bold transition-all ${gender === o.id ? 'border-brasil-blue bg-brasil-blue text-white' : 'border-zinc-200 text-zinc-400 hover:border-brasil-blue/50'}`}>{o.label}</button>
             ))}
           </div>
         </div>
         <div className="space-y-2">
           <label className="text-sm font-bold text-brasil-green flex items-center gap-2"><Heart size={16} />Interessado em</label>
           <div className="grid grid-cols-3 gap-2">
-            {[{id:'male',label:'Eles'},{id:'female',label:'Elas'},{id:'both',label:'Ambos'}].map(o => (
-              <button key={o.id} onClick={() => setInterestedIn(o.id as any)} className={`p-3 rounded-lg border-2 font-bold transition-all ${interestedIn===o.id?'border-brasil-blue bg-brasil-blue text-white':'border-zinc-200 text-zinc-400 hover:border-brasil-blue/50'}`}>{o.label}</button>
+            {[{ id: 'male', label: 'Eles' }, { id: 'female', label: 'Elas' }, { id: 'both', label: 'Ambos' }].map(o => (
+              <button key={o.id} onClick={() => setInterestedIn(o.id as any)} className={`p-3 rounded-lg border-2 font-bold transition-all ${interestedIn === o.id ? 'border-brasil-blue bg-brasil-blue text-white' : 'border-zinc-200 text-zinc-400 hover:border-brasil-blue/50'}`}>{o.label}</button>
             ))}
           </div>
         </div>
@@ -243,11 +243,11 @@ const Onboarding: React.FC<OnboardingProps> = ({ userId, profile }) => {
 
   return (
     <div className="h-full w-full bg-brasil-light flex flex-col">
-      <div className="w-full h-1 bg-zinc-200"><div className="h-full bg-brasil-green transition-all duration-300" style={{width:`${(step/4)*100}%`}} /></div>
-      {step===1 && renderStep1()}
-      {step===2 && renderStep2()}
-      {step===3 && renderStep3()}
-      {step===4 && renderStep4()}
+      <div className="w-full h-1 bg-zinc-200"><div className="h-full bg-brasil-green transition-all duration-300" style={{ width: `${(step / 4) * 100}%` }} /></div>
+      {step === 1 && renderStep1()}
+      {step === 2 && renderStep2()}
+      {step === 3 && renderStep3()}
+      {step === 4 && renderStep4()}
     </div>
   );
 };

@@ -247,12 +247,12 @@ const EditProfile: React.FC<EditProfileProps> = ({ userId, onBack, onSave, onLog
           </div>
 
           <div className="space-y-1">
-            <label className="text-sm font-bold text-zinc-700">Bio</label>
+            <label className="text-sm font-bold text-zinc-700">Mensagem de Quebra-Gelo (Match)</label>
             <textarea
               value={bio}
               onChange={(e) => setBio(e.target.value)}
               className="w-full h-32 p-4 rounded-xl border-2 border-zinc-200 focus:border-brasil-blue bg-white text-zinc-900 resize-none outline-none transition-colors"
-              placeholder="Escreva algo sobre você..."
+              placeholder="Escreva o que você quer que compartilhemos na mensagem assim que você fizer um match..."
             />
           </div>
         </section>

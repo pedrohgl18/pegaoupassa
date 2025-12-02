@@ -1,5 +1,5 @@
 import React from 'react';
-import { Crown, Pencil, SlidersHorizontal, ChevronRight, Star, Settings, LogOut, MapPin, Sparkles } from 'lucide-react';
+import { Crown, Pencil, SlidersHorizontal, ChevronRight, Star, Settings, LogOut, MapPin, Sparkles, Heart } from 'lucide-react';
 import Button from './Button';
 import { ScreenState } from '../types';
 
@@ -20,29 +20,24 @@ const Profile: React.FC<ProfileProps> = ({
     swipeCount,
     onNavigate,
     onLogout,
-    onShowFilter
+    onShowFilter,
 }) => {
     const avatarUrl = user?.user_metadata?.avatar_url || profile?.photos?.[0]?.url || "https://picsum.photos/seed/me/400/400";
-    // Use second photo for cover if available, otherwise use a gradient style (handled in render)
     const hasCoverPhoto = profile?.photos?.length > 1;
     const coverUrl = hasCoverPhoto ? profile.photos[1].url : null;
 
     return (
         <div className="flex flex-col h-full w-full bg-zinc-50 animate-fade-in overflow-y-auto no-scrollbar pb-24">
 
-            {/* Simple Header with Avatar */}
+            {/* Header with Avatar */}
             <div className="relative w-full pt-20 pb-6 flex flex-col items-center bg-zinc-50">
                 <div className="relative">
                     <div className="w-32 h-32 rounded-full p-1 bg-white shadow-xl">
-                        <img
-                            src={avatarUrl}
-                            className="w-full h-full rounded-full object-cover"
-                            alt="Avatar"
-                        />
+                        <img src={avatarUrl} className="w-full h-full rounded-full object-cover" alt="Avatar" />
                     </div>
                     {isVip && (
-                        <div className="absolute -top-2 -right-2 w-10 h-10 bg-gradient-to-br from-yellow-300 to-yellow-500 rounded-full border-4 border-white flex items-center justify-center shadow-lg animate-bounce-slow">
-                            <Crown size={18} className="text-white" fill="white" />
+                        <div className="absolute -top-2 -right-2 w-12 h-12 bg-primary rounded-full border-4 border-white/30 flex items-center justify-center z-20 shadow-lg animate-bounce">
+                            <Heart size={20} className="text-white" fill="white" />
                         </div>
                     )}
                     {!isVip && (
@@ -58,7 +53,6 @@ const Profile: React.FC<ProfileProps> = ({
 
             {/* Main Content */}
             <div className="mt-2 px-6 flex flex-col items-center gap-6">
-
                 {/* Name & Bio */}
                 <div className="text-center space-y-1">
                     <h1 className="text-2xl font-extrabold text-zinc-900 flex items-center justify-center gap-2">
@@ -75,28 +69,30 @@ const Profile: React.FC<ProfileProps> = ({
 
                 {/* Stats Cards */}
                 <div className="grid grid-cols-2 gap-4 w-full">
-                    <div className="bg-white p-4 rounded-2xl shadow-sm border border-zinc-100 flex flex-col items-center gap-1 relative overflow-hidden group">
-                        <div className="absolute inset-0 bg-gradient-to-br from-brasil-green/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                        <span className="text-3xl font-extrabold text-brasil-green">{swipeCount}</span>
+                    {/* Swipe Count Card */}
+                    <div className="bg-white/20 backdrop-blur-lg p-4 rounded-2xl shadow-sm border border-zinc-100 flex flex-col items-center gap-1 relative overflow-hidden group">
+                        <div className="absolute inset-0 bg-gradient-to-br from-secondary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <span className="text-3xl font-extrabold text-primary">{swipeCount}</span>
                         <span className="text-xs text-zinc-400 font-bold uppercase tracking-wider">Pegas Hoje</span>
                     </div>
 
+                    {/* VIP Card */}
                     <div
                         onClick={() => !isVip && onNavigate(ScreenState.VIP)}
-                        className={`p-4 rounded-2xl shadow-sm border flex flex-col items-center gap-1 relative overflow-hidden group cursor-pointer transition-all ${isVip ? 'bg-white border-zinc-100' : 'bg-gradient-to-br from-zinc-900 to-zinc-800 border-transparent text-white'}`}
+                        className={`p-4 rounded-2xl shadow-sm border flex flex-col items-center gap-1 relative overflow-hidden group cursor-pointer transition-all ${isVip ? 'bg-white border-zinc-100' : 'bg-gradient-to-br from-yellow-500 to-orange-600 border-transparent text-white'}`}
                     >
                         {isVip ? (
                             <>
-                                <span className="text-3xl font-extrabold text-brasil-blue">VIP</span>
+                                <span className="text-3xl font-extrabold text-primary">VIP</span>
                                 <span className="text-xs text-zinc-400 font-bold uppercase tracking-wider">Ativo</span>
                             </>
                         ) : (
                             <>
                                 <div className="flex items-center gap-2">
-                                    <Crown size={20} className="text-yellow-400" fill="#FACC15" />
-                                    <span className="text-lg font-bold text-white">Seja VIP</span>
+                                    <Crown size={20} className="text-white" fill="#FFFFFF" />
+                                    <span className="text-lg font-bold text-white drop-shadow-md">Seja VIP</span>
                                 </div>
-                                <span className="text-[10px] text-zinc-400 font-medium mt-1">Desbloqueie tudo</span>
+                                <span className="text-[10px] text-white/90 font-medium mt-1">Desbloqueie tudo</span>
                             </>
                         )}
                     </div>
@@ -108,10 +104,10 @@ const Profile: React.FC<ProfileProps> = ({
 
                     <button
                         onClick={() => onNavigate(ScreenState.EDIT_PROFILE)}
-                        className="w-full p-4 bg-white rounded-2xl border border-zinc-100 shadow-sm flex items-center justify-between group hover:border-brasil-blue/30 transition-all active:scale-[0.98]"
+                        className="w-full p-4 bg-white rounded-2xl border border-zinc-100 shadow-sm flex items-center justify-between group hover:border-primary/30 transition-all active:scale-[0.98]"
                     >
                         <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 rounded-full bg-blue-50 text-brasil-blue flex items-center justify-center group-hover:bg-brasil-blue group-hover:text-white transition-colors">
+                            <div className="w-10 h-10 rounded-full bg-blue-50 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
                                 <Pencil size={20} />
                             </div>
                             <div className="text-left">
@@ -119,15 +115,15 @@ const Profile: React.FC<ProfileProps> = ({
                                 <p className="text-xs text-zinc-400">Fotos, bio, interesses</p>
                             </div>
                         </div>
-                        <ChevronRight size={20} className="text-zinc-300 group-hover:text-brasil-blue transition-colors" />
+                        <ChevronRight size={20} className="text-zinc-300 group-hover:text-primary transition-colors" />
                     </button>
 
                     <button
                         onClick={onShowFilter}
-                        className="w-full p-4 bg-white rounded-2xl border border-zinc-100 shadow-sm flex items-center justify-between group hover:border-brasil-green/30 transition-all active:scale-[0.98]"
+                        className="w-full p-4 bg-white rounded-2xl border border-zinc-100 shadow-sm flex items-center justify-between group hover:border-secondary/30 transition-all active:scale-[0.98]"
                     >
                         <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 rounded-full bg-green-50 text-brasil-green flex items-center justify-center group-hover:bg-brasil-green group-hover:text-white transition-colors">
+                            <div className="w-10 h-10 rounded-full bg-green-50 text-secondary flex items-center justify-center group-hover:bg-secondary group-hover:text-white transition-colors">
                                 <SlidersHorizontal size={20} />
                             </div>
                             <div className="text-left">
@@ -135,16 +131,16 @@ const Profile: React.FC<ProfileProps> = ({
                                 <p className="text-xs text-zinc-400">Idade, distância, gênero</p>
                             </div>
                         </div>
-                        <ChevronRight size={20} className="text-zinc-300 group-hover:text-brasil-green transition-colors" />
+                        <ChevronRight size={20} className="text-zinc-300 group-hover:text-secondary transition-colors" />
                     </button>
 
                     {!isVip && (
                         <button
                             onClick={() => onNavigate(ScreenState.VIP)}
-                            className="w-full p-4 bg-gradient-to-r from-brasil-yellow/10 to-brasil-green/10 rounded-2xl border border-brasil-yellow/20 shadow-sm flex items-center justify-between group transition-all active:scale-[0.98]"
+                            className="w-full p-4 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-2xl border border-yellow-100 shadow-sm flex items-center justify-between group transition-all active:scale-[0.98]"
                         >
                             <div className="flex items-center gap-4">
-                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brasil-yellow to-orange-400 text-white flex items-center justify-center shadow-lg shadow-orange-200">
+                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 text-white flex items-center justify-center shadow-lg shadow-orange-200">
                                     <Sparkles size={20} />
                                 </div>
                                 <div className="text-left">

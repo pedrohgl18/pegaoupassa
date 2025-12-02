@@ -10,9 +10,13 @@ interface SwipeCardProps {
   dragOffset?: number;
   style?: React.CSSProperties;
   myZodiacSign?: string;
+  activeFilters?: {
+    minHeight?: number;
+    zodiac?: string;
+  };
 }
 
-const SwipeCard: React.FC<SwipeCardProps> = ({ profile, isActive, swipeDirection, dragOffset = 0, style, myZodiacSign }) => {
+const SwipeCard: React.FC<SwipeCardProps> = ({ profile, isActive, swipeDirection, dragOffset = 0, style, myZodiacSign, activeFilters }) => {
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const photos = profile.photos && profile.photos.length > 0 ? profile.photos : [profile.imageUrl];
 
@@ -90,11 +94,11 @@ const SwipeCard: React.FC<SwipeCardProps> = ({ profile, isActive, swipeDirection
 
       {/* Action Overlay - Like */}
       <div
-        className="absolute inset-0 bg-brasil-green/30 flex items-center justify-center z-20 pointer-events-none transition-opacity duration-200"
+        className="absolute inset-0 bg-primary/30 flex items-center justify-center z-20 pointer-events-none transition-opacity duration-200"
         style={{ opacity: likeOpacity }}
       >
         <div className="bg-white/20 backdrop-blur-md p-8 rounded-full border-4 border-white shadow-2xl">
-          <ThumbsUp size={80} className="text-white" fill="white" />
+          <Heart size={80} className="text-white" fill="white" />
         </div>
       </div>
 
@@ -127,9 +131,9 @@ const SwipeCard: React.FC<SwipeCardProps> = ({ profile, isActive, swipeDirection
 
           {/* Compatibilidade por Signo */}
           {myZodiacSign && profile.zodiacSign && compatibility > 0 && (
-            <div className="flex items-center gap-2 mb-1">
+            <div className="flex items-center gap-2 mb-0">
               <div className="bg-black/40 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 flex items-center gap-1.5 shadow-lg">
-                <Heart size={12} className="text-brasil-yellow" fill="#FFDF00" />
+                <Heart size={12} className="text-accent" fill="#F28F3B" />
                 <span className="text-xs font-bold text-white">{compatibility}% Match</span>
               </div>
             </div>
@@ -144,7 +148,7 @@ const SwipeCard: React.FC<SwipeCardProps> = ({ profile, isActive, swipeDirection
               {profile.age}
             </span>
             {profile.verified && (
-              <BadgeCheck className="text-brasil-blue w-7 h-7 mb-0.5" fill="white" />
+              <BadgeCheck className="text-primary w-7 h-7 mb-0.5" fill="white" />
             )}
           </div>
 
@@ -158,17 +162,27 @@ const SwipeCard: React.FC<SwipeCardProps> = ({ profile, isActive, swipeDirection
 
             {/* Signo */}
             {profile.zodiacSign && (
-              <div className="flex items-center gap-1.5 bg-white/10 backdrop-blur-md px-3 h-8 rounded-lg border border-white/10 shadow-sm">
-                <Sparkles size={14} className="text-brasil-yellow" />
-                <span className="text-xs font-bold text-white">{profile.zodiacSign}</span>
+              <div className={`flex items-center gap-1.5 bg-white/10 backdrop-blur-md px-3 h-8 rounded-lg border shadow-sm ${activeFilters?.zodiac === profile.zodiacSign
+                  ? 'border-yellow-400/50 bg-yellow-500/20'
+                  : 'border-white/10'
+                }`}>
+                <Sparkles size={14} className={activeFilters?.zodiac === profile.zodiacSign ? "text-yellow-400" : "text-white"} />
+                <span className={`text-xs font-bold ${activeFilters?.zodiac === profile.zodiacSign ? "text-yellow-400" : "text-white"}`}>
+                  {profile.zodiacSign}
+                </span>
               </div>
             )}
 
             {/* Altura */}
             {profile.height && (
-              <div className="flex items-center gap-1.5 bg-white/10 backdrop-blur-md px-3 h-8 rounded-lg border border-white/10 shadow-sm">
-                <Ruler size={14} className="text-white" />
-                <span className="text-xs font-bold text-white">{profile.height} cm</span>
+              <div className={`flex items-center gap-1.5 bg-white/10 backdrop-blur-md px-3 h-8 rounded-lg border shadow-sm ${activeFilters?.minHeight && profile.height >= activeFilters.minHeight
+                  ? 'border-yellow-400/50 bg-yellow-500/20'
+                  : 'border-white/10'
+                }`}>
+                <Ruler size={14} className={activeFilters?.minHeight && profile.height >= activeFilters.minHeight ? "text-yellow-400" : "text-white"} />
+                <span className={`text-xs font-bold ${activeFilters?.minHeight && profile.height >= activeFilters.minHeight ? "text-yellow-400" : "text-white"}`}>
+                  {profile.height} cm
+                </span>
               </div>
             )}
 
@@ -189,12 +203,7 @@ const SwipeCard: React.FC<SwipeCardProps> = ({ profile, isActive, swipeDirection
             )}
           </div>
 
-          {/* Bio */}
-          {profile.bio && profile.bio !== 'Teste' && (
-            <p className="text-sm font-medium text-white/90 leading-relaxed drop-shadow-md line-clamp-2 max-w-full">
-              {profile.bio}
-            </p>
-          )}
+
         </div>
       </div>
     </div>

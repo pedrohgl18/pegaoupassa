@@ -556,6 +556,14 @@ export const swipes = {
           if (swiper?.name) {
             pushNotifications.notifyMatch(swiperId, swiped?.name || 'Alguém', match.id, swipedId)
           }
+        } else {
+          // Se NÃO houve match, notificar o like recebido (apenas Like ou Super Like)
+          console.log('👍 Like registrado (sem match). Enviando notificação...')
+          const { data: swiper } = await supabase.from('profiles').select('name').eq('id', swiperId).single()
+
+          if (swiper?.name) {
+            pushNotifications.notifyLike(swipedId, swiper.name)
+          }
         }
 
         return { data, error: null, match }

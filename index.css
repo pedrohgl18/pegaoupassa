@@ -2,6 +2,22 @@
 @tailwind components;
 @tailwind utilities;
 
+/* New color palette variables */
+:root {
+  --color-primary: #3A7CA5;
+  /* Azul-ciano */
+  --color-secondary: #6C5B7B;
+  /* Roxo-acinzentado */
+  --color-accent: #F28F3B;
+  /* Laranja-dourado */
+  --color-background: #F5F9FC;
+  /* Fundo quase branco */
+  --color-gray-light: #E2E8F0;
+  /* Cinza claro */
+  --color-gray-dark: #2D3748;
+  /* Cinza escuro */
+}
+
 /* Safe Area para dispositivos móveis (notch, barra de navegação) */
 :root {
   --sat: env(safe-area-inset-top, 0px);
@@ -10,12 +26,12 @@
   --sar: env(safe-area-inset-right, 0px);
 }
 
-html, body, #root {
+html,
+body,
+#root {
   height: 100%;
   width: 100%;
-  /* Em apps nativos, o padding de safe area já é tratado pela WebView/Capacitor.
-     Manter aqui apenas o mínimo para evitar barras coloridas extras. */
-  background: #000; /* neutro por trás do frame do app */
+  background: #000;
 }
 
 /* Garantir que modais e overlays respeitem safe areas */
@@ -33,16 +49,61 @@ html, body, #root {
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
 
 @layer utilities {
+  .bg-primary {
+    background-color: var(--color-primary);
+  }
+
+  .text-primary {
+    color: var(--color-primary);
+  }
+
+  .border-primary {
+    border-color: var(--color-primary);
+  }
+
+  .bg-secondary {
+    background-color: var(--color-secondary);
+  }
+
+  .text-secondary {
+    color: var(--color-secondary);
+  }
+
+  .border-secondary {
+    border-color: var(--color-secondary);
+  }
+
+  .bg-accent {
+    background-color: var(--color-accent);
+  }
+
+  .text-accent {
+    color: var(--color-accent);
+  }
+
+  .border-accent {
+    border-color: var(--color-accent);
+  }
+
+  .bg-gray-dark {
+    background-color: var(--color-gray-dark);
+  }
+
+  .text-gray-dark {
+    color: var(--color-gray-dark);
+  }
+
   .animate-fade-in {
     animation: fadeIn 0.3s ease-out forwards;
   }
-  
+
   .animate-slide-up {
     animation: slideUp 0.3s ease-out forwards;
   }
@@ -59,57 +120,100 @@ html, body, #root {
     animation: gradient-xy 6s ease infinite;
     background-size: 400% 400%;
   }
+
+  .animate-float {
+    animation: float 4s ease-in-out infinite;
+  }
+
+  /* Skeleton Loading Animation */
+  .skeleton {
+    background: linear-gradient(90deg,
+        rgba(255, 255, 255, 0.1) 25%,
+        rgba(255, 255, 255, 0.2) 50%,
+        rgba(255, 255, 255, 0.1) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slideUp {
-  from { transform: translateY(20px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 @keyframes slideInRight {
-  from { transform: translateX(100%); }
-  to { transform: translateX(0); }
+  from {
+    transform: translateX(100%);
+  }
+
+  to {
+    transform: translateX(0);
+  }
 }
 
 @keyframes scaleIn {
-  from { transform: scale(0.95); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 @keyframes gradient-xy {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
+  0% {
+    background-position: 0% 50%;
+  }
 
-/* Skeleton Loading Animation */
-.skeleton {
-  background: linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0.1) 25%,
-    rgba(255, 255, 255, 0.2) 50%,
-    rgba(255, 255, 255, 0.1) 75%
-  );
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 @keyframes shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 @keyframes float {
-  0% { transform: translateY(0px) rotate(6deg); }
-  50% { transform: translateY(-10px) rotate(3deg); }
-  100% { transform: translateY(0px) rotate(6deg); }
-}
+  0% {
+    transform: translateY(0px) rotate(6deg);
+  }
 
-.animate-float {
-  animation: float 4s ease-in-out infinite;
+  50% {
+    transform: translateY(-10px) rotate(3deg);
+  }
+
+  100% {
+    transform: translateY(0px) rotate(6deg);
+  }
 }

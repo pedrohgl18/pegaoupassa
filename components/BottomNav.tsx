@@ -24,7 +24,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ currentScreen, onNavigate }) => {
       className="absolute left-0 right-0 z-50 flex justify-center pointer-events-none"
       style={{ bottom: 'calc(16px + env(safe-area-inset-bottom, 0px))' }}
     >
-      <div className="bg-black/90 backdrop-blur-2xl border border-white/10 rounded-full shadow-2xl shadow-black/80 px-6 py-3 flex items-center gap-8 pointer-events-auto transform transition-all duration-300 hover:scale-105">
+      <div className="bg-white/90 backdrop-blur-xl border border-white/20 rounded-full shadow-2xl px-6 py-3 flex items-center gap-8 pointer-events-auto transform transition-all duration-300 hover:scale-105">
         {navItems.map((item) => {
           const isActive = currentScreen === item.id;
           const Icon = item.icon;
@@ -37,22 +37,22 @@ const BottomNav: React.FC<BottomNavProps> = ({ currentScreen, onNavigate }) => {
             >
               {/* Active Indicator Background */}
               {isActive && (
-                <div className="absolute inset-0 bg-brasil-yellow/20 rounded-full blur-md animate-pulse" />
+                <div className="absolute inset-0 bg-primary/10 rounded-full blur-md animate-pulse" />
               )}
 
               <Icon
                 size={28}
                 strokeWidth={isActive ? 2.5 : 2}
                 className={`transition-all duration-300 z-10 ${isActive
-                    ? 'text-brasil-yellow scale-110 drop-shadow-[0_0_12px_rgba(255,223,0,0.8)]'
-                    : 'text-zinc-500 group-hover:text-zinc-300'
+                  ? 'text-primary scale-110 drop-shadow-[0_0_12px_rgba(58,124,165,0.5)]'
+                  : 'text-gray-dark group-hover:text-gray-dark/70'
                   }`}
-                fill={isActive && item.id === ScreenState.HOME ? 'currentColor' : 'none'}
+                fill="none"
               />
 
               {/* Dot Indicator */}
               {isActive && (
-                <div className="absolute -bottom-1 w-1.5 h-1.5 bg-brasil-yellow rounded-full shadow-[0_0_6px_#FFDF00] animate-pulse" />
+                <div className="absolute -bottom-1 w-1.5 h-1.5 bg-primary rounded-full shadow-[0_0_6px_#3A7CA5] animate-pulse" />
               )}
             </button>
           );

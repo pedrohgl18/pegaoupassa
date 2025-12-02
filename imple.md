@@ -173,7 +173,7 @@
 | Push notifications | ✅ | Firebase FCM + Capacitor + Edge Function |
 | Notificação de match | ✅ | Via código (swipes.create) |
 | Notificação de mensagem | ✅ | Via código (ChatScreen.handleSend) |
-| Notificação de like | ⏳ | Precisa implementar (VIP) |
+| Notificação de like | ✅ | Implementado (swipes.create) |
 | Configurações de notificação | ⏳ | Ativar/desativar tipos |
 
 ---
@@ -230,6 +230,14 @@
 | 28/11/2025 | **Refatoração Perfil** | Nova UI premium para a tela de perfil, com header imersivo e novos cards de estatísticas. |
 | 01/12/2025 | **Refatoração Visual** | Nova tela de carregamento (LoadingScreen) e menu inferior flutuante (BottomNav). |
 | 01/12/2025 | **Correções Visuais** | Gradiente suave nas fotos, indicadores no topo, espaçamento correto do menu e botões. |
+| 01/12/2025 | **Nova Paleta de Cores** | Implementada paleta "Modern Cool-Tones" (Azul/Roxo/Laranja) substituindo cores do Brasil. |
+| 01/12/2025 | **Refatoração Visual Completa** | Atualizados Profile, LoadingScreen, BottomNav e SwipeCard com glassmorphism e nova paleta. |
+| 01/12/2025 | **Bio substituída por Quebra-Gelo** | Onboarding e EditProfile agora pedem "Mensagem de Quebra-Gelo" em vez de Bio. |
+| 01/12/2025 | **Envio Automático de Quebra-Gelo** | Ao dar match, a mensagem de quebra-gelo (bio) é enviada automaticamente no chat. |
+| 01/12/2025 | **Envio Automático de Quebra-Gelo** | Ao dar match, a mensagem de quebra-gelo (bio) é enviada automaticamente no chat. |
+| 01/12/2025 | **Correção BottomNav** | Menu inferior agora usa fundo branco opaco (bg-white/90) para garantir consistência em telas escuras. |
+| 01/12/2025 | **Remoção Bio SwipeCard** | Bio removida do card de swipe para manter a privacidade do "Quebra-Gelo". |
+| 01/12/2025 | **Refinamentos UI** | Ícones VIP/Gold corrigidos no perfil. Slider de distância mostra "100km+". Highlight dourado condicional no card (Signo/Altura). |
 
 ---
 
