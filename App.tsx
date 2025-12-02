@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { ThumbsUp, X, Crown, Rocket, Star, Ban, Search, User, ChevronUp, ChevronDown, Hand, Heart, Pencil, SlidersHorizontal, Check, Loader2, ChevronLeft } from 'lucide-react';
+import { ThumbsUp, X, Crown, Rocket, Star, Ban, Search, User, ChevronUp, ChevronDown, Hand, Heart, Pencil, SlidersHorizontal, Check, Loader2, ChevronLeft, Ghost } from 'lucide-react';
 import { ScreenState, SwipeDirection, Profile as ProfileType } from './types';
 import { DAILY_FREE_SWIPES, VIP_PRICE } from './constants';
 import SwipeCard from './components/SwipeCard';
@@ -44,6 +44,7 @@ const App: React.FC = () => {
     signInWithGoogle,
     signOut,
     createProfile,
+    updateProfile,
   } = useAuth();
 
   // State
@@ -94,6 +95,7 @@ const App: React.FC = () => {
   const [filterZodiac, setFilterZodiac] = useState<string>('');
   const [myLocation, setMyLocation] = useState<{ latitude: number, longitude: number } | null>(null);
   const [filtersLoaded, setFiltersLoaded] = useState(false);
+  const [showVipSettingsModal, setShowVipSettingsModal] = useState(false);
 
   // Derived State
   const currentProfile = feedProfiles[0];
@@ -742,75 +744,73 @@ const App: React.FC = () => {
   };
 
   const renderLogin = () => (
-    <div className="flex flex-col h-full w-full relative bg-brasil-blue animate-fade-in overflow-hidden">
-      {/* Dynamic Gradient Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-brasil-blue via-brasil-green to-brasil-yellow/30 pointer-events-none" />
+    <div className="flex flex-col h-full w-full relative bg-zinc-50 overflow-hidden">
+      {/* Top Section - Brand */}
+      <div className="flex-1 relative bg-brasil-blue flex flex-col items-center justify-center overflow-hidden rounded-b-[40px] shadow-2xl z-0">
+        {/* Background Effects */}
+        <div className="absolute inset-0 bg-gradient-to-br from-brasil-blue via-blue-600 to-brasil-green opacity-90" />
+        <div className="absolute -top-20 -right-20 w-80 h-80 bg-brasil-yellow rounded-full blur-[100px] opacity-30 animate-pulse" />
+        <div className="absolute bottom-0 -left-20 w-64 h-64 bg-brasil-green rounded-full blur-[80px] opacity-30" />
 
-      {/* Fluid Shapes */}
-      <div className="absolute -top-[20%] -right-[20%] w-[90%] h-[60%] bg-gradient-to-b from-brasil-yellow to-transparent rounded-full blur-[80px] opacity-40 animate-pulse pointer-events-none" />
-      <div className="absolute -bottom-[10%] -left-[10%] w-[90%] h-[60%] bg-gradient-to-t from-brasil-green to-transparent rounded-full blur-[80px] opacity-40 animate-pulse delay-1000 pointer-events-none" />
+        {/* Logo */}
+        <div className="relative z-10 flex flex-col items-center gap-6 animate-in zoom-in duration-700">
+          <div className="relative group">
+            <div className="absolute inset-0 bg-white/20 blur-3xl rounded-full scale-150 group-hover:scale-125 transition-transform duration-1000" />
 
-      {/* Content Container - não deixa o conteúdo crescer demais em telas baixas */}
-      <div className="flex-1 flex flex-col items-center justify-center gap-3 sm:gap-6 px-6 pt-8 pb-2 z-10 relative min-h-0 max-h-[60%]">
+            <div className="w-32 h-32 bg-gradient-to-tr from-brasil-yellow to-orange-500 rounded-[2.5rem] flex items-center justify-center shadow-2xl rotate-6 border-[6px] border-white/20 backdrop-blur-sm relative z-10 hover:rotate-3 transition-transform duration-500">
+              <ThumbsUp size={64} className="text-white drop-shadow-lg transform -rotate-6" fill="white" strokeWidth={2.5} />
+            </div>
 
-        {/* Logo Section */}
-        <div className="relative group scale-90 sm:scale-100">
-          {/* Glow effect */}
-          <div className="absolute inset-0 bg-white/30 blur-2xl rounded-full scale-110 group-hover:scale-125 transition-transform duration-700" />
-
-          {/* Icon Container */}
-          <div className="w-24 h-24 sm:w-32 sm:h-32 bg-gradient-to-tr from-brasil-yellow to-brasil-green rounded-[2rem] flex items-center justify-center shadow-2xl rotate-6 border-[6px] border-white/20 backdrop-blur-sm relative z-10 hover:rotate-3 transition-transform duration-500">
-            <div className="text-white drop-shadow-lg transform -rotate-6">
-              <ThumbsUp size={52} className="sm:w-16 sm:h-16" fill="white" strokeWidth={2.5} />
+            <div className="absolute -top-4 -right-4 w-14 h-14 bg-white rounded-full flex items-center justify-center z-20 shadow-xl animate-bounce duration-[3000ms]">
+              <Heart size={24} className="text-brasil-blue" fill="#002776" />
             </div>
           </div>
 
-          {/* Decorative 'Heart' Badge */}
-          <div className="absolute -top-2 -right-2 w-10 h-10 sm:w-12 sm:h-12 bg-brasil-blue rounded-full border-4 border-white/30 flex items-center justify-center z-20 shadow-lg animate-bounce duration-[3000ms]">
-            <Heart size={20} className="text-white" fill="white" />
+          <div className="text-center space-y-2">
+            <h1 className="text-5xl font-black text-white tracking-tighter drop-shadow-xl leading-none">
+              Pega ou <br />
+              <span className="text-brasil-yellow inline-block transform -rotate-2 mt-1">Passa</span>
+            </h1>
+            <p className="text-blue-100 font-medium text-lg max-w-[280px] mx-auto leading-relaxed">
+              O jeito brasileiro de dar match.
+            </p>
           </div>
-        </div>
-
-        <div className="text-center space-y-2">
-          <h1 className="text-4xl sm:text-6xl font-extrabold text-white tracking-tighter drop-shadow-xl font-sans leading-none">
-            Pega ou <br />
-            <span className="text-brasil-yellow inline-block transform -rotate-2 mt-2">Passa</span>
-          </h1>
-          <div className="h-1 w-20 bg-white/30 rounded-full mx-auto my-3" />
-          <p className="text-white/90 font-medium text-sm sm:text-lg max-w-[260px] sm:max-w-[280px] mx-auto leading-relaxed drop-shadow-md">
-            O jeito brasileiro de encontrar seu par ideal.
-          </p>
         </div>
       </div>
 
-      {/* Login Section - barra fixa na parte inferior do frame do app */}
-      <div className="w-full max-w-sm mx-auto z-10 shrink-0 pb-4 sm:pb-6 px-6 sm:px-8">
-        <div className="flex flex-col gap-2 sm:gap-3">
-          <div className="transform transition-transform hover:scale-105 duration-200">
-            <Button
-              variant="google"
-              fullWidth
-              onClick={handleLogin}
-              disabled={loginLoading}
-              className="shadow-2xl h-12 sm:h-14 text-sm sm:text-base border-2 border-transparent hover:border-brasil-yellow/50"
-            >
-              {loginLoading ? (
-                <Loader2 size={24} className="animate-spin mr-3" />
-              ) : (
-                <img
-                  src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCIgd2lkdGg9IjQ4cHgiIGhlaWdodD0iNDhweCI+PHBhdGggZmlsbD0iI0ZGQzEwNyIgZD0iTTQzLjYxMSwyMC4wODNINDJWMjBIMjR2OGgxMS4zMDNjLTEuNjQ5LDQuNjU3LTYuMDgsOC0xMS4zMDMsOGMtNi42MjcsMC0xMi01LjM3My0xMi0xMmMwLTYuNjI3LDUuMzczLTEyLDEyLTEyYzMuMDU5LDAsNS44NDIsMS4xNTQsNy45NjEsMy4wMzlsNS42NTctNS42NTdDMzQuMDQ2LDYuMDUzLDI5LjI2OCw0LDI0LDRDMTIuOTU1LDQsNCwxMi45NTUsNCwyNGMwLDExLjA0NSw4Ljk1NSwyMCwyMCwyMGMxMS4wNDUsMCwyMC04Ljk1NSwyMC0yMEM0NCwyMi42NTksNDMuODYyLDIxLjM1LDQzLjYxMSwyMC4wODN6Ii8+PHBhdGggZmlsbD0iI0ZGM0QwMCIgZD0iTTYuMzA2LDE0LjY5MWw2LjU3MSw0LjgxOUMxNC42NTUsMTUuMTA4LDE4Ljk2MSwxMiwyNCwxMmMzLjA1OSwwLDUuODQyLDEuMTU0LDcuOTYxLDMuMDM5bDUuNjU3LTUuNjU3QzM0LjA0Niw2LjA1MywyOS4yNjgsNCwyNCw0QzE2LjMxOCw0LDkuNjU2LDguMzM3LDYuMzA2LDE0LjY5MXoiLz48cGF0aCBmaWxsPSIjNENBRjUwIiBkPSJNMjQsNDRjNS4xNjYsMCw5Ljg2LTEuOTc3LDEzLjQwOS01LjE5MmwtNi4xOTAtNS4yMzhDMjkuMjExLDM1LjA5MSwyNi43MTUsMzYsMjQsMzZjLTUuMjAyLDAtOS42MTktMy4zMTctMTEuMjgzLTcuOTQ2bC02LjUyMiw1LjAyNUM5LjUwNSwzOS41NTYsMTYuMjI3LDQ0LDI0LDQ0eiIvPjxwYXRoIGZpbGw9IiMxOTc2RDIiIGQ9Ik00My42MTEsMjAuMDgzSDQyVjIwSDI0djhoMTEuMzAzYy0wLjc5MiwyLjIzNy0yLjIzMSw0LjE2Ni00LjA4Nyw1LjU3MWMwLjAwMS0wLjAwMSwwLjAwMi0wLjAwMSwwLjAwMy0wLjAwMmw2LjE5MCw1LjIzOEMzNi45NzEsMzkuMjA1LDQ0LDM0LDQ0LDI0QzQ0LDIyLjY1OSw0My44NjIsMjEuMzUsNDMuNjExLDIwLjA4M3oiLz48L3N2Zz4="
-                  alt="Google"
-                  className="w-6 h-6 sm:w-7 sm:h-7 mr-3"
-                />
-              )}
-              {loginLoading ? 'Entrando...' : 'Entrar com Google'}
-            </Button>
+      {/* Bottom Section - Actions */}
+      <div className="relative z-10 -mt-10 px-6 pb-8">
+        <div className="bg-white rounded-3xl shadow-xl p-6 border border-zinc-100 space-y-6">
+          <div className="space-y-2 text-center">
+            <h2 className="text-xl font-black text-zinc-800">Bem-vindo(a)! 👋</h2>
+            <p className="text-zinc-500 text-sm">Entre para encontrar pessoas incríveis perto de você.</p>
           </div>
 
-          <p className="text-white/60 text-[10px] sm:text-xs text-center font-medium leading-relaxed">
+          <Button
+            variant="google"
+            fullWidth
+            onClick={handleLogin}
+            disabled={loginLoading}
+            className="shadow-lg h-14 text-base border-2 border-zinc-100 hover:border-brasil-blue/30 hover:bg-zinc-50"
+          >
+            {loginLoading ? (
+              <Loader2 size={24} className="animate-spin mr-3 text-brasil-blue" />
+            ) : (
+              <img
+                src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCIgd2lkdGg9IjQ4cHgiIGhlaWdodD0iNDhweCI+PHBhdGggZmlsbD0iI0ZGQzEwNyIgZD0iTTQzLjYxMSwyMC4wODNINDJWMjBIMjR2OGgxMS4zMDNjLTEuNjQ5LDQuNjU3LTYuMDgsOC0xMS4zMDMsOGMtNi42MjcsMC0xMi01LjM3My0xMi0xMmMwLTYuNjI3LDUuMzczLTEyLDEyLTEyYzMuMDU5LDAsNS44NDIsMS4xNTQsNy45NjEsMy4wMzlsNS42NTctNS42NTdDMzQuMDQ2LDYuMDUzLDI5LjI2OCw0LDI0LDRDMTIuOTU1LDQsNCwxMi45NTUsNCwyNGMwLDExLjA0NSw4Ljk1NSwyMCwyMCwyMGMxMS4wNDUsMCwyMC04Ljk1NSwyMC0yMEM0NCwyMi42NTksNDMuODYyLDIxLjM1LDQzLjYxMSwyMC4wODN6Ii8+PHBhdGggZmlsbD0iI0ZGM0QwMCIgZD0iTTYuMzA2LDE0LjY5MWw2LjU3MSw0LjgxOUMxNC42NTUsMTUuMTA4LDE4Ljk2MSwxMiwyNCwxMmMzLjA1OSwwLDUuODQyLDEuMTU0LDcuOTYxLDMuMDM5bDUuNjU3LTUuNjU3QzM0LjA0Niw2LjA1MywyOS4yNjgsNCwyNCw0QzE2LjMxOCw0LDkuNjU2LDguMzM3LDYuMzA2LDE0LjY5MXoiLz48cGF0aCBmaWxsPSIjNENBRjUwIiBkPSJNMjQsNDRjNS4xNjYsMCw5Ljg2LTEuOTc3LDEzLjQwOS01LjE5MmwtNi4xOTAtNS4yMzhDMjkuMjExLDM1LjA5MSwyNi43MTUsMzYsMjQsMzZjLTUuMjAyLDAtOS42MTktMy4zMTctMTEuMjgzLTcuOTQ2bC02LjUyMiw1LjAyNUM5LjUwNSwzOS41NTYsMTYuMjI3LDQ0LDI0LDQ0eiIvPjxwYXRoIGZpbGw9IiMxOTc2RDIiIGQ9Ik00My42MTEsMjAuMDgzSDQyVjIwSDI0djhoMTEuMzAzYy0wLjc5MiwyLjIzNy0yLjIzMSw0LjE2Ni00LjA4Nyw1LjU3MWMwLjAwMS0wLjAwMSwwLjAwMi0wLjAwMSwwLjAwMy0wLjAwMmw2LjE5MCw1LjIzOEMzNi45NzEsMzkuMjA1LDQ0LDM0LDQ0LDI0QzQ0LDIyLjY1OSw0My44NjIsMjEuMzUsNDMuNjExLDIwLjA4M3oiLz48L3N2Zz4="
+                alt="Google"
+                className="w-6 h-6 mr-3"
+              />
+            )}
+            {loginLoading ? 'Entrando...' : 'Continuar com Google'}
+          </Button>
+
+          <p className="text-zinc-400 text-[10px] text-center font-medium leading-relaxed px-4">
             Ao continuar, você concorda com nossos <br />
-            <button className="underline decoration-brasil-yellow underline-offset-4 text-white hover:text-brasil-yellow transition-colors font-bold mt-1">
+            <button className="underline decoration-zinc-300 underline-offset-2 text-zinc-500 hover:text-brasil-blue transition-colors font-bold">
               Termos de Uso
+            </button> e <button className="underline decoration-zinc-300 underline-offset-2 text-zinc-500 hover:text-brasil-blue transition-colors font-bold">
+              Política de Privacidade
             </button>.
           </p>
         </div>
@@ -1017,6 +1017,90 @@ const App: React.FC = () => {
               <p className="absolute bottom-28 text-sm text-white/50">Toque para começar</p>
             </div>
           )}
+        </div>
+      </div>
+    );
+  };
+
+  const renderVipSettingsModal = () => {
+    if (!showVipSettingsModal || !profile) return null;
+
+    return (
+      <div className="absolute inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center animate-in fade-in duration-200" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
+        <div className="bg-white w-full max-w-[480px] rounded-t-3xl sm:rounded-3xl p-6 pb-8 shadow-2xl animate-in slide-in-from-bottom duration-300">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-xl font-extrabold text-brasil-blue flex items-center gap-2">
+              <Crown size={24} className="text-brasil-yellow fill-brasil-yellow" /> Configurações VIP
+            </h2>
+            <button
+              onClick={() => setShowVipSettingsModal(false)}
+              className="p-2 bg-zinc-100 rounded-full text-zinc-500 hover:bg-zinc-200"
+            >
+              <X size={20} />
+            </button>
+          </div>
+
+          <div className="space-y-6">
+            {/* Incognito Mode */}
+            <div className="flex items-center justify-between p-4 bg-zinc-50 rounded-2xl border border-zinc-100">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm text-zinc-700">
+                  <Ghost size={20} />
+                </div>
+                <div>
+                  <h3 className="font-bold text-zinc-800">Modo Incógnito</h3>
+                  <p className="text-xs text-zinc-500 max-w-[200px]">
+                    Seu perfil só aparece para quem você curtiu primeiro.
+                  </p>
+                </div>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="sr-only peer"
+                  checked={profile.is_incognito || false}
+                  onChange={async (e) => {
+                    const newValue = e.target.checked;
+                    await updateProfile({ is_incognito: newValue });
+                  }}
+                />
+                <div className="w-11 h-6 bg-zinc-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-100 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brasil-blue"></div>
+              </label>
+            </div>
+
+            {/* Read Receipts */}
+            <div className="flex items-center justify-between p-4 bg-zinc-50 rounded-2xl border border-zinc-100">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm text-zinc-700">
+                  <Check size={20} className="text-brasil-green" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-zinc-800">Confirmação de Leitura</h3>
+                  <p className="text-xs text-zinc-500 max-w-[200px]">
+                    Saiba quando seus matches leram suas mensagens.
+                  </p>
+                </div>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="sr-only peer"
+                  checked={profile.read_receipts_enabled !== false} // Default true
+                  onChange={async (e) => {
+                    const newValue = e.target.checked;
+                    await updateProfile({ read_receipts_enabled: newValue });
+                  }}
+                />
+                <div className="w-11 h-6 bg-zinc-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-100 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brasil-blue"></div>
+              </label>
+            </div>
+          </div>
+
+          <div className="mt-8 text-center">
+            <p className="text-xs text-zinc-400">
+              Essas configurações são exclusivas para membros VIP.
+            </p>
+          </div>
         </div>
       </div>
     );
@@ -1233,6 +1317,7 @@ const App: React.FC = () => {
                 otherUserIsVip={activeChat.isVip}
                 onBack={() => setActiveChat(null)}
                 onUnmatch={() => handleUnmatchSuccess(activeChat.id)}
+                onVipClick={() => setCurrentScreen(ScreenState.VIP)}
                 onViewProfile={() => {
                   // Mock profile data from chat info since we don't have full profile
                   // In a real app, we might fetch the full profile here
@@ -1284,6 +1369,7 @@ const App: React.FC = () => {
               onNavigate={setCurrentScreen}
               onLogout={handleLogout}
               onShowFilter={() => setShowFilterModal(true)}
+              onVipSettings={() => setShowVipSettingsModal(true)}
             />
           )}
           {currentScreen === ScreenState.EDIT_PROFILE && user && (
@@ -1315,6 +1401,7 @@ const App: React.FC = () => {
           onKeepSwiping={() => setMatchModalData(prev => ({ ...prev, isOpen: false }))}
         />
         {showFilterModal && renderFilterModal()}
+        {showVipSettingsModal && renderVipSettingsModal()}
       </div>
     </div>
   );

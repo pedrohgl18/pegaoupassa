@@ -1,5 +1,5 @@
 import React from 'react';
-import { Crown, Rocket, ThumbsUp, SlidersHorizontal, Image, Mic } from 'lucide-react';
+import { Crown, Check, X, Star, Zap, Heart } from 'lucide-react';
 import Button from './Button';
 
 interface VipScreenProps {
@@ -9,98 +9,132 @@ interface VipScreenProps {
 }
 
 const VipScreen: React.FC<VipScreenProps> = ({ price, onPurchase, onClose }) => {
+    const features = [
+        { label: "Likes Infinitos", free: false, vip: true, icon: "🔥" },
+        { label: "Ver quem te curtiu", free: false, vip: true, icon: "👀" },
+        { label: "Enviar Fotos & Áudio", free: false, vip: true, icon: "📸" },
+        { label: "Filtros Avançados", free: false, vip: true, icon: "🎯" },
+        { label: "Modo Incógnito", free: false, vip: true, icon: "🕵️" },
+        { label: "Confirmação de Leitura", free: false, vip: true, icon: "✅" },
+        { label: "Sem Anúncios", free: false, vip: true, icon: "🚫" },
+    ];
+
     return (
-        <div className="flex flex-col h-full w-full bg-zinc-950 relative overflow-y-auto animate-slide-up">
-            {/* Background Effects */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-[-20%] left-[-20%] w-[80%] h-[80%] bg-brasil-blue/20 blur-[120px] rounded-full" />
-                <div className="absolute bottom-[-20%] right-[-20%] w-[80%] h-[80%] bg-brasil-green/10 blur-[120px] rounded-full" />
+        <div className="flex flex-col h-full w-full bg-zinc-50 relative overflow-y-auto animate-in slide-in-from-bottom duration-500">
+            {/* Header Background */}
+            <div className="absolute top-0 left-0 right-0 h-[340px] bg-brasil-blue overflow-hidden rounded-b-[40px] shadow-xl z-0">
+                <div className="absolute inset-0 bg-gradient-to-br from-brasil-blue via-blue-600 to-brasil-green opacity-90" />
+                <div className="absolute -top-20 -right-20 w-64 h-64 bg-brasil-yellow rounded-full blur-[80px] opacity-30 animate-pulse" />
+                <div className="absolute top-20 -left-20 w-48 h-48 bg-brasil-green rounded-full blur-[60px] opacity-30" />
             </div>
 
-            <div className="relative z-10 flex flex-col items-center p-6 pt-10 flex-grow">
+            <div className="relative z-10 flex flex-col items-center px-6 pt-8 pb-6 flex-grow">
+                {/* Close Button */}
+                <button
+                    onClick={onClose}
+                    className="absolute top-4 right-4 p-2 bg-black/20 hover:bg-black/30 text-white rounded-full backdrop-blur-md transition-colors"
+                >
+                    <X size={20} />
+                </button>
 
-                {/* Header Icon */}
-                <div className="mb-6 relative group">
-                    <div className="absolute inset-0 bg-brasil-yellow blur-[50px] opacity-20 rounded-full group-hover:opacity-40 transition-opacity duration-700" />
-                    <div className="relative w-20 h-20 bg-gradient-to-br from-brasil-yellow to-orange-500 rounded-2xl rotate-3 flex items-center justify-center shadow-2xl shadow-orange-500/20 border-2 border-white/10">
-                        <Crown size={40} className="text-white drop-shadow-md -rotate-3" fill="white" />
+                {/* VIP Badge */}
+                <div className="mb-4 relative">
+                    <div className="absolute inset-0 bg-brasil-yellow blur-xl opacity-50 rounded-full animate-pulse" />
+                    <div className="relative w-24 h-24 bg-gradient-to-br from-brasil-yellow to-orange-500 rounded-3xl rotate-3 flex items-center justify-center shadow-2xl border-4 border-white/20">
+                        <Crown size={48} className="text-white drop-shadow-md -rotate-3" fill="white" />
                     </div>
-                    <div className="absolute -top-3 -right-3 bg-white text-brasil-blue text-[10px] font-black px-2 py-0.5 rounded-full shadow-lg rotate-6 border border-zinc-100">
-                        ELITE
+                    <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 bg-white px-3 py-1 rounded-full shadow-lg border border-zinc-100">
+                        <span className="text-xs font-black text-brasil-blue uppercase tracking-widest whitespace-nowrap">
+                            Nível Lendário
+                        </span>
                     </div>
                 </div>
 
-                <h1 className="text-3xl font-black text-white mb-2 tracking-tighter text-center">
-                    Vire o <span className="text-brasil-yellow">Dono do Jogo</span>
+                <h1 className="text-3xl font-black text-white mb-2 text-center drop-shadow-md mt-2">
+                    Seja <span className="text-brasil-yellow">VIP</span>
                 </h1>
-                <p className="text-zinc-400 text-center mb-8 text-sm font-medium max-w-[260px] leading-relaxed">
-                    Chega de limitações. Desbloqueie o poder total e conquiste quem você quiser.
+                <p className="text-blue-100 text-center mb-8 text-sm font-medium max-w-[280px] leading-relaxed">
+                    Desbloqueie superpoderes e pare de depender da sorte. O jogo vira quando você é VIP.
                 </p>
 
-                {/* Benefits List */}
-                <div className="w-full space-y-3 mb-8">
-                    {[
-                        {
-                            icon: <Rocket className="text-white" size={20} />,
-                            color: "bg-blue-600",
-                            title: "Pegas Infinitos",
-                            desc: "Curta sem dó! O dedo não cai e o limite não existe."
-                        },
-                        {
-                            icon: <ThumbsUp className="text-white" size={20} fill="white" />,
-                            color: "bg-green-600",
-                            title: "Quem te Curtiu?",
-                            desc: "Pare de adivinhar. Veja a lista completa de quem te quer."
-                        },
-                        {
-                            icon: <Image className="text-white" size={20} />,
-                            color: "bg-purple-600",
-                            title: "Mande Fotos & Áudios",
-                            desc: "Solte o verbo e mostre mais de você no chat."
-                        },
-                        {
-                            icon: <SlidersHorizontal className="text-white" size={20} />,
-                            color: "bg-pink-600",
-                            title: "Filtros de Elite",
-                            desc: "Filtre por altura, signo e muito mais. Ache o par exato."
-                        }
-                    ].map((benefit, index) => (
-                        <div key={index} className="flex items-center gap-3 bg-white/5 p-3 rounded-xl border border-white/5 backdrop-blur-sm hover:bg-white/10 transition-colors group">
-                            <div className={`w-10 h-10 rounded-lg ${benefit.color} flex items-center justify-center shrink-0 shadow-lg group-hover:scale-105 transition-transform`}>
-                                {benefit.icon}
-                            </div>
-                            <div>
-                                <h3 className="text-white font-bold text-sm">{benefit.title}</h3>
-                                <p className="text-zinc-500 text-xs font-medium leading-tight">{benefit.desc}</p>
-                            </div>
+                {/* Comparison Card */}
+                <div className="w-full bg-white rounded-3xl shadow-xl border border-zinc-100 overflow-hidden mb-6">
+                    {/* Table Header */}
+                    <div className="grid grid-cols-3 bg-zinc-50 border-b border-zinc-100 p-4">
+                        <div className="col-span-1 flex items-center">
+                            <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Benefícios</span>
                         </div>
-                    ))}
+                        <div className="col-span-1 flex justify-center">
+                            <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Free</span>
+                        </div>
+                        <div className="col-span-1 flex justify-center">
+                            <span className="text-xs font-black text-brasil-blue uppercase tracking-wider bg-blue-50 px-2 py-0.5 rounded-full">VIP</span>
+                        </div>
+                    </div>
+
+                    {/* Table Body */}
+                    <div className="divide-y divide-zinc-50">
+                        {features.map((feature, idx) => (
+                            <div key={idx} className="grid grid-cols-3 p-4 items-center hover:bg-zinc-50 transition-colors">
+                                <div className="col-span-1 flex flex-col">
+                                    <span className="text-sm font-bold text-zinc-700 flex items-center gap-1">
+                                        {feature.label}
+                                    </span>
+                                </div>
+                                <div className="col-span-1 flex justify-center">
+                                    {feature.free ? (
+                                        <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center">
+                                            <Check size={14} className="text-green-600" strokeWidth={3} />
+                                        </div>
+                                    ) : (
+                                        <div className="w-6 h-6 rounded-full bg-zinc-100 flex items-center justify-center">
+                                            <X size={14} className="text-zinc-300" strokeWidth={3} />
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="col-span-1 flex justify-center">
+                                    {feature.vip ? (
+                                        <div className="w-6 h-6 rounded-full bg-brasil-green flex items-center justify-center shadow-sm shadow-green-200">
+                                            <Check size={14} className="text-white" strokeWidth={4} />
+                                        </div>
+                                    ) : (
+                                        <X size={16} className="text-zinc-300" />
+                                    )}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
 
                 {/* Footer Actions */}
-                <div className="mt-auto w-full space-y-3 pb-6">
-                    <div className="relative overflow-hidden bg-gradient-to-r from-brasil-green to-emerald-600 p-[1px] rounded-xl shadow-lg shadow-emerald-900/40">
-                        <div className="bg-zinc-900/95 backdrop-blur-sm rounded-[11px] p-3 text-center">
-                            <span className="text-emerald-400 text-[10px] font-black uppercase tracking-widest mb-0.5 block">Oferta Exclusiva</span>
-                            <div className="text-2xl font-black text-white flex items-baseline justify-center gap-1">
-                                {price} <span className="text-xs font-bold text-zinc-500">/ mês</span>
-                            </div>
+                <div className="mt-auto w-full space-y-4">
+                    <div className="text-center">
+                        <span className="text-zinc-400 text-xs font-medium line-through">R$ 29,90</span>
+                        <div className="flex items-center justify-center gap-2">
+                            <span className="text-3xl font-black text-brasil-blue">{price}</span>
+                            <span className="text-sm font-bold text-zinc-500">/ mês</span>
                         </div>
+                        <span className="text-green-600 text-xs font-bold bg-green-50 px-2 py-0.5 rounded-full">
+                            Economize 70% hoje
+                        </span>
                     </div>
 
                     <Button
                         fullWidth
                         onClick={onPurchase}
-                        className="!bg-brasil-yellow !text-brasil-blue !h-12 !text-base !font-black hover:brightness-110 shadow-lg shadow-yellow-500/10 uppercase tracking-wide"
+                        className="!bg-gradient-to-r !from-brasil-green !to-emerald-600 !text-white !h-14 !text-lg !font-black hover:!brightness-110 shadow-xl shadow-green-500/20 uppercase tracking-wide rounded-2xl"
                     >
-                        Quero ser VIP Agora
+                        <div className="flex items-center gap-2">
+                            <Zap size={20} fill="white" />
+                            Quero Ser VIP
+                        </div>
                     </Button>
 
                     <button
                         onClick={onClose}
-                        className="w-full py-2 text-zinc-600 font-bold hover:text-zinc-400 transition-colors text-xs uppercase tracking-wider"
+                        className="w-full py-2 text-zinc-400 font-bold hover:text-zinc-600 transition-colors text-xs uppercase tracking-wider"
                     >
-                        Continuar no básico
+                        Não, prefiro ficar limitado
                     </button>
                 </div>
             </div>

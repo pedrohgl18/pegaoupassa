@@ -309,6 +309,7 @@ export const profiles = {
       .select('*, photos(*)')
       .neq('id', userId)
       .eq('is_active', true)
+      .eq('is_incognito', false) // Não mostrar usuários em modo incógnito
 
     // Filtro de Gênero
     if (filters.gender && filters.gender !== 'both') {
@@ -693,7 +694,7 @@ export const messages = {
       .single()
 
     // Se temos o receiverId, enviar push notification
-    if (data && receiverId) {
+    if (data && receiverId && receiverId !== senderId) {
       const { data: sender } = await supabase.from('profiles').select('name').eq('id', senderId).single()
       const preview = content.length > 50 ? content.substring(0, 50) + '...' : content
       pushNotifications.notifyMessage(receiverId, sender?.name || 'Alguém', preview, conversationId, senderId)
@@ -724,7 +725,7 @@ export const messages = {
       .single()
 
     // Enviar push notification
-    if (data && receiverId) {
+    if (data && receiverId && receiverId !== senderId) {
       const { data: sender } = await supabase.from('profiles').select('name').eq('id', senderId).single()
       const preview = mediaType === 'image' ? '📷 Foto' : '🎤 Áudio'
       pushNotifications.notifyMessage(receiverId, sender?.name || 'Alguém', preview, conversationId, senderId)

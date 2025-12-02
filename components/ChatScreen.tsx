@@ -28,6 +28,7 @@ interface ChatScreenProps {
   onBack: () => void;
   onUnmatch: () => void;
   onViewProfile?: () => void;
+  onVipClick?: () => void;
 }
 
 // Componente Lightbox para visualização em tela cheia
@@ -66,7 +67,8 @@ const ChatScreen: React.FC<ChatScreenProps> = ({
   otherUserIsVip = false,
   onBack,
   onUnmatch,
-  onViewProfile
+  onViewProfile,
+  onVipClick
 }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
@@ -374,8 +376,11 @@ const ChatScreen: React.FC<ChatScreenProps> = ({
       setMessages(prev => prev.map(m => m.id === tempId ? { ...data as any, reply_to: tempMessage.reply_to } : m));
 
       // Enviar push notification para o outro usuário (não bloqueia a UI)
-      const preview = mediaType === 'image' ? '📷 Foto' : mediaType === 'audio' ? '🎤 Áudio' : (msgContent.length > 50 ? msgContent.substring(0, 50) + '...' : msgContent);
-      pushNotifications.notifyMessage(otherUserId, currentUserName, preview, conversationId, currentUserId).catch(console.error);
+      if (otherUserId && otherUserId !== currentUserId) {
+        console.log('Enviando push para:', otherUserId, 'De:', currentUserName);
+        const preview = mediaType === 'image' ? '📷 Foto' : mediaType === 'audio' ? '🎤 Áudio' : (msgContent.length > 50 ? msgContent.substring(0, 50) + '...' : msgContent);
+        pushNotifications.notifyMessage(otherUserId, currentUserName, preview, conversationId, currentUserId).catch(console.error);
+      }
     }
   };
 
@@ -389,7 +394,8 @@ const ChatScreen: React.FC<ChatScreenProps> = ({
   // Media Handlers
   const handlePhotoClick = () => {
     if (!currentUserIsVip) {
-      alert('Recurso exclusivo para VIPs! Assine para enviar fotos.');
+      if (onVipClick) onVipClick();
+      else alert('Recurso exclusivo para VIPs! Assine para enviar fotos.');
       return;
     }
     fileInputRef.current?.click();
@@ -456,7 +462,8 @@ const ChatScreen: React.FC<ChatScreenProps> = ({
 
   const handleMicClick = async () => {
     if (!currentUserIsVip) {
-      alert('Recurso exclusivo para VIPs! Assine para enviar áudio.');
+      if (onVipClick) onVipClick();
+      else alert('Recurso exclusivo para VIPs! Assine para enviar áudio.');
       return;
     }
 

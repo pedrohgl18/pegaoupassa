@@ -238,6 +238,9 @@
 | 01/12/2025 | **Correção BottomNav** | Menu inferior agora usa fundo branco opaco (bg-white/90) para garantir consistência em telas escuras. |
 | 01/12/2025 | **Remoção Bio SwipeCard** | Bio removida do card de swipe para manter a privacidade do "Quebra-Gelo". |
 | 01/12/2025 | **Refinamentos UI** | Ícones VIP/Gold corrigidos no perfil. Slider de distância mostra "100km+". Highlight dourado condicional no card (Signo/Altura). |
+| 02/12/2025 | **Correção Notificações Chat** | Corrigido bug onde usuário recebia notificação da própria mensagem. Adicionado verificação de senderId !== receiverId. |
+| 02/12/2025 | **Refatoração VIP/Login** | Telas de VIP e Login atualizadas com identidade visual do Brasil. Adicionado checklist comparativo no VIP. |
+| 02/12/2025 | **Novas Funcionalidades VIP** | Adicionado "Modo Incógnito" e "Confirmação de Leitura". Removido "Boost" e "Undo" (não serão implementados agora). |
 
 ---
 

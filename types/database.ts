@@ -42,6 +42,8 @@ export interface Database {
           last_online_at: string
           created_at: string
           updated_at: string
+          is_incognito: boolean
+          read_receipts_enabled: boolean
         }
         Insert: {
           id: string
@@ -72,6 +74,8 @@ export interface Database {
           last_online_at?: string
           created_at?: string
           updated_at?: string
+          is_incognito?: boolean
+          read_receipts_enabled?: boolean
         }
         Update: {
           id?: string
@@ -102,6 +106,8 @@ export interface Database {
           last_online_at?: string
           created_at?: string
           updated_at?: string
+          is_incognito?: boolean
+          read_receipts_enabled?: boolean
         }
       }
       photos: {

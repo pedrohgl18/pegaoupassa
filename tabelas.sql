@@ -74,6 +74,8 @@ CREATE TABLE profiles (
     vip_expires_at TIMESTAMP WITH TIME ZONE,
     is_verified BOOLEAN DEFAULT FALSE,
     is_active BOOLEAN DEFAULT TRUE,
+    is_incognito BOOLEAN DEFAULT FALSE,
+    read_receipts_enabled BOOLEAN DEFAULT TRUE,
     
     -- Filtros de busca
     filter_min_age INTEGER DEFAULT 18,

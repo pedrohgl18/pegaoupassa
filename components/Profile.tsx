@@ -11,6 +11,7 @@ interface ProfileProps {
     onNavigate: (screen: ScreenState) => void;
     onLogout: () => void;
     onShowFilter: () => void;
+    onVipSettings: () => void;
 }
 
 const Profile: React.FC<ProfileProps> = ({
@@ -21,6 +22,7 @@ const Profile: React.FC<ProfileProps> = ({
     onNavigate,
     onLogout,
     onShowFilter,
+    onVipSettings,
 }) => {
     const avatarUrl = user?.user_metadata?.avatar_url || profile?.photos?.[0]?.url || "https://picsum.photos/seed/me/400/400";
     const hasCoverPhoto = profile?.photos?.length > 1;
@@ -79,7 +81,7 @@ const Profile: React.FC<ProfileProps> = ({
                     {/* VIP Card */}
                     <div
                         onClick={() => !isVip && onNavigate(ScreenState.VIP)}
-                        className={`p-4 rounded-2xl shadow-sm border flex flex-col items-center gap-1 relative overflow-hidden group cursor-pointer transition-all ${isVip ? 'bg-white border-zinc-100' : 'bg-gradient-to-br from-yellow-500 to-orange-600 border-transparent text-white'}`}
+                        className={`p-3 rounded-2xl shadow-sm border flex flex-col items-center justify-center gap-1 relative overflow-hidden group cursor-pointer transition-all min-h-[100px] ${isVip ? 'bg-white border-zinc-100' : 'bg-gradient-to-br from-yellow-500 to-orange-600 border-transparent text-white'}`}
                     >
                         {isVip ? (
                             <>
@@ -87,13 +89,15 @@ const Profile: React.FC<ProfileProps> = ({
                                 <span className="text-xs text-zinc-400 font-bold uppercase tracking-wider">Ativo</span>
                             </>
                         ) : (
-                            <>
-                                <div className="flex items-center gap-2">
-                                    <Crown size={20} className="text-white" fill="#FFFFFF" />
+                            <div className="flex flex-col items-center justify-center w-full h-full py-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                    <Crown size={22} className="text-white" fill="#FFFFFF" />
                                     <span className="text-lg font-bold text-white drop-shadow-md">Seja VIP</span>
                                 </div>
-                                <span className="text-[10px] text-white/90 font-medium mt-1">Desbloqueie tudo</span>
-                            </>
+                                <p className="text-[10px] text-white/90 font-medium text-center leading-tight px-1">
+                                    O jogo vira quando<br />você é VIP.
+                                </p>
+                            </div>
                         )}
                     </div>
                 </div>
@@ -151,6 +155,24 @@ const Profile: React.FC<ProfileProps> = ({
                             <ChevronRight size={20} className="text-zinc-300 group-hover:text-orange-500 transition-colors" />
                         </button>
                     )}
+
+                    {isVip && (
+                        <button
+                            onClick={onVipSettings}
+                            className="w-full p-4 bg-white rounded-2xl border border-zinc-100 shadow-sm flex items-center justify-between group hover:border-brasil-yellow/50 transition-all active:scale-[0.98]"
+                        >
+                            <div className="flex items-center gap-4">
+                                <div className="w-10 h-10 rounded-full bg-yellow-50 text-brasil-yellow flex items-center justify-center group-hover:bg-brasil-yellow group-hover:text-white transition-colors">
+                                    <Settings size={20} />
+                                </div>
+                                <div className="text-left">
+                                    <p className="font-bold text-zinc-800">Configurações VIP</p>
+                                    <p className="text-xs text-zinc-400">Incógnito, confirmação de leitura</p>
+                                </div>
+                            </div>
+                            <ChevronRight size={20} className="text-zinc-300 group-hover:text-brasil-yellow transition-colors" />
+                        </button>
+                    )}
                 </div>
 
                 {/* Logout */}
@@ -164,7 +186,7 @@ const Profile: React.FC<ProfileProps> = ({
 
                 <div className="h-4" />
             </div>
-        </div>
+        </div >
     );
 };
 
