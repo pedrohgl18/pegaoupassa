@@ -1,5 +1,5 @@
 import React from 'react';
-import { Crown, Pencil, SlidersHorizontal, ChevronRight, Star, Settings, LogOut, MapPin, Sparkles, Heart } from 'lucide-react';
+import { Crown, Pencil, SlidersHorizontal, ChevronRight, Star, Settings, LogOut, MapPin, Sparkles, Heart, User, Lock } from 'lucide-react';
 import Button from './Button';
 import { ScreenState } from '../types';
 
@@ -12,6 +12,9 @@ interface ProfileProps {
     onLogout: () => void;
     onShowFilter: () => void;
     onVipSettings: () => void;
+    onPreview: () => void;
+    matchesCount: number;
+    receivedLikesCount: number;
 }
 
 const Profile: React.FC<ProfileProps> = ({
@@ -23,6 +26,9 @@ const Profile: React.FC<ProfileProps> = ({
     onLogout,
     onShowFilter,
     onVipSettings,
+    onPreview,
+    matchesCount,
+    receivedLikesCount,
 }) => {
     const avatarUrl = user?.user_metadata?.avatar_url || profile?.photos?.[0]?.url || "https://picsum.photos/seed/me/400/400";
     const hasCoverPhoto = profile?.photos?.length > 1;
@@ -100,6 +106,43 @@ const Profile: React.FC<ProfileProps> = ({
                             </div>
                         )}
                     </div>
+
+                    {/* VIP Stats: Matches & Likes Received */}
+                    <div className="col-span-2 grid grid-cols-2 gap-4">
+                        {/* Matches */}
+                        <div
+                            onClick={() => !isVip && onNavigate(ScreenState.VIP)}
+                            className={`p-4 rounded-2xl shadow-sm border border-zinc-100 flex flex-col items-center gap-1 relative overflow-hidden ${isVip ? 'bg-white' : 'bg-zinc-50 cursor-pointer group'}`}
+                        >
+                            {isVip ? (
+                                <span className="text-3xl font-extrabold text-purple-600">{matchesCount}</span>
+                            ) : (
+                                <div className="h-9 flex items-center justify-center">
+                                    <div className="w-8 h-8 rounded-full bg-zinc-200 flex items-center justify-center group-hover:bg-purple-100 transition-colors">
+                                        <Lock size={16} className="text-zinc-400 group-hover:text-purple-500" />
+                                    </div>
+                                </div>
+                            )}
+                            <span className="text-xs text-zinc-400 font-bold uppercase tracking-wider">Matches</span>
+                        </div>
+
+                        {/* Likes Received */}
+                        <div
+                            onClick={() => !isVip && onNavigate(ScreenState.VIP)}
+                            className={`p-4 rounded-2xl shadow-sm border border-zinc-100 flex flex-col items-center gap-1 relative overflow-hidden ${isVip ? 'bg-white' : 'bg-zinc-50 cursor-pointer group'}`}
+                        >
+                            {isVip ? (
+                                <span className="text-3xl font-extrabold text-pink-500">{receivedLikesCount}</span>
+                            ) : (
+                                <div className="h-9 flex items-center justify-center">
+                                    <div className="w-8 h-8 rounded-full bg-zinc-200 flex items-center justify-center group-hover:bg-pink-100 transition-colors">
+                                        <Lock size={16} className="text-zinc-400 group-hover:text-pink-500" />
+                                    </div>
+                                </div>
+                            )}
+                            <span className="text-xs text-zinc-400 font-bold uppercase tracking-wider">Curtidas</span>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Menu Actions */}
@@ -120,6 +163,22 @@ const Profile: React.FC<ProfileProps> = ({
                             </div>
                         </div>
                         <ChevronRight size={20} className="text-zinc-300 group-hover:text-primary transition-colors" />
+                    </button>
+
+                    <button
+                        onClick={onPreview}
+                        className="w-full p-4 bg-white rounded-2xl border border-zinc-100 shadow-sm flex items-center justify-between group hover:border-purple-500/30 transition-all active:scale-[0.98]"
+                    >
+                        <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center group-hover:bg-purple-600 group-hover:text-white transition-colors">
+                                <User size={20} />
+                            </div>
+                            <div className="text-left">
+                                <p className="font-bold text-zinc-800">Visualizar Perfil Público</p>
+                                <p className="text-xs text-zinc-400">Como os outros te veem</p>
+                            </div>
+                        </div>
+                        <ChevronRight size={20} className="text-zinc-300 group-hover:text-purple-600 transition-colors" />
                     </button>
 
                     <button

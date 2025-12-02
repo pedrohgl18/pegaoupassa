@@ -45,10 +45,12 @@ const App: React.FC = () => {
     signOut,
     createProfile,
     updateProfile,
+    refreshProfile,
   } = useAuth();
 
   // State
   const [currentScreen, setCurrentScreen] = useState<ScreenState>(ScreenState.LOGIN);
+  const [previousScreen, setPreviousScreen] = useState<ScreenState>(ScreenState.HOME);
   const [swipeCount, setSwipeCount] = useState(0);
   const [isVip, setIsVip] = useState(false);
   const [lastDirection, setLastDirection] = useState<SwipeDirection>(null);
@@ -354,13 +356,14 @@ const App: React.FC = () => {
           age: p.age || (p.birth_date ? calculateAge(p.birth_date) : 25),
           bio: p.bio || '',
           imageUrl: p.photos?.[0]?.url || 'https://picsum.photos/400/600',
-          photos: p.photos?.map((ph: any) => ph.url) || ['https://picsum.photos/400/600'],
+          photos: p.photos?.sort((a: any, b: any) => a.position - b.position).map((ph: any) => ph.url) || ['https://picsum.photos/400/600'],
           distance: p.distance !== undefined ? Math.round(p.distance) : 0,
           verified: p.is_verified || false,
           zodiacSign: p.zodiac_sign,
           profession: p.profession,
           education: p.education,
           height: p.height,
+          interests: p.user_interests?.map((ui: any) => ui.interest) || [],
         }));
 
         // Filter out duplicates if any
@@ -670,9 +673,33 @@ const App: React.FC = () => {
     setIsDragging(false);
   };
 
+  const handlePreviewProfile = () => {
+    if (!profile || !user) return;
+
+    const previewProfile: ProfileType = {
+      id: user.id,
+      name: profile.name || user.user_metadata.full_name || 'Você',
+      age: calculateAge(profile.birth_date || ''),
+      bio: profile.bio || '',
+      imageUrl: profile.photos?.[0]?.url || user.user_metadata.avatar_url || 'https://picsum.photos/200',
+      photos: profile.photos?.sort((a: any, b: any) => a.position - b.position).map((p: any) => p.url) || [],
+      distance: 0,
+      verified: profile.is_verified || false,
+      zodiacSign: profile.zodiac_sign,
+      profession: profile.profession,
+      education: profile.education,
+      height: profile.height,
+      interests: profile.user_interests?.map((ui: any) => ui.interest) || [],
+    };
+
+    setViewingProfile(previewProfile);
+  };
+
   // Renderers
   const renderProfileViewer = () => {
     if (!viewingProfile) return null;
+
+    const isSelf = user && viewingProfile.id === user.id;
 
     const handleLikeFromViewer = async () => {
       if (!user) return;
@@ -709,11 +736,11 @@ const App: React.FC = () => {
 
     return (
       <div className="absolute inset-0 z-50 bg-black flex flex-col animate-in slide-in-from-bottom duration-300">
-        {/* Header with Back button */}
-        <div className="absolute top-4 left-4 z-50">
+        {/* Header with Back button - Moved down to avoid photo bar */}
+        <div className="absolute top-12 left-4 z-50">
           <button
             onClick={() => setViewingProfile(null)}
-            className="w-10 h-10 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/10"
+            className="w-10 h-10 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/10 shadow-lg"
           >
             <ChevronLeft size={24} />
           </button>
@@ -721,24 +748,32 @@ const App: React.FC = () => {
 
         {/* SwipeCard reused - force isActive to true so it shows info */}
         <div className="flex-1 relative">
-          <SwipeCard profile={viewingProfile} isActive={true} myZodiacSign={profile?.zodiac_sign} />
+          <SwipeCard
+            profile={viewingProfile}
+            isActive={true}
+            myZodiacSign={profile?.zodiac_sign}
+            myInterests={profile?.user_interests?.map((ui: any) => ui.interest?.id) || []}
+            hasActions={!activeChat}
+          />
         </div>
 
-        {/* Action Buttons */}
-        <div className="h-24 bg-black flex items-center justify-center gap-8 pb-4 pt-2">
-          <button
-            onClick={handlePassFromViewer}
-            className="w-14 h-14 rounded-full bg-gradient-to-b from-zinc-700 to-zinc-800 border border-white/10 flex items-center justify-center text-white hover:bg-zinc-700 transition-colors shadow-lg"
-          >
-            <X size={28} />
-          </button>
-          <button
-            onClick={handleLikeFromViewer}
-            className="w-16 h-16 rounded-full bg-gradient-to-b from-brasil-green-light to-brasil-green flex items-center justify-center text-white shadow-lg shadow-brasil-green/40 hover:scale-105 transition-transform border-2 border-white/20"
-          >
-            <Heart size={32} fill="white" />
-          </button>
-        </div>
+        {/* Action Buttons - Only show for other profiles AND if not coming from chat */}
+        {!isSelf && !activeChat && (
+          <div className="h-24 bg-black flex items-center justify-center gap-8 pb-4 pt-2">
+            <button
+              onClick={handlePassFromViewer}
+              className="w-14 h-14 rounded-full bg-gradient-to-b from-zinc-700 to-zinc-800 border border-white/10 flex items-center justify-center text-white hover:bg-zinc-700 transition-colors shadow-lg"
+            >
+              <X size={28} />
+            </button>
+            <button
+              onClick={handleLikeFromViewer}
+              className="w-16 h-16 rounded-full bg-gradient-to-b from-brasil-green-light to-brasil-green flex items-center justify-center text-white shadow-lg shadow-brasil-green/40 hover:scale-105 transition-transform border-2 border-white/20"
+            >
+              <Heart size={32} fill="white" />
+            </button>
+          </div>
+        )}
       </div>
     );
   };
@@ -746,32 +781,28 @@ const App: React.FC = () => {
   const renderLogin = () => (
     <div className="flex flex-col h-full w-full relative bg-zinc-50 overflow-hidden">
       {/* Top Section - Brand */}
-      <div className="flex-1 relative bg-brasil-blue flex flex-col items-center justify-center overflow-hidden rounded-b-[40px] shadow-2xl z-0">
-        {/* Background Effects */}
-        <div className="absolute inset-0 bg-gradient-to-br from-brasil-blue via-blue-600 to-brasil-green opacity-90" />
-        <div className="absolute -top-20 -right-20 w-80 h-80 bg-brasil-yellow rounded-full blur-[100px] opacity-30 animate-pulse" />
-        <div className="absolute bottom-0 -left-20 w-64 h-64 bg-brasil-green rounded-full blur-[80px] opacity-30" />
+      <div className="h-[60vh] relative bg-blue-600 flex flex-col items-center justify-start pt-12 overflow-hidden rounded-b-[40px] shadow-2xl z-0">
+        {/* Background Effects - Rich & Vibrant */}
+        <div className="absolute inset-0 bg-gradient-to-br from-emerald-500 via-teal-600 to-blue-700 opacity-100" />
+        <div className="absolute -top-40 -right-40 w-[500px] h-[500px] bg-blue-500 rounded-full blur-[120px] opacity-50 animate-pulse" />
+        <div className="absolute bottom-0 -left-20 w-[400px] h-[400px] bg-emerald-400 rounded-full blur-[100px] opacity-40" />
 
         {/* Logo */}
         <div className="relative z-10 flex flex-col items-center gap-6 animate-in zoom-in duration-700">
           <div className="relative group">
-            <div className="absolute inset-0 bg-white/20 blur-3xl rounded-full scale-150 group-hover:scale-125 transition-transform duration-1000" />
+            <div className="absolute inset-0 bg-white/30 blur-3xl rounded-full scale-150 group-hover:scale-125 transition-transform duration-1000" />
 
-            <div className="w-32 h-32 bg-gradient-to-tr from-brasil-yellow to-orange-500 rounded-[2.5rem] flex items-center justify-center shadow-2xl rotate-6 border-[6px] border-white/20 backdrop-blur-sm relative z-10 hover:rotate-3 transition-transform duration-500">
-              <ThumbsUp size={64} className="text-white drop-shadow-lg transform -rotate-6" fill="white" strokeWidth={2.5} />
-            </div>
-
-            <div className="absolute -top-4 -right-4 w-14 h-14 bg-white rounded-full flex items-center justify-center z-20 shadow-xl animate-bounce duration-[3000ms]">
-              <Heart size={24} className="text-brasil-blue" fill="#002776" />
+            <div className="w-32 h-32 bg-white rounded-[2.5rem] flex items-center justify-center shadow-2xl rotate-6 border-[6px] border-white/20 backdrop-blur-sm relative z-10 hover:rotate-3 transition-transform duration-500">
+              <Heart size={64} className="text-teal-600 drop-shadow-lg transform -rotate-6" fill="currentColor" strokeWidth={2.5} />
             </div>
           </div>
 
           <div className="text-center space-y-2">
             <h1 className="text-5xl font-black text-white tracking-tighter drop-shadow-xl leading-none">
               Pega ou <br />
-              <span className="text-brasil-yellow inline-block transform -rotate-2 mt-1">Passa</span>
+              <span className="text-yellow-400 inline-block transform -rotate-2 mt-1 drop-shadow-md">Passa</span>
             </h1>
-            <p className="text-blue-100 font-medium text-lg max-w-[280px] mx-auto leading-relaxed">
+            <p className="text-blue-50 font-medium text-lg max-w-[280px] mx-auto leading-relaxed drop-shadow-sm">
               O jeito brasileiro de dar match.
             </p>
           </div>
@@ -779,7 +810,7 @@ const App: React.FC = () => {
       </div>
 
       {/* Bottom Section - Actions */}
-      <div className="relative z-10 -mt-10 px-6 pb-8">
+      <div className="relative z-10 -mt-24 px-6 pb-12">
         <div className="bg-white rounded-3xl shadow-xl p-6 border border-zinc-100 space-y-6">
           <div className="space-y-2 text-center">
             <h2 className="text-xl font-black text-zinc-800">Bem-vindo(a)! 👋</h2>
@@ -791,7 +822,7 @@ const App: React.FC = () => {
             fullWidth
             onClick={handleLogin}
             disabled={loginLoading}
-            className="shadow-lg h-14 text-base border-2 border-zinc-100 hover:border-brasil-blue/30 hover:bg-zinc-50"
+            className="shadow-lg h-14 text-sm font-bold whitespace-nowrap border-2 border-zinc-100 hover:border-brasil-blue/30 hover:bg-zinc-50"
           >
             {loginLoading ? (
               <Loader2 size={24} className="animate-spin mr-3 text-brasil-blue" />
@@ -829,24 +860,24 @@ const App: React.FC = () => {
     // Loading State
     if (loadingFeed && feedProfiles.length === 0) {
       return (
-        <div className="relative h-full w-full bg-black flex flex-col items-center justify-center p-4 animate-fade-in">
+        <div className="relative h-full w-full bg-zinc-50 flex flex-col items-center justify-center p-4 animate-fade-in">
           {/* Skeleton Card */}
-          <div className="w-full h-full rounded-3xl overflow-hidden relative bg-zinc-900 border border-zinc-800">
+          <div className="w-full h-full rounded-3xl overflow-hidden relative bg-white border border-zinc-200 shadow-sm">
             {/* Image Skeleton */}
-            <div className="absolute inset-0 skeleton opacity-20" />
+            <div className="absolute inset-0 skeleton opacity-50 bg-zinc-100" />
 
             {/* Text Skeletons */}
-            <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/90 to-transparent pt-20">
-              <div className="h-8 w-48 bg-zinc-800 rounded-lg mb-3 skeleton opacity-50" />
-              <div className="h-4 w-32 bg-zinc-800 rounded-lg mb-2 skeleton opacity-40" />
-              <div className="h-16 w-full bg-zinc-800 rounded-lg skeleton opacity-30" />
+            <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-white/90 to-transparent pt-20">
+              <div className="h-8 w-48 bg-zinc-200 rounded-lg mb-3 skeleton" />
+              <div className="h-4 w-32 bg-zinc-200 rounded-lg mb-2 skeleton" />
+              <div className="h-16 w-full bg-zinc-200 rounded-lg skeleton" />
             </div>
           </div>
 
           {/* Floating Buttons Skeleton */}
           <div className="absolute bottom-24 right-4 flex flex-col gap-4">
-            <div className="w-16 h-16 rounded-full bg-zinc-800 skeleton opacity-50" />
-            <div className="w-14 h-14 rounded-full bg-zinc-800 skeleton opacity-40" />
+            <div className="w-16 h-16 rounded-full bg-zinc-200 skeleton" />
+            <div className="w-14 h-14 rounded-full bg-zinc-200 skeleton" />
           </div>
         </div>
       );
@@ -855,34 +886,34 @@ const App: React.FC = () => {
     // Empty State
     if (feedProfiles.length === 0) {
       return (
-        <div className="relative h-full w-full bg-zinc-950 flex flex-col items-center justify-center p-8 text-center animate-fade-in overflow-hidden">
+        <div className="relative h-full w-full bg-zinc-50 flex flex-col items-center justify-center p-8 text-center animate-fade-in overflow-hidden">
           {/* Background Effects */}
           <div className="absolute inset-0 pointer-events-none">
-            <div className="absolute top-[-20%] left-[-20%] w-[80%] h-[80%] bg-brasil-blue/10 blur-[100px] rounded-full" />
-            <div className="absolute bottom-[-20%] right-[-20%] w-[80%] h-[80%] bg-brasil-green/5 blur-[100px] rounded-full" />
+            <div className="absolute top-[-20%] left-[-20%] w-[80%] h-[80%] bg-blue-100/50 blur-[100px] rounded-full" />
+            <div className="absolute bottom-[-20%] right-[-20%] w-[80%] h-[80%] bg-green-100/50 blur-[100px] rounded-full" />
           </div>
 
           <div className="relative z-10 flex flex-col items-center">
-            <div className="w-24 h-24 bg-zinc-900 rounded-3xl flex items-center justify-center mb-6 shadow-2xl shadow-black/50 border border-zinc-800 rotate-3 transform hover:rotate-6 transition-transform duration-500">
-              <Search size={40} className="text-zinc-500" />
+            <div className="w-24 h-24 bg-white rounded-3xl flex items-center justify-center mb-6 shadow-xl shadow-zinc-200 border border-zinc-100 rotate-3 transform hover:rotate-6 transition-transform duration-500">
+              <Search size={40} className="text-brasil-blue" />
             </div>
 
-            <h2 className="text-3xl font-black text-white mb-3 tracking-tight">
+            <h2 className="text-3xl font-black text-zinc-900 mb-3 tracking-tight">
               Zerou o Game! <span className="text-2xl">🎮</span>
             </h2>
 
-            <p className="text-zinc-400 mb-8 max-w-[280px] text-sm font-medium leading-relaxed">
+            <p className="text-zinc-500 mb-8 max-w-[280px] text-sm font-medium leading-relaxed">
               Você já viu todo mundo por aqui. Que tal expandir seus horizontes?
             </p>
 
             <div className="flex flex-col gap-3 w-full max-w-[260px]">
-              <Button onClick={() => setShowFilterModal(true)} className="!bg-white !text-black hover:!bg-zinc-200 !font-black !h-12 shadow-lg shadow-white/5">
+              <Button onClick={() => setShowFilterModal(true)} className="bg-brasil-blue text-white hover:bg-brasil-blue-light font-bold h-12 shadow-lg shadow-brasil-blue/20">
                 Ajustar Filtros
               </Button>
 
               <button
                 onClick={fetchFeed}
-                className="py-3 text-brasil-yellow font-bold text-xs uppercase tracking-widest hover:text-brasil-yellow/80 transition-colors"
+                className="py-3 text-zinc-400 font-bold text-xs uppercase tracking-widest hover:text-brasil-blue transition-colors"
               >
                 Buscar Novamente
               </button>
@@ -921,6 +952,7 @@ const App: React.FC = () => {
                   minHeight: minHeight,
                   zodiac: filterZodiac
                 }}
+                myInterests={profile?.user_interests?.map((ui: any) => ui.interest?.id) || []}
               />
             </div>
           )}
@@ -932,6 +964,7 @@ const App: React.FC = () => {
                 profile={nextProfile}
                 isActive={false}
                 myZodiacSign={profile?.zodiac_sign}
+                myInterests={profile?.user_interests?.map((ui: any) => ui.interest?.id) || []}
               />
             </div>
           )}
@@ -1265,7 +1298,7 @@ const App: React.FC = () => {
   // Mostra erro se houver problema com o banco
   if (authError && isAuthenticated) {
     return (
-      <div className="w-full h-[100dvh] bg-brasil-blue text-white overflow-hidden flex flex-col items-center justify-center font-sans p-6">
+      <div className="w-full h-[100dvh] bg-zinc-50 text-zinc-900 overflow-hidden flex flex-col items-center justify-center font-sans p-6">
         <div className="w-full max-w-[480px] h-full relative bg-white shadow-2xl overflow-hidden flex flex-col items-center justify-center p-6 text-center">
           <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mb-6">
             <X size={40} className="text-red-500" />
@@ -1290,7 +1323,7 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="w-full h-[100dvh] bg-brasil-blue text-white overflow-hidden flex flex-col items-center justify-center font-sans">
+    <div className="w-full h-[100dvh] bg-zinc-50 text-zinc-900 overflow-hidden flex flex-col items-center justify-center font-sans">
       <div className="w-full max-w-[480px] h-full relative bg-white shadow-2xl overflow-hidden flex flex-col">
 
         {/* Main Content Area */}
@@ -1315,27 +1348,53 @@ const App: React.FC = () => {
                 otherUserName={activeChat.name}
                 otherUserPhoto={activeChat.imageUrl}
                 otherUserIsVip={activeChat.isVip}
-                onBack={() => setActiveChat(null)}
+                onBack={() => {
+                  setActiveChat(null);
+                  fetchMatches(); // Refresh matches to update unread counts
+                }}
                 onUnmatch={() => handleUnmatchSuccess(activeChat.id)}
-                onVipClick={() => setCurrentScreen(ScreenState.VIP)}
-                onViewProfile={() => {
-                  // Mock profile data from chat info since we don't have full profile
-                  // In a real app, we might fetch the full profile here
-                  const mockProfile: ProfileType = {
-                    id: activeChat.otherUserId,
-                    name: activeChat.name,
-                    age: 0, // We might not have this in chat object
-                    bio: '',
-                    imageUrl: activeChat.imageUrl,
-                    photos: [activeChat.imageUrl],
-                    distance: 0,
-                    verified: false,
-                    zodiacSign: '',
-                    profession: '',
-                    education: '',
-                    height: 0
-                  };
-                  setViewingProfile(mockProfile);
+                onVipClick={() => {
+                  setPreviousScreen(ScreenState.CHAT);
+                  setCurrentScreen(ScreenState.VIP);
+                }}
+                onViewProfile={async () => {
+                  try {
+                    console.log('Buscando perfil completo para:', activeChat.otherUserId);
+                    // Fetch full profile data
+                    const { data, error } = await profiles.getByIdWithRelations(activeChat.otherUserId);
+
+                    if (error || !data) {
+                      console.error('Erro ao buscar perfil:', error);
+                      alert('Erro ao carregar perfil do usuário.');
+                      return;
+                    }
+
+                    console.log('Perfil carregado:', data);
+                    console.log('Interesses raw:', data.user_interests);
+
+                    const interests = data.user_interests?.map((ui: any) => ui.interest) || [];
+                    console.log('Interesses mapeados:', interests);
+
+                    const fullProfile: ProfileType = {
+                      id: data.id,
+                      name: data.name,
+                      age: data.age || (data.birth_date ? calculateAge(data.birth_date) : 25),
+                      bio: data.bio || '',
+                      imageUrl: data.photos?.[0]?.url || activeChat.imageUrl,
+                      photos: data.photos?.sort((a: any, b: any) => a.position - b.position).map((ph: any) => ph.url) || [activeChat.imageUrl],
+                      distance: data.distance !== undefined ? Math.round(data.distance) : 0,
+                      verified: data.is_verified || false,
+                      zodiacSign: data.zodiac_sign,
+                      profession: data.profession,
+                      education: data.education,
+                      height: data.height,
+                      interests: interests,
+                    };
+
+                    setViewingProfile(fullProfile);
+                  } catch (err) {
+                    console.error('Erro ao abrir perfil:', err);
+                  }
                 }}
               />
             ) : (
@@ -1345,7 +1404,10 @@ const App: React.FC = () => {
                 isVip={isVip}
                 loadingMatches={loadingMatches}
                 onChatSelect={setActiveChat}
-                onVipClick={() => setCurrentScreen(ScreenState.VIP)}
+                onVipClick={() => {
+                  setPreviousScreen(ScreenState.CHAT);
+                  setCurrentScreen(ScreenState.VIP);
+                }}
                 onViewProfile={(p) => {
                   setViewingProfile(p);
                   // Optionally navigate or just show modal
@@ -1357,7 +1419,7 @@ const App: React.FC = () => {
             <VipScreen
               price={VIP_PRICE}
               onPurchase={handlePurchaseVip}
-              onClose={() => setCurrentScreen(ScreenState.HOME)}
+              onClose={() => setCurrentScreen(previousScreen)}
             />
           )}
           {currentScreen === ScreenState.PROFILE && (
@@ -1366,17 +1428,31 @@ const App: React.FC = () => {
               profile={profile}
               isVip={isVip}
               swipeCount={swipeCount}
-              onNavigate={setCurrentScreen}
+              onNavigate={(screen) => {
+                if (screen === ScreenState.VIP) {
+                  setPreviousScreen(ScreenState.PROFILE);
+                }
+                setCurrentScreen(screen);
+              }}
               onLogout={handleLogout}
               onShowFilter={() => setShowFilterModal(true)}
-              onVipSettings={() => setShowVipSettingsModal(true)}
+              onVipSettings={() => {
+                setPreviousScreen(ScreenState.PROFILE);
+                setShowVipSettingsModal(true);
+              }}
+              onPreview={handlePreviewProfile}
+              matchesCount={matchesList.length}
+              receivedLikesCount={receivedLikes.length}
             />
           )}
           {currentScreen === ScreenState.EDIT_PROFILE && user && (
             <EditProfile
               userId={user.id}
               onBack={() => setCurrentScreen(ScreenState.PROFILE)}
-              onSave={() => setCurrentScreen(ScreenState.PROFILE)}
+              onSave={async () => {
+                await refreshProfile();
+                setCurrentScreen(ScreenState.PROFILE);
+              }}
             />
           )}
         </div>

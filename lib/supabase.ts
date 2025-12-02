@@ -306,7 +306,7 @@ export const profiles = {
   }) => {
     let query = supabase
       .from('profiles')
-      .select('*, photos(*)')
+      .select('*, photos(*), user_interests(interest:interests(*))')
       .neq('id', userId)
       .eq('is_active', true)
       .eq('is_incognito', false) // Não mostrar usuários em modo incógnito

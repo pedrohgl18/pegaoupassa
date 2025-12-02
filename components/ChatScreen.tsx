@@ -151,6 +151,41 @@ const ChatScreen: React.FC<ChatScreenProps> = ({
     }
   };
 
+  const fetchMessages = async () => {
+    setLoading(true);
+    const { data, error } = await messagesApi.getByConversation(conversationId);
+    if (data) {
+      // Buscar reações para todas as mensagens
+      const messagesWithReactions = await Promise.all(
+        (data as any[]).map(async (msg) => {
+          const { data: reactions } = await messageReactions.getByMessage(msg.id);
+          // Buscar reply_to se existir
+          let replyTo = null;
+          if (msg.reply_to_id) {
+            const { data: replyData } = await supabase
+              .from('messages')
+              .select('id, content, sender_id')
+              .eq('id', msg.reply_to_id)
+              .single();
+            replyTo = replyData;
+          }
+          return { ...msg, reactions: reactions || [], reply_to: replyTo };
+        })
+      );
+      setMessages(messagesWithReactions);
+
+      // Marcar mensagens não lidas do outro usuário como lidas
+      const unreadMessages = messagesWithReactions.filter(
+        (m: any) => m.sender_id === otherUserId && !m.is_read
+      );
+
+      if (unreadMessages.length > 0) {
+        unreadMessages.forEach((m: any) => messagesApi.markAsRead(m.id));
+      }
+    }
+    setLoading(false);
+  };
+
   useEffect(() => {
     fetchMessages();
 
@@ -174,6 +209,32 @@ const ChatScreen: React.FC<ChatScreenProps> = ({
             return [...prev, newMsg];
           });
           scrollToBottom();
+
+          // Se a mensagem for do outro usuário e eu estou no chat, marcar como lida
+          if (newMsg.sender_id === otherUserId) {
+            messagesApi.markAsRead(newMsg.id);
+            // Atualizar estado local para refletir que foi lida (optimistic)
+            setMessages(prev => prev.map(m => m.id === newMsg.id ? { ...m, is_read: true } : m));
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'messages',
+          filter: `conversation_id=eq.${conversationId}`,
+        },
+        (payload) => {
+          const updatedMsg = payload.new as Message;
+          // Atualizar a mensagem no estado, preservando reações se não vierem no payload
+          setMessages(prev => prev.map(m => {
+            if (m.id === updatedMsg.id) {
+              return { ...m, ...updatedMsg, reactions: m.reactions };
+            }
+            return m;
+          }));
         }
       )
       .on('presence', { event: 'sync' }, () => {
@@ -218,31 +279,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({
     scrollToBottom();
   }, [messages, otherUserTyping]);
 
-  const fetchMessages = async () => {
-    setLoading(true);
-    const { data, error } = await messagesApi.getByConversation(conversationId);
-    if (data) {
-      // Buscar reações para todas as mensagens
-      const messagesWithReactions = await Promise.all(
-        (data as any[]).map(async (msg) => {
-          const { data: reactions } = await messageReactions.getByMessage(msg.id);
-          // Buscar reply_to se existir
-          let replyTo = null;
-          if (msg.reply_to_id) {
-            const { data: replyData } = await supabase
-              .from('messages')
-              .select('id, content, sender_id')
-              .eq('id', msg.reply_to_id)
-              .single();
-            replyTo = replyData;
-          }
-          return { ...msg, reactions: reactions || [], reply_to: replyTo };
-        })
-      );
-      setMessages(messagesWithReactions);
-    }
-    setLoading(false);
-  };
+
 
   // Reaction Handlers
   const handleAddReaction = async (messageId: string, reaction: string) => {

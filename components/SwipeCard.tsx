@@ -14,15 +14,25 @@ interface SwipeCardProps {
     minHeight?: number;
     zodiac?: string;
   };
+  myInterests?: string[]; // IDs dos interesses do usuário logado
+  hasActions?: boolean;
 }
 
-const SwipeCard: React.FC<SwipeCardProps> = ({ profile, isActive, swipeDirection, dragOffset = 0, style, myZodiacSign, activeFilters }) => {
+const SwipeCard: React.FC<SwipeCardProps> = ({ profile, isActive, swipeDirection, dragOffset = 0, style, myZodiacSign, activeFilters, myInterests, hasActions = true }) => {
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const photos = profile.photos && profile.photos.length > 0 ? profile.photos : [profile.imageUrl];
 
-  // Compatibilidade por signo
-  const compatibility = zodiac.getCompatibility(myZodiacSign, profile.zodiacSign);
+  // Compatibilidade
+  let compatibility = zodiac.getCompatibility(myZodiacSign, profile.zodiacSign);
+
+  // Adicionar bônus por interesses em comum
+  if (myInterests && profile.interests) {
+    const sharedCount = profile.interests.filter(i => myInterests.includes(i.id)).length;
+    compatibility = Math.min(100, compatibility + (sharedCount * 15));
+  }
+
   const compatibilityText = zodiac.getCompatibilityText(compatibility);
+
 
   const handleTap = (e: React.MouseEvent<HTMLDivElement>) => {
     if (Math.abs(dragOffset) > 10) return;
@@ -126,7 +136,7 @@ const SwipeCard: React.FC<SwipeCardProps> = ({ profile, isActive, swipeDirection
       )}
 
       {/* Content - Layout Otimizado */}
-      <div className="absolute bottom-0 left-0 right-0 pointer-events-none" style={{ paddingBottom: 'calc(110px + env(safe-area-inset-bottom, 0px))' }}>
+      <div className="absolute bottom-0 left-0 right-0 pointer-events-none" style={{ paddingBottom: hasActions ? 'calc(110px + env(safe-area-inset-bottom, 0px))' : 'calc(20px + env(safe-area-inset-bottom, 0px))' }}>
         <div className="px-5 pb-3 flex flex-col gap-3">
 
           {/* Compatibilidade por Signo */}
@@ -163,8 +173,8 @@ const SwipeCard: React.FC<SwipeCardProps> = ({ profile, isActive, swipeDirection
             {/* Signo */}
             {profile.zodiacSign && (
               <div className={`flex items-center gap-1.5 bg-white/10 backdrop-blur-md px-3 h-8 rounded-lg border shadow-sm ${activeFilters?.zodiac === profile.zodiacSign
-                  ? 'border-yellow-400/50 bg-yellow-500/20'
-                  : 'border-white/10'
+                ? 'border-yellow-400/50 bg-yellow-500/20'
+                : 'border-white/10'
                 }`}>
                 <Sparkles size={14} className={activeFilters?.zodiac === profile.zodiacSign ? "text-yellow-400" : "text-white"} />
                 <span className={`text-xs font-bold ${activeFilters?.zodiac === profile.zodiacSign ? "text-yellow-400" : "text-white"}`}>
@@ -176,8 +186,8 @@ const SwipeCard: React.FC<SwipeCardProps> = ({ profile, isActive, swipeDirection
             {/* Altura */}
             {profile.height && (
               <div className={`flex items-center gap-1.5 bg-white/10 backdrop-blur-md px-3 h-8 rounded-lg border shadow-sm ${activeFilters?.minHeight && profile.height >= activeFilters.minHeight
-                  ? 'border-yellow-400/50 bg-yellow-500/20'
-                  : 'border-white/10'
+                ? 'border-yellow-400/50 bg-yellow-500/20'
+                : 'border-white/10'
                 }`}>
                 <Ruler size={14} className={activeFilters?.minHeight && profile.height >= activeFilters.minHeight ? "text-yellow-400" : "text-white"} />
                 <span className={`text-xs font-bold ${activeFilters?.minHeight && profile.height >= activeFilters.minHeight ? "text-yellow-400" : "text-white"}`}>
@@ -199,6 +209,18 @@ const SwipeCard: React.FC<SwipeCardProps> = ({ profile, isActive, swipeDirection
               <div className="flex items-center gap-1.5 bg-white/10 backdrop-blur-md px-3 h-8 rounded-lg border border-white/10 shadow-sm">
                 <GraduationCap size={14} className="text-white" />
                 <span className="text-xs font-bold text-white truncate max-w-[100px]">{profile.education}</span>
+              </div>
+            )}
+
+            {/* Interesses */}
+            {profile.interests && profile.interests.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-1 w-full">
+                {profile.interests.map((interest, index) => (
+                  <div key={index} className="flex items-center gap-1.5 bg-white/10 backdrop-blur-md px-3 h-8 rounded-lg border border-white/10 shadow-sm">
+                    <span className="text-sm">{interest.emoji}</span>
+                    <span className="text-xs font-bold text-white">{interest.name}</span>
+                  </div>
+                ))}
               </div>
             )}
           </div>

@@ -906,7 +906,95 @@ CREATE POLICY "Usuários podem adicionar reações"
 ON message_reactions FOR INSERT
 WITH CHECK (auth.uid() = user_id);
 
+
 CREATE POLICY "Usuários podem remover próprias reações"
 ON message_reactions FOR DELETE
 USING (auth.uid() = user_id);
+
+
+-- =============================================
+-- NOVOS INTERESSES (FUN LIST)
+-- Data: 02/12/2025
+-- Descrição: Lista atualizada com gírias e categorias divertidas
+-- =============================================
+
+-- Limpar interesses antigos para substituir pela nova lista
+-- DELETE FROM user_interests;
+-- DELETE FROM interests;
+
+INSERT INTO interests (name, category, emoji) VALUES
+    -- 🔥 Quente (Rápido / Casual)
+    ('Pente e Rala', '🔥 Quente', '😏'),
+    ('Vapo Vapo', '🔥 Quente', '💨'),
+    ('Só o Pente', '🔥 Quente', '🔥'),
+    ('Revoada', '🔥 Quente', '🦅'),
+    ('No Sigilo', '🔥 Quente', '🤫'),
+    ('Sem Apego', '🔥 Quente', '🍃'),
+    ('Remember', '🔥 Quente', '🔄'),
+    ('Flashback', '🔥 Quente', '🔙'),
+    ('Só o Mel', '🔥 Quente', '🍯'),
+    ('Um Lance', '🔥 Quente', '🎲'),
+    ('Só Trombada', '🔥 Quente', '💥'),
+    ('Madeirada', '🔥 Quente', '🪵'),
+    ('0800', '🔥 Quente', '🆓'),
+
+    -- ❤️ Romântico (Namoro / Sério)
+    ('Fechamento', '❤️ Romântico', '🔒'),
+    ('Meu Dengo', '❤️ Romântico', '🥰'),
+    ('Xodó', '❤️ Romântico', '🥺'),
+    ('Mozão', '❤️ Romântico', '💍'),
+    ('Pra Somar', '❤️ Romântico', '➕'),
+    ('Lovezinho', '❤️ Romântico', '🫶'),
+    ('Fiel de Fechar', '❤️ Romântico', '🤝'),
+    ('Pra Casar', '❤️ Romântico', '👰'),
+    ('Meu Cheiro', '❤️ Romântico', '🌹'),
+    ('Contatinho Fixo', '❤️ Romântico', '📌'),
+
+    -- 🍻 Social (Conversa / Vibe)
+    ('Resenha', '🍻 Social', '🗣️'),
+    ('Desenrolo', '🍻 Social', '🧶'),
+    ('Sintonia', '🍻 Social', '✨'),
+    ('Trocar Ideia', '🍻 Social', '💡'),
+    ('De Boa', '🍻 Social', '✌️'),
+    ('Só Vamo', '🍻 Social', '🚀'),
+    ('Mó Fita', '🍻 Social', '📼'),
+
+    -- 🎭 Estilo / Personalidade
+    ('Mandrake', '🎭 Estilo', '🕶️'),
+    ('Do Corre', '🎭 Estilo', '🏃'),
+    ('Cria', '🎭 Estilo', '🤙'),
+    ('Paty', '🎭 Estilo', '💅'),
+    ('Biscoiteiro(a)', '🎭 Estilo', '🍪'),
+    ('Low Profile', '🎭 Estilo', '👻'),
+    ('Ratx de Academia', '🎭 Estilo', '💪'),
+
+    -- 🛑 Limites
+    ('Sem Lero-Lero', '🛑 Limites', '🚫'),
+    ('Poucas Ideias', '🛑 Limites', '🤐'),
+    ('Zero Caô', '🛑 Limites', '🤥'),
+    ('Sem Drama', '🛑 Limites', '🎭'),
+    ('Sem Migué', '🛑 Limites', '🙅'),
+    ('Vacilão Passa', '🛑 Limites', '👋')
+ON CONFLICT (name) DO UPDATE SET 
+    category = EXCLUDED.category,
+    emoji = EXCLUDED.emoji;
+
+
+-- =============================================
+-- CORREÇÃO: RLS para marcar mensagens como lidas
+-- Data: 02/12/2025
+-- Descrição: Permitir que usuários atualizem mensagens em suas conversas (para marcar como lida)
+-- =============================================
+
+CREATE POLICY "Usuários podem atualizar mensagens de suas conversas"
+ON messages FOR UPDATE
+USING (
+    EXISTS (
+        SELECT 1 FROM conversations c
+        JOIN matches m ON c.match_id = m.id
+        WHERE c.id = messages.conversation_id
+        AND (m.user1_id = auth.uid() OR m.user2_id = auth.uid())
+    )
+);
+
 

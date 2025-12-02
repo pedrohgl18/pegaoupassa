@@ -3,11 +3,11 @@ import { User, Session } from '@supabase/supabase-js'
 import { supabase, profiles } from '../lib/supabase'
 import { initPushNotifications, removePushToken, removePushListeners } from '../lib/pushNotifications'
 import { Capacitor } from '@capacitor/core'
-import type { Profile } from '../types/database'
+import type { Profile, ProfileWithAll } from '../types/database'
 
 interface AuthState {
   user: User | null
-  profile: Profile | null
+  profile: ProfileWithAll | null
   session: Session | null
   loading: boolean
   error: string | null
@@ -29,9 +29,9 @@ export function useAuth() {
   const profileLoadingRef = useRef(false)
 
   // Buscar perfil usando fetch direto (bypass do cliente Supabase no Android)
-  const fetchProfileDirect = useCallback(async (userId: string, accessToken: string): Promise<Profile | null> => {
+  const fetchProfileDirect = useCallback(async (userId: string, accessToken: string): Promise<ProfileWithAll | null> => {
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-    const url = `${supabaseUrl}/rest/v1/profiles?id=eq.${userId}&select=*`
+    const url = `${supabaseUrl}/rest/v1/profiles?id=eq.${userId}&select=*,user_interests(interest:interests(*))`
 
     try {
       const response = await fetch(url, {
@@ -47,7 +47,7 @@ export function useAuth() {
       if (!response.ok) return null
 
       const data = await response.json()
-      return data.length > 0 ? data[0] as Profile : null
+      return data.length > 0 ? data[0] as unknown as ProfileWithAll : null
     } catch (err: any) {
       console.error('fetchProfileDirect error:', err)
       return null
@@ -55,7 +55,7 @@ export function useAuth() {
   }, [])
 
   // Criar perfil usando fetch direto (Android)
-  const createProfileDirect = useCallback(async (userId: string, email: string, accessToken: string): Promise<Profile | null> => {
+  const createProfileDirect = useCallback(async (userId: string, email: string, accessToken: string): Promise<ProfileWithAll | null> => {
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
     const url = `${supabaseUrl}/rest/v1/profiles`
 
@@ -89,7 +89,7 @@ export function useAuth() {
       }
 
       const data = await response.json()
-      return data.length > 0 ? data[0] as Profile : data as Profile
+      return data.length > 0 ? data[0] as unknown as ProfileWithAll : data as unknown as ProfileWithAll
     } catch (err: any) {
       console.error('createProfileDirect error:', err)
       return null
@@ -97,7 +97,7 @@ export function useAuth() {
   }, [fetchProfileDirect])
 
   // Carregar perfil (com fallback para fetch direto no Android)
-  const loadProfile = useCallback(async (user: User, accessToken: string): Promise<Profile | null> => {
+  const loadProfile = useCallback(async (user: User, accessToken: string): Promise<ProfileWithAll | null> => {
     if (profileLoadingRef.current) return null
 
     profileLoadingRef.current = true
@@ -113,16 +113,27 @@ export function useAuth() {
       }
 
       // No web, usar cliente Supabase normalmente
-      const { data: existingProfile, error } = await profiles.getById(user.id)
+      const { data: existingProfile, error } = await profiles.getByIdWithRelations(user.id)
 
-      if (error) return null
-      if (existingProfile) return existingProfile as Profile
+      // Se houver erro, verificamos se é porque o perfil não existe (PGRST116 ou 406)
+      // Se for erro real de conexão ou permissão, retornamos null
+      if (error) {
+        // Códigos comuns para "não encontrado" no Supabase/PostgREST
+        const isNotFound = error.code === 'PGRST116' || error.code === '406' || error.message?.includes('rows returned');
+
+        if (!isNotFound) {
+          console.error('Erro ao buscar perfil:', error)
+          return null
+        }
+      }
+
+      if (existingProfile) return existingProfile as unknown as ProfileWithAll
 
       // Criar se não existe
       const { data: newProfile, error: createError } = await profiles.upsertInitial(user.id, user.email || '')
       if (createError) return null
 
-      return newProfile as Profile
+      return newProfile as unknown as ProfileWithAll
     } catch (err: any) {
       console.error('loadProfile error:', err)
       return null
@@ -387,7 +398,7 @@ export function useAuth() {
   }, [state.user])
 
   // Atualizar perfil
-  const updateProfile = useCallback(async (updates: Partial<Profile>) => {
+  const updateProfile = useCallback(async (updates: Partial<ProfileWithAll>) => {
     if (!state.user) {
       return { error: new Error('Usuário não autenticado') }
     }

@@ -11,6 +11,7 @@ export interface Profile {
   profession?: string;
   education?: string;
   height?: number;
+  interests?: { id: string; name: string; emoji: string }[];
 }
 
 export interface Chat {

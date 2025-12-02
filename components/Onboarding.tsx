@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ChevronRight, MapPin, Calendar, User, Heart, MessageSquare, Loader2, Camera, Plus, X } from 'lucide-react';
+import { ChevronRight, MapPin, Calendar, User, Heart, MessageSquare, Loader2, Camera, Plus, X, Tag } from 'lucide-react';
 import Button from './Button';
-import { photos as photosApi, profiles } from '../lib/supabase';
+import { photos as photosApi, profiles, interests } from '../lib/supabase';
 import type { Profile } from '../types/database';
+import InterestSelector from './InterestSelector';
 
 interface OnboardingProps {
   userId: string;
@@ -13,7 +14,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ userId, profile }) => {
   // Iniciar no step salvo + 1 (próximo a completar), ou 1 se novo
   const [step, setStep] = useState(() => {
     const savedStep = profile?.onboarding_step || 0;
-    return Math.min(savedStep + 1, 4); // Próximo step a completar (max 4)
+    return Math.min(savedStep + 1, 5); // Próximo step a completar (max 5)
   });
   const [saving, setSaving] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
@@ -25,6 +26,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ userId, profile }) => {
   const [gender, setGender] = useState<'male' | 'female' | 'other' | null>(profile?.gender || null);
   const [interestedIn, setInterestedIn] = useState<'male' | 'female' | 'both' | null>(profile?.looking_for || null);
   const [photoUrls, setPhotoUrls] = useState<string[]>([]);
+  const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -76,7 +78,28 @@ const Onboarding: React.FC<OnboardingProps> = ({ userId, profile }) => {
     setStep(4);
   };
 
-  // Finalizar step 4: Localização e completar onboarding
+  // Salvar step 4: Interesses
+  const handleStep4Complete = async () => {
+    if (selectedInterests.length === 0) return;
+    setSaving(true);
+
+    // Salvar interesses
+    const { error: interestsError } = await interests.saveUserInterests(userId, selectedInterests);
+
+    if (interestsError) {
+      setSaving(false);
+      alert('Erro ao salvar interesses. Tente novamente.');
+      return;
+    }
+
+    // Atualizar step
+    const { error } = await profiles.updateOnboarding(userId, {}, 4);
+    setSaving(false);
+    if (error) { alert('Erro ao salvar. Tente novamente.'); return; }
+    setStep(5);
+  };
+
+  // Finalizar step 5: Localização e completar onboarding
   const handleFinish = async () => {
     setSaving(true);
 
@@ -100,7 +123,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ userId, profile }) => {
       ...locationData,
       onboarding_completed: true,
       is_active: true,
-    }, 4);
+    }, 5);
     setSaving(false);
 
     if (error) { alert('Erro ao finalizar. Tente novamente.'); return; }
@@ -134,11 +157,22 @@ const Onboarding: React.FC<OnboardingProps> = ({ userId, profile }) => {
           <MessageSquare size={32} className="text-brasil-blue" />
         </div>
         <h2 className="text-3xl font-extrabold text-brasil-green">Fala tu! 🗣️</h2>
-        <p className="text-zinc-500 text-sm">Nós sabemos que todo mundo já tá de saco cheio das mesmas perguntas. Escreva aí o que você quer que compartilhemos na mensagem assim que você fizer um match:</p>
-        <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Seu nome"
-          className="w-full p-4 rounded-xl border-2 border-zinc-200 focus:border-brasil-blue bg-zinc-50 text-zinc-900 font-bold text-lg" />
-        <textarea value={bio} onChange={(e) => setBio(e.target.value)} placeholder="Sua mensagem de quebra-gelo..."
-          className="w-full h-24 p-4 rounded-xl border-2 border-zinc-200 focus:border-brasil-blue bg-zinc-50 text-zinc-900 resize-none" />
+
+        {/* Name Field First */}
+        <div className="space-y-2">
+          <label className="text-sm font-bold text-zinc-700">Seu Nome</label>
+          <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Como você quer ser chamado?"
+            className="w-full p-4 rounded-xl border-2 border-zinc-200 focus:border-brasil-blue bg-zinc-50 text-zinc-900 font-bold text-lg" />
+        </div>
+
+        {/* Icebreaker Section */}
+        <div className="space-y-2">
+          <p className="text-zinc-500 text-sm font-medium leading-relaxed">
+            Nós sabemos que todo mundo já tá de saco cheio das mesmas perguntas. Escreva aí o que você quer que compartilhemos na mensagem assim que você fizer um match:
+          </p>
+          <textarea value={bio} onChange={(e) => setBio(e.target.value)} placeholder="Sua mensagem de quebra-gelo..."
+            className="w-full h-32 p-4 rounded-xl border-2 border-zinc-200 focus:border-brasil-blue bg-zinc-50 text-zinc-900 resize-none" />
+        </div>
       </div>
       <Button fullWidth onClick={handleStep1Complete} disabled={!name.trim() || saving}>
         {saving ? <Loader2 size={20} className="animate-spin mr-2" /> : null}
@@ -201,7 +235,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ userId, profile }) => {
         <div className="space-y-2">
           <label className="text-sm font-bold text-brasil-green flex items-center gap-2"><User size={16} />Você se identifica como</label>
           <div className="grid grid-cols-3 gap-2">
-            {[{ id: 'male', label: 'Ele' }, { id: 'female', label: 'Ela' }, { id: 'other', label: 'Outro' }].map(o => (
+            {[{ id: 'male', label: 'Ele' }, { id: 'female', label: 'Ela' }, { id: 'other', label: 'Elu/Delu' }].map(o => (
               <button key={o.id} onClick={() => setGender(o.id as any)} className={`p-3 rounded-lg border-2 font-bold transition-all ${gender === o.id ? 'border-brasil-blue bg-brasil-blue text-white' : 'border-zinc-200 text-zinc-400 hover:border-brasil-blue/50'}`}>{o.label}</button>
             ))}
           </div>
@@ -209,7 +243,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ userId, profile }) => {
         <div className="space-y-2">
           <label className="text-sm font-bold text-brasil-green flex items-center gap-2"><Heart size={16} />Interessado em</label>
           <div className="grid grid-cols-3 gap-2">
-            {[{ id: 'male', label: 'Eles' }, { id: 'female', label: 'Elas' }, { id: 'both', label: 'Ambos' }].map(o => (
+            {[{ id: 'male', label: 'Eles' }, { id: 'female', label: 'Elas' }, { id: 'both', label: 'Todes' }].map(o => (
               <button key={o.id} onClick={() => setInterestedIn(o.id as any)} className={`p-3 rounded-lg border-2 font-bold transition-all ${interestedIn === o.id ? 'border-brasil-blue bg-brasil-blue text-white' : 'border-zinc-200 text-zinc-400 hover:border-brasil-blue/50'}`}>{o.label}</button>
             ))}
           </div>
@@ -217,12 +251,38 @@ const Onboarding: React.FC<OnboardingProps> = ({ userId, profile }) => {
       </div>
       <Button fullWidth onClick={handleStep3Complete} disabled={!birthDate || !gender || !interestedIn || saving}>
         {saving ? <Loader2 size={20} className="animate-spin mr-2" /> : null}
-        Quase lá <ChevronRight size={20} />
+        Próximo <ChevronRight size={20} />
       </Button>
     </div>
   );
 
   const renderStep4 = () => (
+    <div className="flex flex-col h-full p-6">
+      <div className="flex-1 flex flex-col gap-6 pt-4 overflow-y-auto">
+        <div className="w-16 h-16 bg-purple-100 rounded-2xl flex items-center justify-center shadow-lg">
+          <Tag size={32} className="text-purple-600" />
+        </div>
+        <div>
+          <h2 className="text-3xl font-extrabold text-brasil-blue">Seus Interesses</h2>
+          <p className="text-zinc-500">Escolha até 3 coisas que você curte</p>
+        </div>
+
+        <InterestSelector
+          selectedIds={selectedInterests}
+          onChange={setSelectedInterests}
+          maxSelection={3}
+        />
+      </div>
+      <div className="pt-4">
+        <Button fullWidth onClick={handleStep4Complete} disabled={selectedInterests.length === 0 || saving}>
+          {saving ? <Loader2 size={20} className="animate-spin mr-2" /> : null}
+          Próximo <ChevronRight size={20} />
+        </Button>
+      </div>
+    </div>
+  );
+
+  const renderStep5 = () => (
     <div className="flex flex-col h-full p-6">
       <div className="flex-1 flex flex-col items-center justify-center gap-6 text-center">
         <div className="relative">
@@ -243,11 +303,12 @@ const Onboarding: React.FC<OnboardingProps> = ({ userId, profile }) => {
 
   return (
     <div className="h-full w-full bg-brasil-light flex flex-col">
-      <div className="w-full h-1 bg-zinc-200"><div className="h-full bg-brasil-green transition-all duration-300" style={{ width: `${(step / 4) * 100}%` }} /></div>
+      <div className="w-full h-1 bg-zinc-200"><div className="h-full bg-brasil-green transition-all duration-300" style={{ width: `${(step / 5) * 100}%` }} /></div>
       {step === 1 && renderStep1()}
       {step === 2 && renderStep2()}
       {step === 3 && renderStep3()}
       {step === 4 && renderStep4()}
+      {step === 5 && renderStep5()}
     </div>
   );
 };

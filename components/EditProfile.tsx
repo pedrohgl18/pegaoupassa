@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Loader2, Plus, X, Briefcase, GraduationCap, Ruler, Sparkles, Settings as SettingsIcon } from 'lucide-react';
+import { ArrowLeft, Loader2, Plus, X, Briefcase, GraduationCap, Ruler, Sparkles, Settings as SettingsIcon, Tag, ChevronRight } from 'lucide-react';
 import Button from './Button';
-import { profiles, photos as photosApi } from '../lib/supabase';
+import { profiles, photos as photosApi, interests } from '../lib/supabase';
 import { Settings } from './Settings';
+import InterestSelector from './InterestSelector';
 
 const ZODIAC_SIGNS = [
   'Áries', 'Touro', 'Gêmeos', 'Câncer', 'Leão', 'Virgem',
@@ -33,6 +34,7 @@ const EditProfile: React.FC<EditProfileProps> = ({ userId, onBack, onSave, onLog
   const [saving, setSaving] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showInterestsModal, setShowInterestsModal] = useState(false);
 
   // Form State
   const [name, setName] = useState('');
@@ -41,6 +43,7 @@ const EditProfile: React.FC<EditProfileProps> = ({ userId, onBack, onSave, onLog
   const [education, setEducation] = useState('');
   const [height, setHeight] = useState('');
   const [zodiacSign, setZodiacSign] = useState('');
+  const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
 
   const [photoUrls, setPhotoUrls] = useState<{ id: string, url: string, position: number }[]>([]);
 
@@ -64,6 +67,10 @@ const EditProfile: React.FC<EditProfileProps> = ({ userId, onBack, onSave, onLog
 
       if (data.photos) {
         setPhotoUrls(data.photos.sort((a: any, b: any) => a.position - b.position));
+      }
+
+      if (data.user_interests) {
+        setSelectedInterests(data.user_interests.map((ui: any) => ui.interest_id));
       }
     }
     setLoading(false);
@@ -129,6 +136,7 @@ const EditProfile: React.FC<EditProfileProps> = ({ userId, onBack, onSave, onLog
 
     setSaving(true);
     try {
+      // Update profile
       const { error } = await profiles.update(userId, {
         name: name.trim(),
         bio: bio.trim(),
@@ -140,9 +148,17 @@ const EditProfile: React.FC<EditProfileProps> = ({ userId, onBack, onSave, onLog
 
       if (error) {
         alert('Erro ao salvar perfil.');
-      } else {
-        onSave();
+        return;
       }
+
+      // Update interests
+      const { error: interestsError } = await interests.saveUserInterests(userId, selectedInterests);
+      if (interestsError) {
+        alert('Erro ao salvar interesses.');
+        return;
+      }
+
+      onSave();
     } finally {
       setSaving(false);
     }
@@ -257,6 +273,8 @@ const EditProfile: React.FC<EditProfileProps> = ({ userId, onBack, onSave, onLog
           </div>
         </section>
 
+
+
         {/* Details */}
         <section className="space-y-4">
           <h2 className="text-sm font-bold text-zinc-500 uppercase tracking-wider">Detalhes</h2>
@@ -322,6 +340,29 @@ const EditProfile: React.FC<EditProfileProps> = ({ userId, onBack, onSave, onLog
           </div>
         </section>
 
+
+
+        {/* Interests Button */}
+        <section className="space-y-4">
+          <h2 className="text-sm font-bold text-zinc-500 uppercase tracking-wider flex items-center gap-2">
+            <Tag size={16} /> Interesses
+          </h2>
+          <button
+            onClick={() => setShowInterestsModal(true)}
+            className="w-full p-4 bg-white rounded-xl border-2 border-zinc-200 flex items-center justify-between group hover:border-brasil-blue transition-all"
+          >
+            <div className="flex flex-col items-start">
+              <span className="font-bold text-zinc-900">Selecionar Interesses</span>
+              <span className="text-xs text-zinc-500">
+                {selectedInterests.length > 0
+                  ? `${selectedInterests.length} selecionados`
+                  : 'Adicione seus hobbies e gostos'}
+              </span>
+            </div>
+            <ChevronRight size={20} className="text-zinc-400 group-hover:text-brasil-blue" />
+          </button>
+        </section>
+
         <div className="pt-4 pb-10">
           <Button fullWidth onClick={handleSave} disabled={saving}>
             {saving ? 'Salvando...' : 'Salvar Alterações'}
@@ -329,6 +370,39 @@ const EditProfile: React.FC<EditProfileProps> = ({ userId, onBack, onSave, onLog
         </div>
 
       </div>
+
+      {/* Interests Modal */}
+      {showInterestsModal && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-[480px] h-[80vh] rounded-t-3xl sm:rounded-3xl p-6 flex flex-col shadow-2xl animate-in slide-in-from-bottom duration-300">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-extrabold text-zinc-900 flex items-center gap-2">
+                <Tag size={24} className="text-brasil-blue" /> Seus Interesses
+              </h2>
+              <button
+                onClick={() => setShowInterestsModal(false)}
+                className="p-2 bg-zinc-100 rounded-full text-zinc-500 hover:bg-zinc-200"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto">
+              <InterestSelector
+                selectedIds={selectedInterests}
+                onChange={setSelectedInterests}
+                maxSelection={3}
+              />
+            </div>
+
+            <div className="pt-4 mt-4 border-t border-zinc-100">
+              <Button fullWidth onClick={() => setShowInterestsModal(false)}>
+                Concluir
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

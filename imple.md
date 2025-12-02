@@ -44,7 +44,7 @@
 | Upload de fotos | ✅ | Step 2 - Supabase Storage |
 | Validação de idade (18+) | ⏳ | Precisa implementar |
 | Barra de progresso | ✅ | 4 steps |
-| Seleção de interesses/tags | ⏳ | Lista de hobbies clicáveis |
+| Seleção de interesses/tags | ✅ | Implementado (Onboarding + EditProfile) |
 | Persistência de progresso | ✅ | Salva cada step no banco |
 | Retomar onboarding | ✅ | Continua de onde parou |
 
@@ -62,7 +62,8 @@
 | Múltiplas fotos (galeria) | ✅ | Suporte a 6 fotos |
 | Informações extras | ✅ | Profissão, altura, escolaridade, signo |
 | Verificação de perfil | ⏳ | Selfie com gesto |
-| Estatísticas do perfil | ⏳ | Likes recebidos, matches |
+| Estatísticas do perfil | ✅ | Likes recebidos, matches (VIP Only) |
+| Visualizar como público | ✅ | Ver como os outros veem seu perfil |
 
 ---
 
@@ -77,7 +78,7 @@
 | Feedback visual (coração/X) | ✅ | Mostrar ícone ao arrastar |
 | Indicador de direção | ⏳ | Texto explicativo para novos usuários |
 | Galeria de fotos no card | ✅ | Navegação por toque esq/dir |
-| Informações completas | ⏳ | Distância, online, interesses em comum |
+| Informações completas | ✅ | Distância, online, interesses em comum |
 | Compatibilidade por signo | ✅ | Badge mostrando % e texto |
 | Botões de ação | ✅ | Botões flutuantes implementados |
 | Botão voltar (rewind) | ⏳ | Desfazer último swipe |
@@ -241,6 +242,25 @@
 | 02/12/2025 | **Correção Notificações Chat** | Corrigido bug onde usuário recebia notificação da própria mensagem. Adicionado verificação de senderId !== receiverId. |
 | 02/12/2025 | **Refatoração VIP/Login** | Telas de VIP e Login atualizadas com identidade visual do Brasil. Adicionado checklist comparativo no VIP. |
 | 02/12/2025 | **Novas Funcionalidades VIP** | Adicionado "Modo Incógnito" e "Confirmação de Leitura". Removido "Boost" e "Undo" (não serão implementados agora). |
+| 02/12/2025 | **Seleção de Interesses** | Implementado seletor de interesses no Onboarding e EditProfile. Interesses aparecem no card e influenciam compatibilidade. |
+| 02/12/2025 | **Novos Interesses** | Atualizada lista de interesses com gírias e categorias divertidas (Quente, Romântico, Social, etc). |
+| 02/12/2025 | **Preview de Perfil** | Adicionado botão "Visualizar Perfil Público" para o usuário ver como seu card aparece para os outros. |
+| 02/12/2025 | **Estatísticas VIP** | Adicionado cards de "Matches" e "Curtidas" no perfil, exclusivos para usuários VIP. |
+| 02/12/2025 | **UI Editar Perfil** | Movida seção de interesses para baixo de detalhes e transformada em modal expansível. |
+| 02/12/2025 | **Confirmação de Leitura** | Implementada lógica de marcar mensagens como lidas e atualização em tempo real para o remetente. |
+| 02/12/2025 | **Correção RLS Mensagens** | Adicionada política RLS permitindo UPDATE na tabela messages para marcar como lida. |
+| 02/12/2025 | **Correção Ícone e CSS** | Ícone do app atualizado (Web e Android) e warnings do Tailwind no VS Code resolvidos. |
+| 02/12/2025 | **Correção Perfil no Chat** | "Toque para ver perfil" agora carrega dados completos do banco (interesses, bio, etc) em vez de mock. |
+| 02/12/2025 | **Ajuste UI Perfil Chat** | Removidos botões de ação (Like/Pass) ao visualizar perfil de um match e ajustado padding. |
+| 02/12/2025 | **Ajuste Cores UI** | Telas de "Zerou o Game", Loading e Erro ajustadas para fundo claro (padrão do app) em vez de preto/azul. |
+| 02/12/2025 | **Ajuste Login** | Tela de Login com cores mais suaves (pastel) e card de boas-vindas posicionado mais acima. |
+| 02/12/2025 | **Logo Login** | Ícone da tela de login atualizado para Coração (igual Loading) e card movido ainda mais para cima (-mt-32). |
+| 02/12/2025 | **Ajuste Layout Login** | Conteúdo da tela de login movido consideravelmente para cima (-mt-72 e pt-28) e botão do Google ajustado para não quebrar linha. |
+| 02/12/2025 | **Layout Login Final** | Topo da tela de login fixado em 50vh com card subindo -mt-24, garantindo posição elevada em qualquer tela. |
+| 02/12/2025 | **Design Login Final** | Cores vibrantes (Esmeralda/Azul), logo branco com ícone Teal e efeitos de fundo ampliados para maior imersão. |
+| 02/12/2025 | **Correção Auth** | Corrigido erro 406 ao logar com novo usuário. Agora o sistema cria o perfil corretamente se não encontrado. |
+| 02/12/2025 | **Ajuste Onboarding** | Reordenado campos do Step 1 (Nome primeiro) e atualizado texto do "Quebra-gelo" conforme solicitado. |
+| 02/12/2025 | **Ajuste Labels Onboarding** | Alterado "Outro" para "Elu/Delu" e "Ambos" para "Todes" no Step 3 do Onboarding. |
 
 ---
 

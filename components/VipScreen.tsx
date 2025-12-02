@@ -16,6 +16,7 @@ const VipScreen: React.FC<VipScreenProps> = ({ price, onPurchase, onClose }) => 
         { label: "Filtros Avançados", free: false, vip: true, icon: "🎯" },
         { label: "Modo Incógnito", free: false, vip: true, icon: "🕵️" },
         { label: "Confirmação de Leitura", free: false, vip: true, icon: "✅" },
+        { label: "Estatísticas de Perfil", free: false, vip: true, icon: "📊" },
         { label: "Sem Anúncios", free: false, vip: true, icon: "🚫" },
     ];
 
@@ -32,13 +33,13 @@ const VipScreen: React.FC<VipScreenProps> = ({ price, onPurchase, onClose }) => 
                 {/* Close Button */}
                 <button
                     onClick={onClose}
-                    className="absolute top-4 right-4 p-2 bg-black/20 hover:bg-black/30 text-white rounded-full backdrop-blur-md transition-colors"
+                    className="absolute top-12 right-4 p-2 bg-black/20 hover:bg-black/30 text-white rounded-full backdrop-blur-md transition-colors z-50"
                 >
                     <X size={20} />
                 </button>
 
                 {/* VIP Badge */}
-                <div className="mb-4 relative">
+                <div className="mb-2 relative scale-90">
                     <div className="absolute inset-0 bg-brasil-yellow blur-xl opacity-50 rounded-full animate-pulse" />
                     <div className="relative w-24 h-24 bg-gradient-to-br from-brasil-yellow to-orange-500 rounded-3xl rotate-3 flex items-center justify-center shadow-2xl border-4 border-white/20">
                         <Crown size={48} className="text-white drop-shadow-md -rotate-3" fill="white" />
@@ -50,55 +51,55 @@ const VipScreen: React.FC<VipScreenProps> = ({ price, onPurchase, onClose }) => 
                     </div>
                 </div>
 
-                <h1 className="text-3xl font-black text-white mb-2 text-center drop-shadow-md mt-2">
+                <h1 className="text-3xl font-black text-white mb-1 text-center drop-shadow-md mt-2">
                     Seja <span className="text-brasil-yellow">VIP</span>
                 </h1>
-                <p className="text-blue-100 text-center mb-8 text-sm font-medium max-w-[280px] leading-relaxed">
+                <p className="text-blue-100 text-center mb-4 text-sm font-medium max-w-[280px] leading-relaxed">
                     Desbloqueie superpoderes e pare de depender da sorte. O jogo vira quando você é VIP.
                 </p>
 
                 {/* Comparison Card */}
-                <div className="w-full bg-white rounded-3xl shadow-xl border border-zinc-100 overflow-hidden mb-6">
+                <div className="w-full bg-white rounded-3xl shadow-xl border border-zinc-100 overflow-hidden mb-4">
                     {/* Table Header */}
-                    <div className="grid grid-cols-3 bg-zinc-50 border-b border-zinc-100 p-4">
+                    <div className="grid grid-cols-3 bg-zinc-50 border-b border-zinc-100 p-3">
                         <div className="col-span-1 flex items-center">
-                            <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Benefícios</span>
+                            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Benefícios</span>
                         </div>
                         <div className="col-span-1 flex justify-center">
-                            <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Free</span>
+                            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Free</span>
                         </div>
                         <div className="col-span-1 flex justify-center">
-                            <span className="text-xs font-black text-brasil-blue uppercase tracking-wider bg-blue-50 px-2 py-0.5 rounded-full">VIP</span>
+                            <span className="text-[10px] font-black text-brasil-blue uppercase tracking-wider bg-blue-50 px-2 py-0.5 rounded-full">VIP</span>
                         </div>
                     </div>
 
                     {/* Table Body */}
                     <div className="divide-y divide-zinc-50">
                         {features.map((feature, idx) => (
-                            <div key={idx} className="grid grid-cols-3 p-4 items-center hover:bg-zinc-50 transition-colors">
+                            <div key={idx} className="grid grid-cols-3 p-3 items-center hover:bg-zinc-50 transition-colors">
                                 <div className="col-span-1 flex flex-col">
-                                    <span className="text-sm font-bold text-zinc-700 flex items-center gap-1">
+                                    <span className="text-xs font-bold text-zinc-700 flex items-center gap-1">
                                         {feature.label}
                                     </span>
                                 </div>
                                 <div className="col-span-1 flex justify-center">
                                     {feature.free ? (
-                                        <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center">
-                                            <Check size={14} className="text-green-600" strokeWidth={3} />
+                                        <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center">
+                                            <Check size={12} className="text-green-600" strokeWidth={3} />
                                         </div>
                                     ) : (
-                                        <div className="w-6 h-6 rounded-full bg-zinc-100 flex items-center justify-center">
-                                            <X size={14} className="text-zinc-300" strokeWidth={3} />
+                                        <div className="w-5 h-5 rounded-full bg-zinc-100 flex items-center justify-center">
+                                            <X size={12} className="text-zinc-300" strokeWidth={3} />
                                         </div>
                                     )}
                                 </div>
                                 <div className="col-span-1 flex justify-center">
                                     {feature.vip ? (
-                                        <div className="w-6 h-6 rounded-full bg-brasil-green flex items-center justify-center shadow-sm shadow-green-200">
-                                            <Check size={14} className="text-white" strokeWidth={4} />
+                                        <div className="w-5 h-5 rounded-full bg-brasil-green flex items-center justify-center shadow-sm shadow-green-200">
+                                            <Check size={12} className="text-white" strokeWidth={4} />
                                         </div>
                                     ) : (
-                                        <X size={16} className="text-zinc-300" />
+                                        <X size={14} className="text-zinc-300" />
                                     )}
                                 </div>
                             </div>
@@ -107,14 +108,14 @@ const VipScreen: React.FC<VipScreenProps> = ({ price, onPurchase, onClose }) => 
                 </div>
 
                 {/* Footer Actions */}
-                <div className="mt-auto w-full space-y-4">
+                <div className="mt-auto w-full space-y-3 pb-8">
                     <div className="text-center">
                         <span className="text-zinc-400 text-xs font-medium line-through">R$ 29,90</span>
                         <div className="flex items-center justify-center gap-2">
                             <span className="text-3xl font-black text-brasil-blue">{price}</span>
                             <span className="text-sm font-bold text-zinc-500">/ mês</span>
                         </div>
-                        <span className="text-green-600 text-xs font-bold bg-green-50 px-2 py-0.5 rounded-full">
+                        <span className="text-green-600 text-[10px] font-bold bg-green-50 px-2 py-0.5 rounded-full">
                             Economize 70% hoje
                         </span>
                     </div>
@@ -122,17 +123,17 @@ const VipScreen: React.FC<VipScreenProps> = ({ price, onPurchase, onClose }) => 
                     <Button
                         fullWidth
                         onClick={onPurchase}
-                        className="!bg-gradient-to-r !from-brasil-green !to-emerald-600 !text-white !h-14 !text-lg !font-black hover:!brightness-110 shadow-xl shadow-green-500/20 uppercase tracking-wide rounded-2xl"
+                        className="!bg-gradient-to-r !from-brasil-green !to-emerald-600 !text-white !h-12 !text-lg !font-black hover:!brightness-110 shadow-xl shadow-green-500/20 uppercase tracking-wide rounded-2xl"
                     >
                         <div className="flex items-center gap-2">
-                            <Zap size={20} fill="white" />
+                            <Zap size={18} fill="white" />
                             Quero Ser VIP
                         </div>
                     </Button>
 
                     <button
                         onClick={onClose}
-                        className="w-full py-2 text-zinc-400 font-bold hover:text-zinc-600 transition-colors text-xs uppercase tracking-wider"
+                        className="w-full py-2 text-zinc-400 font-bold hover:text-zinc-600 transition-colors text-xs uppercase tracking-wider mb-4"
                     >
                         Não, prefiro ficar limitado
                     </button>
