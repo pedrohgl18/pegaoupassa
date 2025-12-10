@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Loader2, Plus, X, Briefcase, GraduationCap, Ruler, Sparkles, Settings as SettingsIcon, Tag, ChevronRight } from 'lucide-react';
 import Button from './Button';
 import { profiles, photos as photosApi, interests } from '../lib/supabase';
-import { profiles, photos as photosApi, interests } from '../lib/supabase';
+
 import InterestSelector from './InterestSelector';
 
 const ZODIAC_SIGNS = [

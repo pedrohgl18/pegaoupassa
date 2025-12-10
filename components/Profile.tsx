@@ -1,5 +1,5 @@
-import React from 'react';
-import { Crown, Pencil, SlidersHorizontal, ChevronRight, Star, Settings, LogOut, MapPin, Sparkles, Heart, User, Lock } from 'lucide-react';
+import React, { useState } from 'react';
+import { Crown, Pencil, SlidersHorizontal, ChevronRight, Star, Settings as SettingsIcon, LogOut, MapPin, Sparkles, Heart, User, Lock } from 'lucide-react';
 import Button from './Button';
 import { ScreenState } from '../types';
 import { Settings } from './Settings';
@@ -228,7 +228,7 @@ const Profile: React.FC<ProfileProps> = ({
                     >
                         <div className="flex items-center gap-4">
                             <div className="w-10 h-10 rounded-full bg-zinc-50 text-zinc-600 flex items-center justify-center group-hover:bg-zinc-600 group-hover:text-white transition-colors">
-                                <Settings size={20} />
+                                <SettingsIcon size={20} />
                             </div>
                             <div className="text-left">
                                 <p className="font-bold text-zinc-800">Configurações</p>
