@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ChevronRight, MapPin, Calendar, User, Heart, MessageSquare, Loader2, Camera, Plus, X, Tag } from 'lucide-react';
+import { ChevronRight, MapPin, Calendar, User, Heart, MessageSquare, Loader2, Camera, Plus, X, Tag, Briefcase, GraduationCap } from 'lucide-react';
 import Button from './Button';
 import { photos as photosApi, profiles, interests } from '../lib/supabase';
 import type { Profile } from '../types/database';
@@ -27,6 +27,8 @@ const Onboarding: React.FC<OnboardingProps> = ({ userId, profile }) => {
   const [interestedIn, setInterestedIn] = useState<'male' | 'female' | 'both' | null>(profile?.looking_for || null);
   const [photoUrls, setPhotoUrls] = useState<string[]>([]);
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
+  const [profession, setProfession] = useState(profile?.profession || '');
+  const [education, setEducation] = useState(profile?.education || '');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -72,6 +74,8 @@ const Onboarding: React.FC<OnboardingProps> = ({ userId, profile }) => {
       birth_date: birthDate,
       gender,
       looking_for: interestedIn,
+      profession: profession.trim(),
+      education: education.trim(),
     }, 3);
     setSaving(false);
     if (error) { alert('Erro ao salvar. Tente novamente.'); return; }
@@ -153,16 +157,16 @@ const Onboarding: React.FC<OnboardingProps> = ({ userId, profile }) => {
   const renderStep1 = () => (
     <div className="flex flex-col h-full p-6">
       <div className="flex-1 flex flex-col justify-center gap-6">
-        <div className="w-16 h-16 bg-brasil-yellow rounded-2xl flex items-center justify-center shadow-lg rotate-3">
-          <MessageSquare size={32} className="text-brasil-blue" />
+        <div className="w-16 h-16 bg-violet-100 rounded-2xl flex items-center justify-center shadow-lg rotate-3">
+          <MessageSquare size={32} className="text-violet-600" />
         </div>
-        <h2 className="text-3xl font-extrabold text-brasil-green">Fala tu! 🗣️</h2>
+        <h2 className="text-3xl font-extrabold text-violet-600">Fala tu! 🗣️</h2>
 
         {/* Name Field First */}
         <div className="space-y-2">
           <label className="text-sm font-bold text-zinc-700">Seu Nome</label>
           <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Como você quer ser chamado?"
-            className="w-full p-4 rounded-xl border-2 border-zinc-200 focus:border-brasil-blue bg-zinc-50 text-zinc-900 font-bold text-lg" />
+            className="w-full p-4 rounded-xl border-2 border-zinc-200 focus:border-violet-600 bg-zinc-50 text-zinc-900 font-bold text-lg" />
         </div>
 
         {/* Icebreaker Section */}
@@ -171,7 +175,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ userId, profile }) => {
             Nós sabemos que todo mundo já tá de saco cheio das mesmas perguntas. Escreva aí o que você quer que compartilhemos na mensagem assim que você fizer um match:
           </p>
           <textarea value={bio} onChange={(e) => setBio(e.target.value)} placeholder="Sua mensagem de quebra-gelo..."
-            className="w-full h-32 p-4 rounded-xl border-2 border-zinc-200 focus:border-brasil-blue bg-zinc-50 text-zinc-900 resize-none" />
+            className="w-full h-32 p-4 rounded-xl border-2 border-zinc-200 focus:border-violet-600 bg-zinc-50 text-zinc-900 resize-none" />
         </div>
       </div>
       <Button fullWidth onClick={handleStep1Complete} disabled={!name.trim() || saving}>
@@ -184,10 +188,10 @@ const Onboarding: React.FC<OnboardingProps> = ({ userId, profile }) => {
   const renderStep2 = () => (
     <div className="flex flex-col h-full p-6">
       <div className="flex-1 flex flex-col gap-6">
-        <div className="w-16 h-16 bg-brasil-green rounded-2xl flex items-center justify-center shadow-lg">
-          <Camera size={32} className="text-white" />
+        <div className="w-16 h-16 bg-violet-100 rounded-2xl flex items-center justify-center shadow-lg">
+          <Camera size={32} className="text-violet-600" />
         </div>
-        <h2 className="text-3xl font-extrabold text-brasil-blue">Mostra a cara!</h2>
+        <h2 className="text-3xl font-extrabold text-violet-600">Mostra a cara!</h2>
         <p className="text-zinc-500">Adicione pelo menos 1 foto (máximo 6)</p>
         <div className="grid grid-cols-3 gap-3">
           {[0, 1, 2, 3, 4, 5].map((i) => (
@@ -199,15 +203,15 @@ const Onboarding: React.FC<OnboardingProps> = ({ userId, profile }) => {
                     <X size={16} className="text-white" />
                   </button>
                   {i === 0 && (
-                    <div className="absolute bottom-2 left-2 bg-brasil-yellow text-brasil-blue text-xs font-bold px-2 py-1 rounded-full">
+                    <div className="absolute bottom-2 left-2 bg-violet-600 text-white text-xs font-bold px-2 py-1 rounded-full">
                       Principal
                     </div>
                   )}
                 </>
               ) : (
                 <button onClick={() => fileInputRef.current?.click()} disabled={uploadingPhoto || i !== photoUrls.length}
-                  className={`w-full h-full border-2 border-dashed rounded-xl flex items-center justify-center transition-all ${i === photoUrls.length ? 'border-brasil-blue bg-brasil-blue/5 hover:bg-brasil-blue/10' : 'border-zinc-200 bg-zinc-50'}`}>
-                  {uploadingPhoto && i === photoUrls.length ? <Loader2 size={24} className="animate-spin text-brasil-blue" /> : <Plus size={20} className={i === photoUrls.length ? 'text-brasil-blue' : 'text-zinc-400'} />}
+                  className={`w-full h-full border-2 border-dashed rounded-xl flex items-center justify-center transition-all ${i === photoUrls.length ? 'border-violet-600 bg-violet-50 hover:bg-violet-100' : 'border-zinc-200 bg-zinc-50'}`}>
+                  {uploadingPhoto && i === photoUrls.length ? <Loader2 size={24} className="animate-spin text-violet-600" /> : <Plus size={20} className={i === photoUrls.length ? 'text-violet-600' : 'text-zinc-400'} />}
                 </button>
               )}
             </div>
@@ -225,28 +229,45 @@ const Onboarding: React.FC<OnboardingProps> = ({ userId, profile }) => {
 
   const renderStep3 = () => (
     <div className="flex flex-col h-full p-6">
-      <div className="flex-1 flex flex-col gap-6 pt-4">
-        <h2 className="text-3xl font-extrabold text-brasil-blue">Sobre você</h2>
+      <div className="flex-1 flex flex-col gap-5 pt-4 overflow-y-auto">
+        <h2 className="text-3xl font-extrabold text-violet-600">Sobre você</h2>
         <p className="text-zinc-500">Conta mais pra gente te conhecer melhor</p>
         <div className="space-y-2">
-          <label className="text-sm font-bold text-brasil-green flex items-center gap-2"><Calendar size={16} />Data de Nascimento</label>
+          <label className="text-sm font-bold text-violet-600 flex items-center gap-2"><Calendar size={16} />Data de Nascimento</label>
           <input type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} className="w-full p-4 rounded-xl border-2 border-zinc-200 bg-white font-bold text-zinc-900" />
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-bold text-brasil-green flex items-center gap-2"><User size={16} />Você se identifica como</label>
+          <label className="text-sm font-bold text-violet-600 flex items-center gap-2"><User size={16} />Você se identifica como</label>
           <div className="grid grid-cols-3 gap-2">
             {[{ id: 'male', label: 'Ele' }, { id: 'female', label: 'Ela' }, { id: 'other', label: 'Elu/Delu' }].map(o => (
-              <button key={o.id} onClick={() => setGender(o.id as any)} className={`p-3 rounded-lg border-2 font-bold transition-all ${gender === o.id ? 'border-brasil-blue bg-brasil-blue text-white' : 'border-zinc-200 text-zinc-400 hover:border-brasil-blue/50'}`}>{o.label}</button>
+              <button key={o.id} onClick={() => setGender(o.id as any)} className={`p-3 rounded-lg border-2 font-bold transition-all ${gender === o.id ? 'border-violet-600 bg-violet-600 text-white' : 'border-zinc-200 text-zinc-400 hover:border-violet-300'}`}>{o.label}</button>
             ))}
           </div>
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-bold text-brasil-green flex items-center gap-2"><Heart size={16} />Interessado em</label>
+          <label className="text-sm font-bold text-violet-600 flex items-center gap-2"><Heart size={16} />Interessado em</label>
           <div className="grid grid-cols-3 gap-2">
             {[{ id: 'male', label: 'Eles' }, { id: 'female', label: 'Elas' }, { id: 'both', label: 'Todes' }].map(o => (
-              <button key={o.id} onClick={() => setInterestedIn(o.id as any)} className={`p-3 rounded-lg border-2 font-bold transition-all ${interestedIn === o.id ? 'border-brasil-blue bg-brasil-blue text-white' : 'border-zinc-200 text-zinc-400 hover:border-brasil-blue/50'}`}>{o.label}</button>
+              <button key={o.id} onClick={() => setInterestedIn(o.id as any)} className={`p-3 rounded-lg border-2 font-bold transition-all ${interestedIn === o.id ? 'border-violet-600 bg-violet-600 text-white' : 'border-zinc-200 text-zinc-400 hover:border-violet-300'}`}>{o.label}</button>
             ))}
           </div>
+        </div>
+
+        {/* New Fields */}
+        <div className="space-y-2">
+          <label className="text-sm font-bold text-violet-600 flex items-center gap-2"><Briefcase size={16} />Profissão ou Cargo</label>
+          <input type="text" value={profession} onChange={(e) => setProfession(e.target.value)} placeholder="Ex: Designer, Estudante..." className="w-full p-3 rounded-xl border-2 border-zinc-200 bg-white font-bold text-zinc-900 focus:border-violet-600" />
+        </div>
+        <div className="space-y-2">
+          <label className="text-sm font-bold text-violet-600 flex items-center gap-2"><GraduationCap size={16} />Escolaridade</label>
+          <select value={education} onChange={(e) => setEducation(e.target.value)} className="w-full p-3 rounded-xl border-2 border-zinc-200 bg-white font-bold text-zinc-900 focus:border-violet-600">
+            <option value="">Selecione...</option>
+            <option value="Ensino Médio">Ensino Médio Incompleto</option>
+            <option value="Ensino Médio Completo">Ensino Médio Completo</option>
+            <option value="Ensino Superior">Ensino Superior Incompleto</option>
+            <option value="Ensino Superior Completo">Ensino Superior Completo</option>
+            <option value="Pós-graduação">Pós-graduação</option>
+          </select>
         </div>
       </div>
       <Button fullWidth onClick={handleStep3Complete} disabled={!birthDate || !gender || !interestedIn || saving}>
@@ -259,11 +280,11 @@ const Onboarding: React.FC<OnboardingProps> = ({ userId, profile }) => {
   const renderStep4 = () => (
     <div className="flex flex-col h-full p-6">
       <div className="flex-1 flex flex-col gap-6 pt-4 overflow-y-auto">
-        <div className="w-16 h-16 bg-purple-100 rounded-2xl flex items-center justify-center shadow-lg">
-          <Tag size={32} className="text-purple-600" />
+        <div className="w-16 h-16 bg-violet-100 rounded-2xl flex items-center justify-center shadow-lg">
+          <Tag size={32} className="text-violet-600" />
         </div>
         <div>
-          <h2 className="text-3xl font-extrabold text-brasil-blue">Seus Interesses</h2>
+          <h2 className="text-3xl font-extrabold text-violet-600">Seus Interesses</h2>
           <p className="text-zinc-500">Escolha até 3 coisas que você curte</p>
         </div>
 
@@ -286,31 +307,32 @@ const Onboarding: React.FC<OnboardingProps> = ({ userId, profile }) => {
     <div className="flex flex-col h-full p-6">
       <div className="flex-1 flex flex-col items-center justify-center gap-6 text-center">
         <div className="relative">
-          <div className="absolute inset-0 bg-brasil-green/20 rounded-full blur-xl animate-pulse" />
-          <div className="w-32 h-32 bg-gradient-to-br from-brasil-green to-teal-500 rounded-full flex items-center justify-center shadow-2xl relative">
-            <MapPin size={64} className="text-white" />
+          <div className="relative">
+            <div className="absolute inset-0 bg-violet-600/20 rounded-full blur-xl animate-pulse" />
+            <div className="w-32 h-32 bg-gradient-to-br from-violet-600 to-fuchsia-600 rounded-full flex items-center justify-center shadow-2xl relative">
+              <MapPin size={64} className="text-white" />
+            </div>
           </div>
+          <h2 className="text-3xl font-extrabold text-violet-600">Onde você está?</h2>
+          <p className="text-zinc-600 max-w-xs">Para encontrar pessoas perto de você, precisamos da sua localização.</p>
         </div>
-        <h2 className="text-3xl font-extrabold text-brasil-blue">Onde você está?</h2>
-        <p className="text-zinc-600 max-w-xs">Para encontrar pessoas perto de você, precisamos da sua localização.</p>
+        <Button fullWidth onClick={handleFinish} disabled={saving}>
+          {saving ? <><Loader2 size={20} className="animate-spin mr-2" />Finalizando...</> : 'Começar a usar!'}
+        </Button>
+        <p className="text-center text-xs text-zinc-400 mt-4">Você pode pular a localização e configurar depois</p>
       </div>
-      <Button fullWidth onClick={handleFinish} disabled={saving}>
-        {saving ? <><Loader2 size={20} className="animate-spin mr-2" />Finalizando...</> : 'Começar a usar!'}
-      </Button>
-      <p className="text-center text-xs text-zinc-400 mt-4">Você pode pular a localização e configurar depois</p>
-    </div>
-  );
+      );
 
-  return (
-    <div className="h-full w-full bg-brasil-light flex flex-col">
-      <div className="w-full h-1 bg-zinc-200"><div className="h-full bg-brasil-green transition-all duration-300" style={{ width: `${(step / 5) * 100}%` }} /></div>
-      {step === 1 && renderStep1()}
-      {step === 2 && renderStep2()}
-      {step === 3 && renderStep3()}
-      {step === 4 && renderStep4()}
-      {step === 5 && renderStep5()}
-    </div>
-  );
+      return (
+      <div className="h-full w-full bg-brasil-light flex flex-col">
+        <div className="w-full h-1 bg-zinc-200"><div className="h-full bg-violet-600 transition-all duration-300" style={{ width: `${(step / 5) * 100}%` }} /></div>
+        {step === 1 && renderStep1()}
+        {step === 2 && renderStep2()}
+        {step === 3 && renderStep3()}
+        {step === 4 && renderStep4()}
+        {step === 5 && renderStep5()}
+      </div>
+      );
 };
 
-export default Onboarding;
+      export default Onboarding;

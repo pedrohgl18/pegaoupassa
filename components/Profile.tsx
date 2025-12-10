@@ -248,8 +248,8 @@ const Profile: React.FC<ProfileProps> = ({
                                     <Sparkles size={20} />
                                 </div>
                                 <div className="text-left">
-                                    <p className="font-bold text-zinc-800">Pega ou Passa Gold</p>
-                                    <p className="text-xs text-zinc-500">Veja quem te curtiu</p>
+                                    <p className="font-bold text-zinc-800">Modo VIP Lendário</p>
+                                    <p className="text-xs text-zinc-500">Veja quem te curtiu e mais</p>
                                 </div>
                             </div>
                             <ChevronRight size={20} className="text-zinc-300 group-hover:text-orange-500 transition-colors" />

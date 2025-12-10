@@ -89,7 +89,7 @@ export function Settings({ onClose, onLogout }: SettingsProps) {
                 .from('blocks')
                 .select(`
           id,
-          blocked:profiles!blocked_id(id, name, photos)
+          blocked:profiles!blocked_id(id, name, photos(*))
         `)
                 .eq('blocker_id', user.id);
 

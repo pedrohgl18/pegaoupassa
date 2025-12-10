@@ -11,6 +11,7 @@ interface VipScreenProps {
 const VipScreen: React.FC<VipScreenProps> = ({ price, onPurchase, onClose }) => {
     const features = [
         { label: "Likes Infinitos", free: false, vip: true, icon: "🔥" },
+        { label: "Modo Agora Ilimitado", free: false, vip: true, icon: "✨" },
         { label: "Ver quem te curtiu", free: false, vip: true, icon: "👀" },
         { label: "Enviar Fotos & Áudio", free: false, vip: true, icon: "📸" },
         { label: "Filtros Avançados", free: false, vip: true, icon: "🎯" },
@@ -23,10 +24,10 @@ const VipScreen: React.FC<VipScreenProps> = ({ price, onPurchase, onClose }) => 
     return (
         <div className="flex flex-col h-full w-full bg-zinc-50 relative overflow-y-auto animate-in slide-in-from-bottom duration-500">
             {/* Header Background */}
-            <div className="absolute top-0 left-0 right-0 h-[340px] bg-brasil-blue overflow-hidden rounded-b-[40px] shadow-xl z-0">
-                <div className="absolute inset-0 bg-gradient-to-br from-brasil-blue via-blue-600 to-brasil-green opacity-90" />
-                <div className="absolute -top-20 -right-20 w-64 h-64 bg-brasil-yellow rounded-full blur-[80px] opacity-30 animate-pulse" />
-                <div className="absolute top-20 -left-20 w-48 h-48 bg-brasil-green rounded-full blur-[60px] opacity-30" />
+            <div className="absolute top-0 left-0 right-0 h-[340px] bg-violet-900 overflow-hidden rounded-b-[40px] shadow-xl z-0">
+                <div className="absolute inset-0 bg-gradient-to-br from-violet-900 via-purple-800 to-indigo-900 opacity-90" />
+                <div className="absolute -top-20 -right-20 w-64 h-64 bg-fuchsia-500 rounded-full blur-[80px] opacity-30 animate-pulse" />
+                <div className="absolute top-20 -left-20 w-48 h-48 bg-violet-500 rounded-full blur-[60px] opacity-30" />
             </div>
 
             <div className="relative z-10 flex flex-col items-center px-6 pt-8 pb-6 flex-grow">
@@ -40,21 +41,21 @@ const VipScreen: React.FC<VipScreenProps> = ({ price, onPurchase, onClose }) => 
 
                 {/* VIP Badge */}
                 <div className="mb-2 relative scale-90">
-                    <div className="absolute inset-0 bg-brasil-yellow blur-xl opacity-50 rounded-full animate-pulse" />
-                    <div className="relative w-24 h-24 bg-gradient-to-br from-brasil-yellow to-orange-500 rounded-3xl rotate-3 flex items-center justify-center shadow-2xl border-4 border-white/20">
+                    <div className="absolute inset-0 bg-fuchsia-500 blur-xl opacity-50 rounded-full animate-pulse" />
+                    <div className="relative w-24 h-24 bg-gradient-to-br from-amber-300 to-yellow-500 rounded-3xl rotate-3 flex items-center justify-center shadow-2xl border-4 border-white/20">
                         <Crown size={48} className="text-white drop-shadow-md -rotate-3" fill="white" />
                     </div>
                     <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 bg-white px-3 py-1 rounded-full shadow-lg border border-zinc-100">
-                        <span className="text-xs font-black text-brasil-blue uppercase tracking-widest whitespace-nowrap">
+                        <span className="text-xs font-black text-violet-800 uppercase tracking-widest whitespace-nowrap">
                             Nível Lendário
                         </span>
                     </div>
                 </div>
 
                 <h1 className="text-3xl font-black text-white mb-1 text-center drop-shadow-md mt-2">
-                    Seja <span className="text-brasil-yellow">VIP</span>
+                    Seja <span className="text-amber-300">VIP</span>
                 </h1>
-                <p className="text-blue-100 text-center mb-4 text-sm font-medium max-w-[280px] leading-relaxed">
+                <p className="text-indigo-100 text-center mb-4 text-sm font-medium max-w-[280px] leading-relaxed">
                     Desbloqueie superpoderes e pare de depender da sorte. O jogo vira quando você é VIP.
                 </p>
 
@@ -69,7 +70,7 @@ const VipScreen: React.FC<VipScreenProps> = ({ price, onPurchase, onClose }) => 
                             <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Free</span>
                         </div>
                         <div className="col-span-1 flex justify-center">
-                            <span className="text-[10px] font-black text-brasil-blue uppercase tracking-wider bg-blue-50 px-2 py-0.5 rounded-full">VIP</span>
+                            <span className="text-[10px] font-black text-violet-600 uppercase tracking-wider bg-violet-50 px-2 py-0.5 rounded-full">VIP</span>
                         </div>
                     </div>
 
@@ -95,7 +96,7 @@ const VipScreen: React.FC<VipScreenProps> = ({ price, onPurchase, onClose }) => 
                                 </div>
                                 <div className="col-span-1 flex justify-center">
                                     {feature.vip ? (
-                                        <div className="w-5 h-5 rounded-full bg-brasil-green flex items-center justify-center shadow-sm shadow-green-200">
+                                        <div className="w-5 h-5 rounded-full bg-violet-600 flex items-center justify-center shadow-sm shadow-violet-200">
                                             <Check size={12} className="text-white" strokeWidth={4} />
                                         </div>
                                     ) : (
@@ -112,7 +113,7 @@ const VipScreen: React.FC<VipScreenProps> = ({ price, onPurchase, onClose }) => 
                     <div className="text-center">
                         <span className="text-zinc-400 text-xs font-medium line-through">R$ 29,90</span>
                         <div className="flex items-center justify-center gap-2">
-                            <span className="text-3xl font-black text-brasil-blue">{price}</span>
+                            <span className="text-3xl font-black text-violet-900">{price}</span>
                             <span className="text-sm font-bold text-zinc-500">/ mês</span>
                         </div>
                         <span className="text-green-600 text-[10px] font-bold bg-green-50 px-2 py-0.5 rounded-full">
@@ -123,7 +124,7 @@ const VipScreen: React.FC<VipScreenProps> = ({ price, onPurchase, onClose }) => 
                     <Button
                         fullWidth
                         onClick={onPurchase}
-                        className="!bg-gradient-to-r !from-brasil-green !to-emerald-600 !text-white !h-12 !text-lg !font-black hover:!brightness-110 shadow-xl shadow-green-500/20 uppercase tracking-wide rounded-2xl"
+                        className="!bg-gradient-to-r !from-violet-600 !to-fuchsia-600 !text-white !h-12 !text-lg !font-black hover:!brightness-110 shadow-xl shadow-violet-500/20 uppercase tracking-wide rounded-2xl"
                     >
                         <div className="flex items-center gap-2">
                             <Zap size={18} fill="white" />
