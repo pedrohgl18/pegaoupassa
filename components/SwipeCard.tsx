@@ -138,6 +138,16 @@ const SwipeCard: React.FC<SwipeCardProps> = ({
           {/* Gradients */}
           <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none" />
 
+          {/* Flip Button - Top Right */}
+          <div className="absolute top-4 right-4 z-50 pointer-events-auto">
+            <button
+              onClick={handleFlip}
+              className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center text-white border border-white/10 hover:bg-black/60 transition-all active:scale-95"
+            >
+              <RotateCw size={20} />
+            </button>
+          </div>
+
           {/* Photo Indicators */}
           {photos.length > 1 && (
             <div className="absolute top-2 left-0 right-0 z-30 px-3 flex gap-1">
@@ -172,12 +182,7 @@ const SwipeCard: React.FC<SwipeCardProps> = ({
               )}
             </div>
 
-            {/* Flip Button */}
-            <div className="absolute right-6 bottom-[calc(100px+env(safe-area-inset-bottom))] pointer-events-auto">
-              <button onClick={handleFlip} className="w-12 h-12 rounded-full glass flex items-center justify-center text-white hover:bg-white/20 transition-all active:scale-95">
-                <RotateCw size={24} />
-              </button>
-            </div>
+
           </div>
         </div>
 
