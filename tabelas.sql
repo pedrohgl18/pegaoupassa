@@ -62,6 +62,7 @@ CREATE TABLE profiles (
     longitude DECIMAL(11, 8),
     city TEXT,
     state TEXT,
+    neighborhood TEXT,
     
     -- Informações extras
     profession TEXT,

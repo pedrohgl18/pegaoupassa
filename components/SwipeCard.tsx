@@ -169,7 +169,7 @@ const SwipeCard: React.FC<SwipeCardProps> = ({
           )}
 
           {/* Info Section - Stacked Layout with Safety Margin */}
-          <div className="absolute bottom-0 left-0 right-0 pb-[calc(110px+env(safe-area-inset-bottom))] px-5 z-30 pointer-events-none flex flex-col items-start gap-1">
+          <div className="absolute bottom-0 left-0 right-0 pb-[calc(90px+env(safe-area-inset-bottom))] px-5 z-30 pointer-events-none flex flex-col items-start gap-1">
 
             {/* Layer 3: Tags (Top) - Subtler visually */}
             <div className="flex flex-wrap gap-2 mb-1 w-full items-center justify-start">

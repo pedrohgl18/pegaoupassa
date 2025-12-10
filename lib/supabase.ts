@@ -283,6 +283,9 @@ export const profiles = {
     looking_for: 'male' | 'female' | 'both'
     onboarding_step: number
     onboarding_completed: boolean
+    vibe_status: string
+    vibe_expires_at: string
+    last_vibe_activation: string
   }>) => {
     const { data, error } = await supabase
       .from('profiles')
@@ -390,7 +393,7 @@ export const profiles = {
           const distance = R * c;
           return { ...profile, distance };
         }
-        return { ...profile, distance: 9999 }; // Sem localização = longe
+        return { ...profile, distance: 99999 }; // Sem localização = Longe (será filtrado)
       }).filter((profile: any) => profile.distance <= (filters.maxDistance || 100));
     } else {
       // Se não tem localização do usuário, assume distância 0 ou desconhecida
@@ -423,7 +426,16 @@ export const profiles = {
 export const photos = {
   // Upload de foto para Storage + salvar no banco
   upload: async (userId: string, file: File, position: number) => {
-    const fileExt = file.name.split('.').pop()
+    // Better extension handling
+    let fileExt = file.name.split('.').pop();
+    if (!fileExt || fileExt === file.name) {
+      // If no extension, infer from type
+      if (file.type === 'image/jpeg') fileExt = 'jpg';
+      else if (file.type === 'image/png') fileExt = 'png';
+      else if (file.type === 'image/webp') fileExt = 'webp';
+      else fileExt = 'jpg'; // Fallback
+    }
+
     const timestamp = Date.now()
     const fileName = `${userId}/${timestamp}_${position}.${fileExt}`
 
@@ -998,6 +1010,26 @@ export const zodiac = {
     if (percentage >= 60) return 'Tem Futuro! ✨ Só não enrola'
     if (percentage >= 45) return 'Pagou pra ver! 🎲 Ousadia pura'
     return 'Desafio Aceito? 😈 Os opostos se atraem...'
+  },
+
+  // Calcular signo (getSing helper)
+  getSign: (dateString: string): string => {
+    const date = new Date(dateString);
+    const day = date.getDate();
+    const month = date.getMonth() + 1;
+
+    if ((month === 3 && day >= 21) || (month === 4 && day <= 19)) return 'Áries';
+    if ((month === 4 && day >= 20) || (month === 5 && day <= 20)) return 'Touro';
+    if ((month === 5 && day >= 21) || (month === 6 && day <= 20)) return 'Gêmeos';
+    if ((month === 6 && day >= 21) || (month === 7 && day <= 22)) return 'Câncer';
+    if ((month === 7 && day >= 23) || (month === 8 && day <= 22)) return 'Leão';
+    if ((month === 8 && day >= 23) || (month === 9 && day <= 22)) return 'Virgem';
+    if ((month === 9 && day >= 23) || (month === 10 && day <= 22)) return 'Libra';
+    if ((month === 10 && day >= 23) || (month === 11 && day <= 21)) return 'Escorpião';
+    if ((month === 11 && day >= 22) || (month === 12 && day <= 21)) return 'Sagitário';
+    if ((month === 12 && day >= 22) || (month === 1 && day <= 19)) return 'Capricórnio';
+    if ((month === 1 && day >= 20) || (month === 2 && day <= 18)) return 'Aquário';
+    return 'Peixes';
   },
 }
 

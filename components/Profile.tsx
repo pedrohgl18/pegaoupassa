@@ -34,7 +34,7 @@ const Profile: React.FC<ProfileProps> = ({
     receivedLikesCount,
 }) => {
     const [showSettings, setShowSettings] = useState(false);
-    const avatarUrl = user?.user_metadata?.avatar_url || profile?.photos?.[0]?.url || "https://picsum.photos/seed/me/400/400";
+    const avatarUrl = profile?.photos?.[0]?.url || "https://picsum.photos/seed/me/400/400";
     const hasCoverPhoto = profile?.photos?.length > 1;
 
     return (
@@ -263,7 +263,7 @@ const Profile: React.FC<ProfileProps> = ({
                         >
                             <div className="flex items-center gap-4">
                                 <div className="w-10 h-10 rounded-full bg-yellow-50 text-yellow-500 flex items-center justify-center group-hover:bg-yellow-500 group-hover:text-white transition-colors">
-                                    <Settings size={20} />
+                                    <SettingsIcon size={20} />
                                 </div>
                                 <div className="text-left">
                                     <p className="font-bold text-zinc-800">Configurações VIP</p>

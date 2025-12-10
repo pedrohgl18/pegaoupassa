@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { ThumbsUp, X, Crown, Rocket, Star, Ban, Search, User, ChevronUp, ChevronDown, Hand, Heart, Pencil, SlidersHorizontal, Check, Loader2, ChevronLeft, Ghost } from 'lucide-react';
+import { ThumbsUp, X, Crown, Rocket, Star, Ban, Search, User, ChevronUp, ChevronDown, Hand, Heart, Pencil, SlidersHorizontal, Check, Loader2, ChevronLeft, Ghost, MapPin } from 'lucide-react';
 import { ScreenState, SwipeDirection, Profile as ProfileType } from './types';
 import { DAILY_FREE_SWIPES, VIP_PRICE } from './constants';
 import SwipeCard from './components/SwipeCard';
@@ -13,12 +13,15 @@ import RangeSlider from './components/RangeSlider';
 import Profile from './components/Profile';
 import ChatList from './components/ChatList';
 import VipScreen from './components/VipScreen';
+import ReceivedLikesList from './components/ReceivedLikesList';
 import VibeSelector from './components/VibeSelector';
 import LoadingScreen from './components/LoadingScreen';
 import { useAuth } from './hooks/useAuth';
 import { profiles, swipes, matches, messages, supabase } from './lib/supabase';
 import { Chat } from './types';
 import { Capacitor } from '@capacitor/core';
+import { Geolocation } from '@capacitor/geolocation';
+import TutorialOverlay from './components/TutorialOverlay';
 
 // Helper to calculate age
 const calculateAge = (birthDate: string) => {
@@ -105,6 +108,78 @@ const App: React.FC = () => {
   // Derived State
   const currentProfile = feedProfiles[0];
   const nextProfile = feedProfiles[1];
+
+  // Check for tutorial
+  useEffect(() => {
+    if (currentScreen === ScreenState.HOME) {
+      const hasSeen = localStorage.getItem('hasSeenTutorial');
+      if (!hasSeen) {
+        setShowTutorial(true);
+      }
+    }
+  }, [currentScreen]);
+
+  const [locationDenied, setLocationDenied] = useState(false);
+
+  // Geolocation Setup (Android/iOS)
+  useEffect(() => {
+    const setupLocation = async () => {
+      if (!user) return;
+
+      try {
+        // Request permissions
+        const permission = await Geolocation.checkPermissions();
+        console.log('Permission status:', permission);
+
+        if (permission.location !== 'granted') {
+          const request = await Geolocation.requestPermissions();
+          if (request.location !== 'granted') {
+            setLocationDenied(true);
+            return;
+          }
+        }
+
+        // Get current position
+        const position = await Geolocation.getCurrentPosition();
+        if (position) {
+          const { latitude, longitude } = position.coords;
+          setMyLocation({ latitude, longitude });
+          setLocationDenied(false);
+
+          // Reverse Geocoding (City, State, Neighborhood)
+          try {
+            const response = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=pt`);
+            const data = await response.json();
+            const city = data.city || data.locality || '';
+            const state = data.principalSubdivision || '';
+            const neighborhood = data.localityInfo?.administrative?.find((x: any) => x.order === 6)?.name || ''; // Heuristic for neighborhood
+
+            if (user) {
+              console.log('Updating location detailed:', latitude, longitude, city, state, neighborhood);
+              await profiles.update(user.id, {
+                latitude,
+                longitude,
+                city,
+                state,
+                neighborhood
+              });
+            }
+          } catch (geoErr) {
+            console.error('Error in reverse geocoding:', geoErr);
+            // Update lat/long anyway if geocoding fails
+            await profiles.update(user.id, { latitude, longitude });
+          }
+        }
+      } catch (err) {
+        console.error('Error getting location:', err);
+        setLocationDenied(true); // Treat error as denial/failure to enforce check
+      }
+    };
+
+    if (isAuthenticated) {
+      setupLocation();
+    }
+  }, [user, isAuthenticated]);
 
   // Hardware Back Button Handler (Android)
   useEffect(() => {
@@ -360,7 +435,7 @@ const App: React.FC = () => {
           bio: p.bio || '',
           imageUrl: p.photos?.[0]?.url || 'https://picsum.photos/400/600',
           photos: p.photos?.sort((a: any, b: any) => a.position - b.position).map((ph: any) => ph.url) || ['https://picsum.photos/400/600'],
-          distance: p.distance !== undefined ? Math.round(p.distance) : 0,
+          distance: p.distance !== undefined ? p.distance : 0,
           verified: p.is_verified || false,
           zodiacSign: p.zodiac_sign,
           profession: p.profession,
@@ -636,6 +711,7 @@ const App: React.FC = () => {
     }
 
     console.log('Perfil criado com sucesso, redirecionando para HOME');
+    localStorage.removeItem('hasSeenTutorial'); // Reset tutorial for new profile
     setCurrentScreen(ScreenState.HOME);
   };
 
@@ -652,22 +728,16 @@ const App: React.FC = () => {
   const handleSelectVibe = async (vibeId: string) => {
     if (!user) return;
 
-    // Optimistic update
-    updateProfile({ vibeStatus: vibeId });
-    setShowVibeSelector(false);
-
-    // Persist to DB
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString(); // 1 hour
-    const { error } = await supabase
-      .from('profiles')
-      .update({
-        vibe_status: vibeId,
-        vibe_expires_at: expiresAt,
-        last_vibe_activation: new Date().toISOString()
-      })
-      .eq('id', user.id);
 
-    if (error) console.error('Error updating vibe:', error);
+    // Single update call using snake_case column names
+    updateProfile({
+      vibe_status: vibeId,
+      vibe_expires_at: expiresAt,
+      last_vibe_activation: new Date().toISOString()
+    });
+
+    setShowVibeSelector(false);
   };
 
   // Drag Handlers
@@ -710,7 +780,7 @@ const App: React.FC = () => {
       name: profile.name || user.user_metadata.full_name || 'Você',
       age: calculateAge(profile.birth_date || ''),
       bio: profile.bio || '',
-      imageUrl: profile.photos?.[0]?.url || user.user_metadata.avatar_url || 'https://picsum.photos/200',
+      imageUrl: profile.photos?.[0]?.url || 'https://picsum.photos/200',
       photos: profile.photos?.sort((a: any, b: any) => a.position - b.position).map((p: any) => p.url) || [],
       distance: 0,
       verified: profile.is_verified || false,
@@ -807,37 +877,58 @@ const App: React.FC = () => {
     );
   };
 
-  /* Login Screen - Updated for Neutral/Modern Look (Replaces Tropical) */
+  /* Blocking Screen for Location */
+  if (locationDenied) {
+    return (
+      <div className="flex flex-col h-full w-full items-center justify-center bg-white p-6 text-center">
+        <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mb-6 animate-bounce">
+          <MapPin size={40} className="text-red-500" />
+        </div>
+        <h1 className="text-2xl font-black text-zinc-900 mb-2">Localização Necessária</h1>
+        <p className="text-zinc-500 mb-8 max-w-xs">
+          Passou, Pegou... mas onde? 📍<br />
+          Precisamos da sua localização para mostrar pessoas próximas a você.
+        </p>
+        <Button
+          onClick={() => window.location.reload()}
+          className="bg-brasil-blue hover:bg-blue-700"
+        >
+          Tentar Novamente
+        </Button>
+        <p className="mt-4 text-xs text-zinc-400">Verifique se o GPS está ativado.</p>
+      </div>
+    );
+  }
+
+  /* Login Screen - Updated for Light/Premium Look */
   const renderLogin = () => (
-    <div className="flex flex-col h-full w-full relative bg-[#2e1065] overflow-hidden text-white">
-      {/* Background Ambience (Subtle) */}
-      <div className="absolute top-[-20%] left-[-20%] w-[140%] h-[140%] bg-[radial-gradient(circle_at_50%_50%,_rgba(167,139,250,0.15),_transparent_70%)] animate-pulse" style={{ animationDuration: '6s' }} />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[100%] h-[100%] bg-[radial-gradient(circle_at_50%_50%,_rgba(236,72,153,0.15),_transparent_70%)] animate-pulse" style={{ animationDuration: '8s' }} />
+    <div className="flex flex-col h-full w-full relative bg-gradient-to-b from-blue-50/50 to-white overflow-hidden text-zinc-900">
+      {/* Background Ambience (Cleaner, no pulsing blobs) */}
+      <div className="absolute top-0 right-0 w-full h-1/2 bg-gradient-to-b from-violet-100/20 to-transparent pointer-events-none" />
 
       {/* Main Content */}
       <div className="relative z-10 flex flex-col items-center justify-center h-full px-6 text-center">
 
         {/* Logo Container */}
-        <div className="relative group mb-12">
-          <div className="absolute inset-0 bg-gradient-to-r from-primary to-secondary rounded-full blur-3xl opacity-10 group-hover:opacity-30 transition-opacity duration-1000" />
-          <div className="glass p-8 rounded-[40px] shadow-2xl relative z-10 transform transition-transform duration-500 hover:scale-105">
+        <div className="relative group mb-8">
+          <div className="p-4 relative z-10 transform transition-transform duration-500 hover:scale-105">
             <img
-              src="/logo_premium.svg"
+              src="/logo.svg"
               alt="Pega ou Passa Logo"
-              className="w-32 h-32 drop-shadow-lg"
+              className="w-32 h-32 drop-shadow-xl rounded-[30px]"
             />
           </div>
         </div>
 
         {/* Brand Text */}
-        <div className="space-y-4 mb-16 animate-slide-up">
-          <h1 className="text-5xl font-black tracking-tighter">
-            <span className="text-white">PEGA</span>
-            <span className="text-primary mx-2">OU</span>
-            <span className="text-white">PASSA</span>
+        <div className="space-y-3 mb-12 animate-slide-up w-full max-w-lg mx-auto px-4">
+          <h1 className="text-4xl font-black tracking-tighter text-zinc-900 leading-none">
+            <span className="text-violet-700">PEGA</span>
+            <span className="text-zinc-400 mx-2 text-2xl align-middle">OU</span>
+            <span className="text-violet-700">PASSA</span>
           </h1>
-          <p className="text-lg text-zinc-400 font-medium tracking-wide">
-            Namoro feito pro <span className="text-white font-bold">Brasil</span>
+          <p className="text-base text-zinc-600 font-medium whitespace-normal max-w-xs mx-auto">
+            O jeito mais divertido de encontrar seu par!
           </p>
         </div>
 
@@ -846,11 +937,11 @@ const App: React.FC = () => {
           <button
             onClick={handleLogin}
             disabled={loginLoading}
-            className="w-full relative group overflow-hidden bg-white text-black font-bold py-4 px-6 rounded-2xl shadow-lg transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed hover:shadow-[0_0_20px_rgba(255,255,255,0.2)]"
+            className="w-full h-14 bg-white hover:bg-zinc-50 text-zinc-800 font-bold text-lg rounded-full shadow-lg shadow-zinc-200/50 border border-zinc-200 flex items-center justify-center gap-3 transition-all active:scale-95 relative overflow-hidden group"
           >
             <div className="flex items-center justify-center gap-3 relative z-10">
               {loginLoading ? (
-                <Loader2 className="animate-spin text-black" size={24} />
+                <Loader2 className="animate-spin text-violet-600" size={24} />
               ) : (
                 <>
                   <svg className="w-6 h-6" viewBox="0 0 24 24">
@@ -863,12 +954,10 @@ const App: React.FC = () => {
                 </>
               )}
             </div>
-            {/* Hover shine effect */}
-            <div className="absolute top-0 -left-full w-1/2 h-full bg-gradient-to-r from-transparent via-zinc-200/40 to-transparent skew-x-[-20deg] group-hover:animate-shine" />
           </button>
 
-          <p className="mt-8 text-xs text-zinc-500">
-            Ao entrar, você concorda com nossos <a href="#" className="underline hover:text-zinc-300">Termos</a> e <a href="#" className="underline hover:text-zinc-300">Privacidade</a>.
+          <p className="mt-8 text-xs text-zinc-400">
+            Ao entrar, você concorda com nossos <a href="#" className="underline hover:text-violet-600">Termos</a> e <a href="#" className="underline hover:text-violet-600">Privacidade</a>.
           </p>
         </div>
       </div>
@@ -1000,7 +1089,7 @@ const App: React.FC = () => {
           {/* Top Bar - Status VIP/Free - Redesigned */}
           {/* Top Bar - Status VIP/Free - Minimalist */}
           <div className="absolute top-0 left-0 right-0 z-20 pointer-events-none">
-            <div className="flex justify-center pt-24 pb-4 bg-gradient-to-b from-black/80 via-black/40 to-transparent">
+            <div className="flex justify-center pt-16 pb-4 bg-gradient-to-b from-black/80 via-black/40 to-transparent">
               {!isVip && !isTopCardFlipped && (
                 <div className="flex items-center gap-3 pointer-events-auto">
                   {/* Progress Bar Minimal */}
@@ -1524,6 +1613,7 @@ const App: React.FC = () => {
           onSelectVibe={handleSelectVibe}
           currentVibe={profile?.vibeStatus}
         />
+        {showTutorial && <TutorialOverlay onDismiss={dismissTutorial} />}
       </div>
     </div>
   );

@@ -48,6 +48,9 @@
 | SeleÃ§Ã£o de interesses/tags | âœ… | Implementado (Onboarding + EditProfile) |
 | PersistÃªncia de progresso | âœ… | Salva cada step no banco |
 | Retomar onboarding | âœ… | Continua de onde parou |
+| Calculo automÃ¡tico de signo | âœ… | Baseado na data de nascimento |
+| Campo de Altura | âœ… | Adicionado ao step 3 |
+| Limite de caracteres (Bio) | âœ… | Max 500 chars com contador |
 
 ---
 
@@ -369,3 +372,7 @@ Se parar em "Chamando profiles.getById..." sem retornar, o cliente Supabase volt
 ```
 | 10/12/2025 | **UX - Flip Card** | Interação de tap-to-flip melhorada, layout do verso ajustado (Nome > Fotos), contador de likes oculto no verso. |
 | 10/12/2025 | **UX - Flip Card Layout** | Ajuste de grid para Profissão/Escolaridade (largura total) para evitar overflow. |
+| 10/12/2025 | **Onboarding V2** | Tema atualizado para Light/Violet. Adicionado Profissão e Escolaridade no Step 3. |
+| 10/12/2025 | **VIP V2** | Tela VIP atualizada para Violet/Purple. Adicionado "Modo Agora Ilimitado" na lista. |
+| 10/12/2025 | **RefatoraÃ§Ã£o Perfil** | Movido Configurações para menu do perfil. Renomeado VIP para "Modo VIP Lendário". |
+| 10/12/2025 | **CorreÃ§Ã£o Bugs** | Corrigido erro 400 em "Usuários Bloqueados" (query Supabase) e crash em "Deletar Conta". |

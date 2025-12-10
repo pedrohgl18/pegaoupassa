@@ -31,7 +31,7 @@ export function useAuth() {
   // Buscar perfil usando fetch direto (bypass do cliente Supabase no Android)
   const fetchProfileDirect = useCallback(async (userId: string, accessToken: string): Promise<ProfileWithAll | null> => {
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-    const url = `${supabaseUrl}/rest/v1/profiles?id=eq.${userId}&select=*,user_interests(interest:interests(*))`
+    const url = `${supabaseUrl}/rest/v1/profiles?id=eq.${userId}&select=*,photos(*),user_interests(interest:interests(*))`
 
     try {
       const response = await fetch(url, {

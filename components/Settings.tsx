@@ -58,7 +58,7 @@ export function Settings({ onClose, onLogout }: SettingsProps) {
         if (!confirm('Tem certeza? Essa ação é IRREVERSÍVEL. Todos os seus dados, fotos e matches serão apagados.')) return;
 
         const confirmText = prompt('Digite "DELETAR" para confirmar:');
-        if (confirmText !== 'DELETAR') return;
+        if (confirmText?.toUpperCase() !== 'DELETAR') return;
 
         setLoading(true);
         try {

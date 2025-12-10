@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ChevronRight, MapPin, Calendar, User, Heart, MessageSquare, Loader2, Camera, Plus, X, Tag, Briefcase, GraduationCap } from 'lucide-react';
+import { ChevronRight, ChevronDown, MapPin, Calendar, User, Heart, MessageSquare, Loader2, Camera, Plus, X, Tag, Briefcase, GraduationCap, Ruler } from 'lucide-react';
 import Button from './Button';
-import { photos as photosApi, profiles, interests } from '../lib/supabase';
+import { photos as photosApi, profiles, interests, zodiac } from '../lib/supabase';
 import type { Profile } from '../types/database';
 import InterestSelector from './InterestSelector';
 
@@ -29,6 +29,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ userId, profile }) => {
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const [profession, setProfession] = useState(profile?.profession || '');
   const [education, setEducation] = useState(profile?.education || '');
+  const [height, setHeight] = useState(profile?.height?.toString() || '');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -73,9 +74,10 @@ const Onboarding: React.FC<OnboardingProps> = ({ userId, profile }) => {
     const { error } = await profiles.updateOnboarding(userId, {
       birth_date: birthDate,
       gender,
-      looking_for: interestedIn,
       profession: profession.trim(),
       education: education.trim(),
+      height: height ? parseInt(height) : null,
+      zodiac_sign: birthDate ? zodiac.getSign(birthDate) : null,
     }, 3);
     setSaving(false);
     if (error) { alert('Erro ao salvar. Tente novamente.'); return; }
@@ -165,7 +167,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ userId, profile }) => {
         {/* Name Field First */}
         <div className="space-y-2">
           <label className="text-sm font-bold text-zinc-700">Seu Nome</label>
-          <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Como você quer ser chamado?"
+          <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Como você quer ser chamado?" maxLength={50}
             className="w-full p-4 rounded-xl border-2 border-zinc-200 focus:border-violet-600 bg-zinc-50 text-zinc-900 font-bold text-lg" />
         </div>
 
@@ -174,14 +176,21 @@ const Onboarding: React.FC<OnboardingProps> = ({ userId, profile }) => {
           <p className="text-zinc-500 text-sm font-medium leading-relaxed">
             Nós sabemos que todo mundo já tá de saco cheio das mesmas perguntas. Escreva aí o que você quer que compartilhemos na mensagem assim que você fizer um match:
           </p>
-          <textarea value={bio} onChange={(e) => setBio(e.target.value)} placeholder="Sua mensagem de quebra-gelo..."
-            className="w-full h-32 p-4 rounded-xl border-2 border-zinc-200 focus:border-violet-600 bg-zinc-50 text-zinc-900 resize-none" />
+          <div className="relative">
+            <textarea value={bio} onChange={(e) => setBio(e.target.value)} placeholder="Sua mensagem de quebra-gelo..." maxLength={500}
+              className="w-full h-32 p-4 rounded-xl border-2 border-zinc-200 focus:border-violet-600 bg-zinc-50 text-zinc-900 resize-none" />
+            <div className="absolute bottom-2 right-2 text-xs text-zinc-400 font-bold bg-white/80 px-2 rounded-full">
+              {bio.length}/500
+            </div>
+          </div>
         </div>
       </div>
-      <Button fullWidth onClick={handleStep1Complete} disabled={!name.trim() || saving}>
-        {saving ? <Loader2 size={20} className="animate-spin mr-2" /> : null}
-        Próximo <ChevronRight size={20} />
-      </Button>
+      <div className="pb-8 pt-4">
+        <Button fullWidth onClick={handleStep1Complete} disabled={!name.trim() || saving} className="!bg-violet-600 !bg-none hover:!bg-violet-700 text-white !shadow-lg !shadow-violet-500/30">
+          {saving ? <Loader2 size={20} className="animate-spin mr-2" /> : null}
+          Próximo <ChevronRight size={20} />
+        </Button>
+      </div>
     </div>
   );
 
@@ -220,10 +229,12 @@ const Onboarding: React.FC<OnboardingProps> = ({ userId, profile }) => {
         <input ref={fileInputRef} type="file" accept="image/*" onChange={handlePhotoSelect} className="hidden" />
         <p className="text-sm text-zinc-500 text-center">{photoUrls.length}/6 fotos</p>
       </div>
-      <Button fullWidth onClick={handleStep2Complete} disabled={photoUrls.length === 0 || uploadingPhoto || saving}>
-        {saving ? <Loader2 size={20} className="animate-spin mr-2" /> : null}
-        Próximo <ChevronRight size={20} />
-      </Button>
+      <div className="pb-8 pt-4">
+        <Button fullWidth onClick={handleStep2Complete} disabled={photoUrls.length === 0 || uploadingPhoto || saving} className="!bg-violet-600 !bg-none hover:!bg-violet-700 text-white !shadow-lg !shadow-violet-500/30">
+          {saving ? <Loader2 size={20} className="animate-spin mr-2" /> : null}
+          Próximo <ChevronRight size={20} />
+        </Button>
+      </div>
     </div>
   );
 
@@ -256,25 +267,37 @@ const Onboarding: React.FC<OnboardingProps> = ({ userId, profile }) => {
         {/* New Fields */}
         <div className="space-y-2">
           <label className="text-sm font-bold text-violet-600 flex items-center gap-2"><Briefcase size={16} />Profissão ou Cargo</label>
-          <input type="text" value={profession} onChange={(e) => setProfession(e.target.value)} placeholder="Ex: Designer, Estudante..." className="w-full p-3 rounded-xl border-2 border-zinc-200 bg-white font-bold text-zinc-900 focus:border-violet-600" />
+          <input type="text" value={profession} onChange={(e) => setProfession(e.target.value)} placeholder="Ex: Designer, Estudante..." maxLength={50} className="w-full p-3 rounded-xl border-2 border-zinc-200 bg-white font-bold text-zinc-900 focus:border-violet-600" />
+        </div>
+        <div className="space-y-2">
+          <label className="text-sm font-bold text-violet-600 flex items-center gap-2"><Ruler size={16} />Altura (em cm)</label>
+
+          <input type="tel" inputMode="numeric" pattern="[0-9]*" maxLength={3} value={height} onChange={(e) => setHeight(e.target.value.replace(/[^0-9]/g, ''))} placeholder="Ex: 175" className="w-full p-4 rounded-xl border-2 border-zinc-200 bg-zinc-50 font-bold text-zinc-900 focus:border-violet-600 focus:bg-white transition-all" />
         </div>
         <div className="space-y-2">
           <label className="text-sm font-bold text-violet-600 flex items-center gap-2"><GraduationCap size={16} />Escolaridade</label>
-          <select value={education} onChange={(e) => setEducation(e.target.value)} className="w-full p-3 rounded-xl border-2 border-zinc-200 bg-white font-bold text-zinc-900 focus:border-violet-600">
-            <option value="">Selecione...</option>
-            <option value="Ensino Médio">Ensino Médio Incompleto</option>
-            <option value="Ensino Médio Completo">Ensino Médio Completo</option>
-            <option value="Ensino Superior">Ensino Superior Incompleto</option>
-            <option value="Ensino Superior Completo">Ensino Superior Completo</option>
-            <option value="Pós-graduação">Pós-graduação</option>
-          </select>
+          <div className="relative">
+            <select value={education} onChange={(e) => setEducation(e.target.value)} className="w-full p-4 rounded-xl border-2 border-zinc-200 bg-zinc-50 font-bold text-zinc-900 focus:border-violet-600 focus:bg-white appearance-none transition-all">
+              <option value="">Selecione...</option>
+              <option value="Ensino Médio">Ensino Médio Incompleto</option>
+              <option value="Ensino Médio Completo">Ensino Médio Completo</option>
+              <option value="Ensino Superior">Ensino Superior Incompleto</option>
+              <option value="Ensino Superior Completo">Ensino Superior Completo</option>
+              <option value="Pós-graduação">Pós-graduação</option>
+            </select>
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-400">
+              <ChevronDown size={20} />
+            </div>
+          </div>
         </div>
       </div>
-      <Button fullWidth onClick={handleStep3Complete} disabled={!birthDate || !gender || !interestedIn || saving}>
-        {saving ? <Loader2 size={20} className="animate-spin mr-2" /> : null}
-        Próximo <ChevronRight size={20} />
-      </Button>
-    </div>
+      <div className="pb-8 pt-4">
+        <Button fullWidth onClick={handleStep3Complete} disabled={!birthDate || !gender || !interestedIn || saving} className="bg-violet-600 hover:bg-violet-700 text-white shadow-lg shadow-violet-500/30">
+          {saving ? <Loader2 size={20} className="animate-spin mr-2" /> : null}
+          Próximo <ChevronRight size={20} />
+        </Button>
+      </div>
+    </div >
   );
 
   const renderStep4 = () => (
@@ -294,8 +317,8 @@ const Onboarding: React.FC<OnboardingProps> = ({ userId, profile }) => {
           maxSelection={3}
         />
       </div>
-      <div className="pt-4">
-        <Button fullWidth onClick={handleStep4Complete} disabled={selectedInterests.length === 0 || saving}>
+      <div className="pb-8 pt-4">
+        <Button fullWidth onClick={handleStep4Complete} disabled={selectedInterests.length === 0 || saving} className="!bg-violet-600 !bg-none hover:!bg-violet-700 text-white !shadow-lg !shadow-violet-500/30">
           {saving ? <Loader2 size={20} className="animate-spin mr-2" /> : null}
           Próximo <ChevronRight size={20} />
         </Button>
@@ -307,32 +330,33 @@ const Onboarding: React.FC<OnboardingProps> = ({ userId, profile }) => {
     <div className="flex flex-col h-full p-6">
       <div className="flex-1 flex flex-col items-center justify-center gap-6 text-center">
         <div className="relative">
-          <div className="relative">
-            <div className="absolute inset-0 bg-violet-600/20 rounded-full blur-xl animate-pulse" />
-            <div className="w-32 h-32 bg-gradient-to-br from-violet-600 to-fuchsia-600 rounded-full flex items-center justify-center shadow-2xl relative">
-              <MapPin size={64} className="text-white" />
-            </div>
+          <div className="absolute inset-0 bg-violet-600/20 rounded-full blur-xl animate-pulse" />
+          <div className="w-32 h-32 bg-gradient-to-br from-violet-600 to-fuchsia-600 rounded-full flex items-center justify-center shadow-2xl relative">
+            <MapPin size={64} className="text-white" />
           </div>
-          <h2 className="text-3xl font-extrabold text-violet-600">Onde você está?</h2>
-          <p className="text-zinc-600 max-w-xs">Para encontrar pessoas perto de você, precisamos da sua localização.</p>
         </div>
-        <Button fullWidth onClick={handleFinish} disabled={saving}>
+        <h2 className="text-3xl font-extrabold text-violet-600">Onde você está?</h2>
+        <p className="text-zinc-600 max-w-xs">Para encontrar pessoas perto de você, precisamos da sua localização.</p>
+      </div>
+      <div className="pb-8 pt-4">
+        <Button fullWidth onClick={handleFinish} disabled={saving} className="!bg-violet-600 !bg-none hover:!bg-violet-700 text-white !shadow-lg !shadow-violet-500/30">
           {saving ? <><Loader2 size={20} className="animate-spin mr-2" />Finalizando...</> : 'Começar a usar!'}
         </Button>
-        <p className="text-center text-xs text-zinc-400 mt-4">Você pode pular a localização e configurar depois</p>
       </div>
-      );
+      <p className="text-center text-xs text-zinc-400 mt-4">Você pode pular a localização e configurar depois</p>
+    </div>
+  );
 
-      return (
-      <div className="h-full w-full bg-brasil-light flex flex-col">
-        <div className="w-full h-1 bg-zinc-200"><div className="h-full bg-violet-600 transition-all duration-300" style={{ width: `${(step / 5) * 100}%` }} /></div>
-        {step === 1 && renderStep1()}
-        {step === 2 && renderStep2()}
-        {step === 3 && renderStep3()}
-        {step === 4 && renderStep4()}
-        {step === 5 && renderStep5()}
-      </div>
-      );
+  return (
+    <div className="h-full w-full bg-brasil-light flex flex-col">
+      <div className="w-full h-1 bg-zinc-200"><div className="h-full bg-violet-600 transition-all duration-300" style={{ width: `${(step / 5) * 100}%` }} /></div>
+      {step === 1 && renderStep1()}
+      {step === 2 && renderStep2()}
+      {step === 3 && renderStep3()}
+      {step === 4 && renderStep4()}
+      {step === 5 && renderStep5()}
+    </div>
+  );
 };
 
-      export default Onboarding;
+export default Onboarding;
