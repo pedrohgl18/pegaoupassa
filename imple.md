@@ -338,3 +338,5 @@ Se parar em "Chamando profiles.getById..." sem retornar, o cliente Supabase volt
 10. **Build Android** - Gerar APK para testes â¬…ï¸ PRÃ“XIMO
 
 ```
+| 10/12/2025 | **UX - Flip Card** | Interação de tap-to-flip melhorada, layout do verso ajustado (Nome > Fotos), contador de likes oculto no verso. |
+| 10/12/2025 | **UX - Flip Card Layout** | Ajuste de grid para Profissão/Escolaridade (largura total) para evitar overflow. |

@@ -246,14 +246,7 @@ const SwipeCard: React.FC<SwipeCardProps> = ({
             Sobre {profile.name.split(' ')[0]}
           </h3>
           <div className="grid grid-cols-2 gap-3 mb-8">
-            <div className="bg-zinc-50 p-4 rounded-2xl border border-zinc-100 flex flex-col gap-1 items-start hover:bg-zinc-100 transition-colors">
-              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wide">Profissão</span>
-              <span className="text-zinc-800 font-bold text-sm flex items-center gap-2 leading-tight">
-                <Briefcase size={14} className="text-amber-500 flex-shrink-0" />
-                <span className="truncate w-full">{profile.profession || "----"}</span>
-              </span>
-            </div>
-
+            {/* Row 1: Shared Space (Compact Info) */}
             <div className="bg-zinc-50 p-4 rounded-2xl border border-zinc-100 flex flex-col gap-1 items-start hover:bg-zinc-100 transition-colors">
               <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wide">Signo</span>
               <span className="text-zinc-800 font-bold text-sm flex items-center gap-2">
@@ -270,9 +263,19 @@ const SwipeCard: React.FC<SwipeCardProps> = ({
               </span>
             </div>
 
-            <div className="bg-zinc-50 p-4 rounded-2xl border border-zinc-100 flex flex-col gap-1 items-start hover:bg-zinc-100 transition-colors">
+            {/* Row 2: Full Width (Long Text) */}
+            <div className="col-span-2 bg-zinc-50 p-4 rounded-2xl border border-zinc-100 flex flex-col gap-1 items-start hover:bg-zinc-100 transition-colors">
+              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wide">Profissão</span>
+              <span className="text-zinc-800 font-bold text-sm flex items-center gap-2 leading-tight w-full">
+                <Briefcase size={14} className="text-amber-500 flex-shrink-0" />
+                <span className="truncate w-full">{profile.profession || "----"}</span>
+              </span>
+            </div>
+
+            {/* Row 3: Full Width (Long Text) */}
+            <div className="col-span-2 bg-zinc-50 p-4 rounded-2xl border border-zinc-100 flex flex-col gap-1 items-start hover:bg-zinc-100 transition-colors">
               <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wide">Escolaridade</span>
-              <span className="text-zinc-800 font-bold text-sm flex items-center gap-2 leading-tight">
+              <span className="text-zinc-800 font-bold text-sm flex items-center gap-2 leading-tight w-full">
                 <GraduationCap size={14} className="text-emerald-500 flex-shrink-0" />
                 <span className="truncate w-full">{profile.education || "----"}</span>
               </span>
