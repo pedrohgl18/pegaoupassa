@@ -136,19 +136,21 @@ const SwipeCard: React.FC<SwipeCardProps> = ({
           {/* Gradients */}
           <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none" />
 
-          {/* Flip Button - SAFE AREA FIX */}
-          <div className="absolute top-[calc(1rem+env(safe-area-inset-top))] right-4 z-50 pointer-events-auto">
-            <button
-              onClick={handleFlip}
-              className="w-10 h-10 rounded-full bg-black/30 backdrop-blur-md flex items-center justify-center text-white border border-white/20 hover:bg-black/50 transition-all active:scale-95 shadow-lg"
-            >
-              <RotateCw size={20} />
-            </button>
-          </div>
+          {/* Flip Button - RESPONSIVE SAFE AREA FIX */}
+          <button
+            onClick={handleFlip}
+            className="absolute z-50 pointer-events-auto w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center text-white border border-white/20 hover:bg-black/60 transition-all active:scale-95 shadow-lg"
+            style={{
+              top: 'max(1rem, env(safe-area-inset-top, 16px))',
+              right: 'max(1rem, env(safe-area-inset-right, 16px))'
+            }}
+          >
+            <RotateCw className="w-4 h-4 sm:w-5 sm:h-5" />
+          </button>
 
           {/* Photo Indicators */}
           {photos.length > 1 && (
-            <div className="absolute top-2 left-0 right-0 z-30 px-3 flex gap-1">
+            <div className="absolute top-2 left-0 right-0 z-30 px-3 flex gap-1" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
               {photos.map((_, index) => (
                 <div key={index} className={`h-1 rounded-full flex-1 transition-all duration-300 ${index === currentPhotoIndex ? 'bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)]' : 'bg-white/30'}`} />
               ))}
@@ -156,7 +158,8 @@ const SwipeCard: React.FC<SwipeCardProps> = ({
           )}
 
           {/* Info Section - CLEAN: Name, Age, Distance, Match %, Vibe */}
-          <div className="absolute bottom-0 left-0 right-0 pb-[calc(100px+env(safe-area-inset-bottom))] px-6 flex flex-col gap-1 z-30 pointer-events-none mb-4">
+          <div className="absolute bottom-0 left-0 right-0 pb-[calc(100px+env(safe-area-inset-bottom))] px-4 sm:px-6 flex flex-col gap-1 z-30 pointer-events-none mb-4">
+
 
             {/* Vibe Badge (Modo Agora) */}
             {activeVibe && (
