@@ -22,6 +22,7 @@
 |----------------|--------|-------------|
 | Tela de login | ✅ | Visual implementado |
 | Login com Google | ✅ | Integrado com Supabase Auth |
+| App Icon | ✅ | Novo ícone SVG/PNG gerado para Android |
 | Login com Facebook | ⏳ | Precisa integrar Supabase Auth |
 | Logout funcional | ✅ | Implementado |
 | Sessão persistente | ✅ | Supabase Auth |
@@ -261,6 +262,11 @@
 | 02/12/2025 | **Correção Auth** | Corrigido erro 406 ao logar com novo usuário. Agora o sistema cria o perfil corretamente se não encontrado. |
 | 02/12/2025 | **Ajuste Onboarding** | Reordenado campos do Step 1 (Nome primeiro) e atualizado texto do "Quebra-gelo" conforme solicitado. |
 | 02/12/2025 | **Ajuste Labels Onboarding** | Alterado "Outro" para "Elu/Delu" e "Ambos" para "Todes" no Step 3 do Onboarding. |
+| 02/12/2025 | **Correção Ícone APK** | Removida pasta `mipmap-anydpi-v26` para forçar o uso dos ícones PNG gerados e corrigir o ícone padrão no Android. |
+| 02/12/2025 | **Segurança Database** | Corrigido warnings do Linter: search_path mutável em funções e RLS forçado em todas as tabelas. |
+| 02/12/2025 | **Revisão de Segurança** | Scan de código: XSS/SQLi limpos. Adicionado função RPC `increment_like_count` faltante em `tabelas.sql`. |
+| 02/12/2025 | **Proteção de Dados** | Criado Trigger `protect_profile_fields` para impedir alteração de VIP/Likes via API e Policy de DELETE para conta. |
+| 02/12/2025 | **Correção RLS Interesses** | Adicionadas policies faltantes para `interests` (leitura pública) e `user_interests` (gestão pelo usuário). |
 
 ---
 

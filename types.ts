@@ -12,6 +12,8 @@ export interface Profile {
   education?: string;
   height?: number;
   interests?: { id: string; name: string; emoji: string }[];
+  vibeStatus?: string;
+  vibeExpiresAt?: string;
 }
 
 export interface Chat {

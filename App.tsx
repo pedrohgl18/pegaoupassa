@@ -13,6 +13,7 @@ import RangeSlider from './components/RangeSlider';
 import Profile from './components/Profile';
 import ChatList from './components/ChatList';
 import VipScreen from './components/VipScreen';
+import VibeSelector from './components/VibeSelector';
 import LoadingScreen from './components/LoadingScreen';
 import { useAuth } from './hooks/useAuth';
 import { profiles, swipes, matches, messages, supabase } from './lib/supabase';
@@ -98,6 +99,7 @@ const App: React.FC = () => {
   const [myLocation, setMyLocation] = useState<{ latitude: number, longitude: number } | null>(null);
   const [filtersLoaded, setFiltersLoaded] = useState(false);
   const [showVipSettingsModal, setShowVipSettingsModal] = useState(false);
+  const [showVibeSelector, setShowVibeSelector] = useState(false);
 
   // Derived State
   const currentProfile = feedProfiles[0];
@@ -643,6 +645,26 @@ const App: React.FC = () => {
     setCurrentScreen(ScreenState.HOME);
   };
 
+  const handleSelectVibe = async (vibeId: string) => {
+    if (!user) return;
+
+    // Optimistic update
+    updateProfile({ vibeStatus: vibeId });
+    setShowVibeSelector(false);
+
+    // Persist to DB
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString(); // 1 hour
+    const { error } = await supabase
+      .from('profiles')
+      .update({
+        vibe_status: vibeId,
+        vibe_expires_at: expiresAt
+      })
+      .eq('id', user.id);
+
+    if (error) console.error('Error updating vibe:', error);
+  };
+
   // Drag Handlers
   const handleTouchStart = (e: React.TouchEvent | React.MouseEvent) => {
     if (lastDirection) return; // Don't allow drag during animation
@@ -778,71 +800,68 @@ const App: React.FC = () => {
     );
   };
 
+  /* Login Screen - Updated for Neutral/Modern Look (Replaces Tropical) */
   const renderLogin = () => (
-    <div className="flex flex-col h-full w-full relative bg-zinc-50 overflow-hidden">
-      {/* Top Section - Brand */}
-      <div className="h-[60vh] relative bg-blue-600 flex flex-col items-center justify-start pt-12 overflow-hidden rounded-b-[40px] shadow-2xl z-0">
-        {/* Background Effects - Rich & Vibrant */}
-        <div className="absolute inset-0 bg-gradient-to-br from-emerald-500 via-teal-600 to-blue-700 opacity-100" />
-        <div className="absolute -top-40 -right-40 w-[500px] h-[500px] bg-blue-500 rounded-full blur-[120px] opacity-50 animate-pulse" />
-        <div className="absolute bottom-0 -left-20 w-[400px] h-[400px] bg-emerald-400 rounded-full blur-[100px] opacity-40" />
+    <div className="flex flex-col h-full w-full relative bg-zinc-950 overflow-hidden text-white">
+      {/* Background Ambience (Subtle) */}
+      <div className="absolute top-[-20%] left-[-20%] w-[140%] h-[140%] bg-[radial-gradient(circle_at_50%_50%,_rgba(139,92,246,0.1),_transparent_70%)] animate-pulse" style={{ animationDuration: '6s' }} />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[100%] h-[100%] bg-[radial-gradient(circle_at_50%_50%,_rgba(236,72,153,0.1),_transparent_70%)] animate-pulse" style={{ animationDuration: '8s' }} />
 
-        {/* Logo */}
-        <div className="relative z-10 flex flex-col items-center gap-6 animate-in zoom-in duration-700">
-          <div className="relative group">
-            <div className="absolute inset-0 bg-white/30 blur-3xl rounded-full scale-150 group-hover:scale-125 transition-transform duration-1000" />
+      {/* Main Content */}
+      <div className="relative z-10 flex flex-col items-center justify-center h-full px-6 text-center">
 
-            <div className="w-32 h-32 bg-white rounded-[2.5rem] flex items-center justify-center shadow-2xl rotate-6 border-[6px] border-white/20 backdrop-blur-sm relative z-10 hover:rotate-3 transition-transform duration-500">
-              <Heart size={64} className="text-teal-600 drop-shadow-lg transform -rotate-6" fill="currentColor" strokeWidth={2.5} />
-            </div>
-          </div>
-
-          <div className="text-center space-y-2">
-            <h1 className="text-5xl font-black text-white tracking-tighter drop-shadow-xl leading-none">
-              Pega ou <br />
-              <span className="text-yellow-400 inline-block transform -rotate-2 mt-1 drop-shadow-md">Passa</span>
-            </h1>
-            <p className="text-blue-50 font-medium text-lg max-w-[280px] mx-auto leading-relaxed drop-shadow-sm">
-              O jeito brasileiro de dar match.
-            </p>
+        {/* Logo Container */}
+        <div className="relative group mb-12">
+          <div className="absolute inset-0 bg-gradient-to-r from-primary to-secondary rounded-full blur-3xl opacity-10 group-hover:opacity-30 transition-opacity duration-1000" />
+          <div className="glass p-8 rounded-[40px] shadow-2xl relative z-10 transform transition-transform duration-500 hover:scale-105">
+            <img
+              src="/logo_premium.svg"
+              alt="Pega ou Passa Logo"
+              className="w-32 h-32 drop-shadow-lg"
+            />
           </div>
         </div>
-      </div>
 
-      {/* Bottom Section - Actions */}
-      <div className="relative z-10 -mt-24 px-6 pb-12">
-        <div className="bg-white rounded-3xl shadow-xl p-6 border border-zinc-100 space-y-6">
-          <div className="space-y-2 text-center">
-            <h2 className="text-xl font-black text-zinc-800">Bem-vindo(a)! 👋</h2>
-            <p className="text-zinc-500 text-sm">Entre para encontrar pessoas incríveis perto de você.</p>
-          </div>
+        {/* Brand Text */}
+        <div className="space-y-4 mb-16 animate-slide-up">
+          <h1 className="text-5xl font-black tracking-tighter">
+            <span className="text-white">PEGA</span>
+            <span className="text-primary mx-2">OU</span>
+            <span className="text-white">PASSA</span>
+          </h1>
+          <p className="text-lg text-zinc-400 font-medium tracking-wide">
+            Namoro feito pro <span className="text-white font-bold">Brasil</span>
+          </p>
+        </div>
 
-          <Button
-            variant="google"
-            fullWidth
+        {/* Login Button */}
+        <div className="w-full max-w-sm animate-slide-up" style={{ animationDelay: '0.2s' }}>
+          <button
             onClick={handleLogin}
             disabled={loginLoading}
-            className="shadow-lg h-14 text-sm font-bold whitespace-nowrap border-2 border-zinc-100 hover:border-brasil-blue/30 hover:bg-zinc-50"
+            className="w-full relative group overflow-hidden bg-white text-black font-bold py-4 px-6 rounded-2xl shadow-lg transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed hover:shadow-[0_0_20px_rgba(255,255,255,0.2)]"
           >
-            {loginLoading ? (
-              <Loader2 size={24} className="animate-spin mr-3 text-brasil-blue" />
-            ) : (
-              <img
-                src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCIgd2lkdGg9IjQ4cHgiIGhlaWdodD0iNDhweCI+PHBhdGggZmlsbD0iI0ZGQzEwNyIgZD0iTTQzLjYxMSwyMC4wODNINDJWMjBIMjR2OGgxMS4zMDNjLTEuNjQ5LDQuNjU3LTYuMDgsOC0xMS4zMDMsOGMtNi42MjcsMC0xMi01LjM3My0xMi0xMmMwLTYuNjI3LDUuMzczLTEyLDEyLTEyYzMuMDU5LDAsNS44NDIsMS4xNTQsNy45NjEsMy4wMzlsNS42NTctNS42NTdDMzQuMDQ2LDYuMDUzLDI5LjI2OCw0LDI0LDRDMTIuOTU1LDQsNCwxMi45NTUsNCwyNGMwLDExLjA0NSw4Ljk1NSwyMCwyMCwyMGMxMS4wNDUsMCwyMC04Ljk1NSwyMC0yMEM0NCwyMi42NTksNDMuODYyLDIxLjM1LDQzLjYxMSwyMC4wODN6Ii8+PHBhdGggZmlsbD0iI0ZGM0QwMCIgZD0iTTYuMzA2LDE0LjY5MWw2LjU3MSw0LjgxOUMxNC42NTUsMTUuMTA4LDE4Ljk2MSwxMiwyNCwxMmMzLjA1OSwwLDUuODQyLDEuMTU0LDcuOTYxLDMuMDM5bDUuNjU3LTUuNjU3QzM0LjA0Niw2LjA1MywyOS4yNjgsNCwyNCw0QzE2LjMxOCw0LDkuNjU2LDguMzM3LDYuMzA2LDE0LjY5MXoiLz48cGF0aCBmaWxsPSIjNENBRjUwIiBkPSJNMjQsNDRjNS4xNjYsMCw5Ljg2LTEuOTc3LDEzLjQwOS01LjE5MmwtNi4xOTAtNS4yMzhDMjkuMjExLDM1LjA5MSwyNi43MTUsMzYsMjQsMzZjLTUuMjAyLDAtOS42MTktMy4zMTctMTEuMjgzLTcuOTQ2bC02LjUyMiw1LjAyNUM5LjUwNSwzOS41NTYsMTYuMjI3LDQ0LDI0LDQ0eiIvPjxwYXRoIGZpbGw9IiMxOTc2RDIiIGQ9Ik00My42MTEsMjAuMDgzSDQyVjIwSDI0djhoMTEuMzAzYy0wLjc5MiwyLjIzNy0yLjIzMSw0LjE2Ni00LjA4Nyw1LjU3MWMwLjAwMS0wLjAwMSwwLjAwMi0wLjAwMSwwLjAwMy0wLjAwMmw2LjE5MCw1LjIzOEMzNi45NzEsMzkuMjA1LDQ0LDM0LDQ0LDI0QzQ0LDIyLjY1OSw0My44NjIsMjEuMzUsNDMuNjExLDIwLjA4M3oiLz48L3N2Zz4="
-                alt="Google"
-                className="w-6 h-6 mr-3"
-              />
-            )}
-            {loginLoading ? 'Entrando...' : 'Continuar com Google'}
-          </Button>
+            <div className="flex items-center justify-center gap-3 relative z-10">
+              {loginLoading ? (
+                <Loader2 className="animate-spin text-black" size={24} />
+              ) : (
+                <>
+                  <svg className="w-6 h-6" viewBox="0 0 24 24">
+                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
+                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+                  </svg>
+                  <span>Entrar com Google</span>
+                </>
+              )}
+            </div>
+            {/* Hover shine effect */}
+            <div className="absolute top-0 -left-full w-1/2 h-full bg-gradient-to-r from-transparent via-zinc-200/40 to-transparent skew-x-[-20deg] group-hover:animate-shine" />
+          </button>
 
-          <p className="text-zinc-400 text-[10px] text-center font-medium leading-relaxed px-4">
-            Ao continuar, você concorda com nossos <br />
-            <button className="underline decoration-zinc-300 underline-offset-2 text-zinc-500 hover:text-brasil-blue transition-colors font-bold">
-              Termos de Uso
-            </button> e <button className="underline decoration-zinc-300 underline-offset-2 text-zinc-500 hover:text-brasil-blue transition-colors font-bold">
-              Política de Privacidade
-            </button>.
+          <p className="mt-8 text-xs text-zinc-500">
+            Ao entrar, você concorda com nossos <a href="#" className="underline hover:text-zinc-300">Termos</a> e <a href="#" className="underline hover:text-zinc-300">Privacidade</a>.
           </p>
         </div>
       </div>
@@ -1440,6 +1459,7 @@ const App: React.FC = () => {
                 setPreviousScreen(ScreenState.PROFILE);
                 setShowVipSettingsModal(true);
               }}
+              onVibeCheck={() => setShowVibeSelector(true)} // Added prop
               onPreview={handlePreviewProfile}
               matchesCount={matchesList.length}
               receivedLikesCount={receivedLikes.length}
@@ -1478,6 +1498,12 @@ const App: React.FC = () => {
         />
         {showFilterModal && renderFilterModal()}
         {showVipSettingsModal && renderVipSettingsModal()}
+        <VibeSelector
+          isOpen={showVibeSelector}
+          onClose={() => setShowVibeSelector(false)}
+          onSelectVibe={handleSelectVibe}
+          currentVibe={profile?.vibeStatus}
+        />
       </div>
     </div>
   );

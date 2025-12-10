@@ -13,6 +13,7 @@ interface ProfileProps {
     onShowFilter: () => void;
     onVipSettings: () => void;
     onPreview: () => void;
+    onVibeCheck: () => void;
     matchesCount: number;
     receivedLikesCount: number;
 }
@@ -27,12 +28,12 @@ const Profile: React.FC<ProfileProps> = ({
     onShowFilter,
     onVipSettings,
     onPreview,
+    onVibeCheck,
     matchesCount,
     receivedLikesCount,
 }) => {
     const avatarUrl = user?.user_metadata?.avatar_url || profile?.photos?.[0]?.url || "https://picsum.photos/seed/me/400/400";
     const hasCoverPhoto = profile?.photos?.length > 1;
-    const coverUrl = hasCoverPhoto ? profile.photos[1].url : null;
 
     return (
         <div className="flex flex-col h-full w-full bg-zinc-50 animate-fade-in overflow-y-auto no-scrollbar pb-24">
@@ -145,6 +146,28 @@ const Profile: React.FC<ProfileProps> = ({
                     </div>
                 </div>
 
+                {/* Vibe Status Card (New Placement) */}
+                <div
+                    onClick={onVibeCheck}
+                    className="w-full bg-white p-4 rounded-2xl shadow-sm border border-zinc-100 flex items-center justify-between cursor-pointer group active:scale-[0.98] transition-all"
+                >
+                    <div className="flex items-center gap-4">
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center relative ${profile?.vibeStatus ? 'bg-purple-100' : 'bg-zinc-100'}`}>
+                            {profile?.vibeStatus ? (
+                                <span className="text-2xl animate-pulse">✨</span>
+                            ) : (
+                                <div className="w-3 h-3 bg-red-500 rounded-full animate-ping absolute top-0 right-0" />
+                            )}
+                            <Sparkles size={24} className={profile?.vibeStatus ? "text-purple-600" : "text-zinc-400"} />
+                        </div>
+                        <div className="text-left">
+                            <h3 className="font-bold text-zinc-900">Modo Agora {profile?.vibeStatus && <span className="text-xs font-normal text-purple-600 ml-2 bg-purple-50 px-2 py-0.5 rounded-full">Ativo</span>}</h3>
+                            <p className="text-xs text-zinc-500">Defina seu status para encontros hoje</p>
+                        </div>
+                    </div>
+                    <ChevronRight size={20} className="text-zinc-300 group-hover:text-purple-600 transition-colors" />
+                </div>
+
                 {/* Menu Actions */}
                 <div className="w-full space-y-2">
                     <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-wider ml-1">Menu</h3>
@@ -218,10 +241,10 @@ const Profile: React.FC<ProfileProps> = ({
                     {isVip && (
                         <button
                             onClick={onVipSettings}
-                            className="w-full p-4 bg-white rounded-2xl border border-zinc-100 shadow-sm flex items-center justify-between group hover:border-brasil-yellow/50 transition-all active:scale-[0.98]"
+                            className="w-full p-4 bg-white rounded-2xl border border-zinc-100 shadow-sm flex items-center justify-between group hover:border-yellow-400/50 transition-all active:scale-[0.98]"
                         >
                             <div className="flex items-center gap-4">
-                                <div className="w-10 h-10 rounded-full bg-yellow-50 text-brasil-yellow flex items-center justify-center group-hover:bg-brasil-yellow group-hover:text-white transition-colors">
+                                <div className="w-10 h-10 rounded-full bg-yellow-50 text-yellow-500 flex items-center justify-center group-hover:bg-yellow-500 group-hover:text-white transition-colors">
                                     <Settings size={20} />
                                 </div>
                                 <div className="text-left">
@@ -229,7 +252,7 @@ const Profile: React.FC<ProfileProps> = ({
                                     <p className="text-xs text-zinc-400">Incógnito, confirmação de leitura</p>
                                 </div>
                             </div>
-                            <ChevronRight size={20} className="text-zinc-300 group-hover:text-brasil-yellow transition-colors" />
+                            <ChevronRight size={20} className="text-zinc-300 group-hover:text-yellow-500 transition-colors" />
                         </button>
                     )}
                 </div>

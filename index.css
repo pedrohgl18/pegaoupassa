@@ -2,20 +2,39 @@
 @tailwind components;
 @tailwind utilities;
 
-/* New color palette variables */
 :root {
-  --color-primary: #3A7CA5;
-  /* Azul-ciano */
-  --color-secondary: #6C5B7B;
-  /* Roxo-acinzentado */
-  --color-accent: #F28F3B;
-  /* Laranja-dourado */
-  --color-background: #F5F9FC;
-  /* Fundo quase branco */
-  --color-gray-light: #E2E8F0;
-  /* Cinza claro */
-  --color-gray-dark: #2D3748;
-  /* Cinza escuro */
+  --color-primary: #8B5CF6;
+  /* Violet 500 */
+  --color-secondary: #EC4899;
+  /* Pink 500 */
+  --color-accent: #F59E0B;
+  /* Amber 500 */
+  --color-background: #000000;
+  --color-surface: #18181b;
+  --color-gray-light: #a1a1aa;
+  --color-gray-dark: #27272a;
+}
+
+/* Glassmorphism Utilities */
+.glass {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glass-strong {
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 /* Safe Area para dispositivos móveis (notch, barra de navegação) */

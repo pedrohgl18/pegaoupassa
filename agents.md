@@ -2,7 +2,7 @@
 
 ## Sobre o Projeto
 
-**Pega ou Passa** é um aplicativo de namoro estilo Tinder/TikTok desenvolvido para **Android**. O app utiliza swipe vertical (para baixo = curtir, para cima = passar) com uma interface imersiva nas cores do Brasil (verde, amarelo e azul).
+**Pega ou Passa** é um aplicativo de namoro estilo Tinder/TikTok desenvolvido para **Android**. O app utiliza swipe vertical (para baixo = curtir, para cima = passar).
 
 ## Stack Tecnológica
 
@@ -32,7 +32,7 @@
 6. **SEMPRE rodar os comandos de build/sync e analisar a saída** - Exceto `npm run dev`
 7. **SEMPRE atualizar `imple.md`** quando uma funcionalidade for adicionada, modificada ou removida
 8. **O arquivo `imple.md` é a fonte da verdade** - Sempre consultá-lo para saber o estado atual do projeto
-9. **NUNCA assumir/adivinhar** - Se tiver dúvida sobre a existência de algo (bucket, tabela, coluna, etc), **PERGUNTAR ao desenvolvedor ANTES** de fazer qualquer mudança
+9. **NUNCA assumir/adivinhar** - O estado do banco deve ser verificado via MCP (`list_tables`, `execute_sql` etc) **ANTES** de gerar código que dependa dele. Só pergunte ao desenvolvedor se a informação não estiver disponível via MCP.
 10. **Buckets do Supabase Storage usam RLS** - NÃO são públicos por padrão. Usar URLs assinadas quando necessário
 11. **SEMPRE subir para o GitHub** ao finalizar uma tarefa: `git push -u origin main`
 12. **SEMPRE gerar build Android** ao finalizar uma tarefa, executando na ordem:
@@ -44,12 +44,13 @@
 
 ### 🗄️ Banco de Dados (Supabase)
 
-- O banco de dados é gerenciado via **Supabase Web Console**
-- **NÃO executar queries automaticamente**
-- Todas as queries SQL devem ser:
-  1. Escritas no arquivo `tabelas.sql`
-  2. Apresentadas em blocos de código para o desenvolvedor
-  3. O desenvolvedor irá executar manualmente no Supabase
+### 🗄️ Banco de Dados (Supabase)
+
+- **USO OBRIGATÓRIO do Supabase MCP Server** para todas as interações com o banco.
+- **SEMPRE** consultar o esquema atual (tabelas, colunas, policies) via ferramentas MCP (`get_project`, `list_tables`, `execute_sql` para inspeção) **ANTES** de propor ou fazer alterações.
+- **SEMPRE** executar queries e migrations utilizando as ferramentas do MCP (`execute_sql`, `apply_migration`).
+- As queries SQL **DEVEM** continuar sendo registradas no arquivo `tabelas.sql` para documentação e histórico, mesmo que executadas via MCP.
+- **NUNCA** assumir o estado do banco; verifique sempre via MCP.
 
 #### Formato para queries:
 
@@ -69,7 +70,7 @@
 2. Implementar a funcionalidade no código
 3. Se precisar de banco de dados:
    - Adicionar query em `tabelas.sql`
-   - Informar o desenvolvedor para executar no Supabase
+   - Executar query/migration via ferramentas MCP (`execute_sql` ou `apply_migration`)
 4. Atualizar `imple.md` marcando como concluído
 5. Nunca criar arquivos de documentação extras
 
@@ -78,9 +79,9 @@
 ```
 1. Ler imple.md → Ver o que precisa ser feito
 2. Implementar código → React/TypeScript
-3. Se precisar de DB → Adicionar em tabelas.sql
+3. Se precisar de DB → Adicionar em tabelas.sql e Executar via MCP
 4. Atualizar imple.md → Marcar status
-5. Informar desenvolvedor → Queries pendentes
+5. Verificar via MCP se alterações foram aplicadas com sucesso
 ```
 
 ## Estrutura do Projeto

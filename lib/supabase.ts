@@ -155,7 +155,7 @@ export const profiles = {
   getByIdWithRelations: async (id: string) => {
     const { data, error } = await supabase
       .from('profiles')
-      .select('*, photos(*), user_interests(interest:interests(*))')
+      .select('*, photos(*), user_interests(*, interest:interests(*))')
       .eq('id', id)
       .single()
     return { data, error }
@@ -306,10 +306,27 @@ export const profiles = {
   }) => {
     let query = supabase
       .from('profiles')
-      .select('*, photos(*), user_interests(interest:interests(*))')
+      .select('*, photos(*), user_interests(*, interest:interests(*))')
       .neq('id', userId)
       .eq('is_active', true)
-      .eq('is_incognito', false) // Não mostrar usuários em modo incógnito
+
+    // Buscar quem me curtiu (para mostrar incógnitos que me curtiram)
+    const { data: fans } = await supabase
+      .from('swipes')
+      .select('swiper_id')
+      .eq('swiped_id', userId)
+      .eq('action', 'like')
+
+    const fanIds = fans?.map(f => f.swiper_id) || [];
+
+    if (fanIds.length > 0) {
+      // Mostra se (não é incognito) OU (é um fã que me curtiu)
+      // Nota: A sintaxe do .or() aqui funciona como OR entre as condições separadas por vírgula
+      query = query.or(`is_incognito.eq.false,id.in.(${fanIds.join(',')})`);
+    } else {
+      // Se ninguém me curtiu, mostra apenas quem não é incognito
+      query = query.eq('is_incognito', false);
+    }
 
     // Filtro de Gênero
     if (filters.gender && filters.gender !== 'both') {
@@ -782,66 +799,45 @@ export const interests = {
 
   // Salvar interesses do usuário
   saveUserInterests: async (userId: string, interestIds: string[]) => {
-    // Remover interesses antigos
-    await supabase
-      .from('user_interests')
-      .delete()
-      .eq('user_id', userId)
+    console.log('saveUserInterests:', userId, interestIds)
 
-    // Inserir novos
-    const { error } = await supabase
-      .from('user_interests')
-      .insert(
-        interestIds.map(interestId => ({
-          user_id: userId,
-          interest_id: interestId,
-        }))
-      )
+    try {
+      // 1. Remover interesses antigos
+      const { error: deleteError } = await supabase
+        .from('user_interests')
+        .delete()
+        .eq('user_id', userId)
 
-    return { error }
-  },
-}
+      if (deleteError) {
+        console.error('Erro ao limpar interesses:', deleteError)
+        return { error: deleteError }
+      }
 
-// ============================================
-// REPORTS & BLOCKS
-// ============================================
+      // Se não tem novos interesses, paramos aqui
+      if (!interestIds || interestIds.length === 0) {
+        return { error: null }
+      }
 
-export const safety = {
-  // Denunciar usuário
-  report: async (reporterId: string, reportedId: string, reason: string, description?: string) => {
-    const { error } = await supabase
-      .from('reports')
-      .insert({
-        reporter_id: reporterId,
-        reported_id: reportedId,
-        reason,
-        description,
-      })
+      // 2. Inserir novos
+      const { error: insertError } = await supabase
+        .from('user_interests')
+        .insert(
+          interestIds.map(interestId => ({
+            user_id: userId,
+            interest_id: interestId,
+          }))
+        )
 
-    return { error }
-  },
+      if (insertError) {
+        console.error('Erro ao salvar interesses:', insertError)
+        return { error: insertError }
+      }
 
-  // Bloquear usuário
-  block: async (blockerId: string, blockedId: string) => {
-    const { error } = await supabase
-      .from('blocks')
-      .insert({
-        blocker_id: blockerId,
-        blocked_id: blockedId,
-      })
-
-    return { error }
-  },
-
-  // Desbloquear usuário
-  unblock: async (blockerId: string, blockedId: string) => {
-    const { error } = await supabase
-      .from('blocks')
-      .delete()
-      .eq('blocker_id', blockerId)
-      .eq('blocked_id', blockedId)
-
-    return { error }
+      return { error: null }
+    } catch (err) {
+      console.error('Exceção em saveUserInterests:', err)
+      return { error: err }
+    }
   },
 }
 
@@ -904,6 +900,68 @@ export const pushNotifications = {
       `${likerName} curtiu você! Seja VIP para ver quem.`,
       'like'
     )
+  },
+}
+
+// ============================================
+// REPORTS & BLOCKS
+// ============================================
+
+export const reports = {
+  // Criar denúncia
+  create: async (reporterId: string, reportedId: string, reason: string, description?: string) => {
+    const { error } = await supabase
+      .from('reports')
+      .insert({
+        reporter_id: reporterId,
+        reported_id: reportedId,
+        reason,
+        description,
+      })
+
+    return { error }
+  },
+
+  // Verificar se já denunciou este usuário
+  hasReported: async (reporterId: string, reportedId: string): Promise<boolean> => {
+    const { data } = await supabase
+      .from('reports')
+      .select('id')
+      .eq('reporter_id', reporterId)
+      .eq('reported_id', reportedId)
+      .single()
+
+    return !!data
+  },
+}
+
+export const safety = {
+  // Denunciar usuário
+  report: async (reporterId: string, reportedId: string, reason: string, description?: string) => {
+    return reports.create(reporterId, reportedId, reason, description)
+  },
+
+  // Bloquear usuário
+  block: async (blockerId: string, blockedId: string) => {
+    const { error } = await supabase
+      .from('blocks')
+      .insert({
+        blocker_id: blockerId,
+        blocked_id: blockedId,
+      })
+
+    return { error }
+  },
+
+  // Desbloquear usuário
+  unblock: async (blockerId: string, blockedId: string) => {
+    const { error } = await supabase
+      .from('blocks')
+      .delete()
+      .eq('blocker_id', blockerId)
+      .eq('blocked_id', blockedId)
+
+    return { error }
   },
 }
 
@@ -996,38 +1054,6 @@ export const boosts = {
     if (!data?.boost_expires_at) return 0
     const remaining = new Date(data.boost_expires_at).getTime() - Date.now()
     return Math.max(0, Math.ceil(remaining / 60000))
-  },
-}
-
-// ============================================
-// SISTEMA DE DENÚNCIAS
-// ============================================
-
-export const reports = {
-  // Criar denúncia
-  create: async (reporterId: string, reportedId: string, reason: string, description?: string) => {
-    const { error } = await supabase
-      .from('reports')
-      .insert({
-        reporter_id: reporterId,
-        reported_id: reportedId,
-        reason,
-        description,
-      })
-
-    return { error }
-  },
-
-  // Verificar se já denunciou este usuário
-  hasReported: async (reporterId: string, reportedId: string): Promise<boolean> => {
-    const { data } = await supabase
-      .from('reports')
-      .select('id')
-      .eq('reporter_id', reporterId)
-      .eq('reported_id', reportedId)
-      .single()
-
-    return !!data
   },
 }
 

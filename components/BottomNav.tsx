@@ -44,15 +44,15 @@ const BottomNav: React.FC<BottomNavProps> = ({ currentScreen, onNavigate }) => {
                 size={28}
                 strokeWidth={isActive ? 2.5 : 2}
                 className={`transition-all duration-300 z-10 ${isActive
-                  ? 'text-primary scale-110 drop-shadow-[0_0_12px_rgba(58,124,165,0.5)]'
-                  : 'text-gray-dark group-hover:text-gray-dark/70'
+                  ? 'text-primary scale-110 drop-shadow-md'
+                  : 'text-zinc-400 group-hover:text-zinc-600'
                   }`}
                 fill="none"
               />
 
               {/* Dot Indicator */}
               {isActive && (
-                <div className="absolute -bottom-1 w-1.5 h-1.5 bg-primary rounded-full shadow-[0_0_6px_#3A7CA5] animate-pulse" />
+                <div className="absolute -bottom-1 w-1.5 h-1.5 bg-primary rounded-full" />
               )}
             </button>
           );

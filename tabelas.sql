@@ -998,3 +998,139 @@ USING (
 );
 
 
+-- =============================================
+-- CORREÇÃO DE SEGURANÇA E LINTER
+-- Data: 02/12/2025
+-- Descrição: Correções de segurança apontadas pelo linter do Supabase
+-- =============================================
+
+-- 1. Habilitar RLS na tabela profiles (estava desabilitado)
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+
+-- 2. Fixar search_path das funções para evitar hijacking
+-- Isso é crítico especialmente para funções SECURITY DEFINER
+ALTER FUNCTION public.calculate_age(DATE) SET search_path = public;
+ALTER FUNCTION public.reset_daily_likes() SET search_path = public;
+ALTER FUNCTION public.update_updated_at() SET search_path = public;
+ALTER FUNCTION public.check_for_match() SET search_path = public;
+ALTER FUNCTION public.update_last_message() SET search_path = public;
+ALTER FUNCTION public.unmatch_user(UUID) SET search_path = public;
+
+-- 3. Garantir RLS em todas as outras tabelas (prevenção)
+ALTER TABLE photos ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_interests ENABLE ROW LEVEL SECURITY;
+ALTER TABLE swipes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE matches ENABLE ROW LEVEL SECURITY;
+ALTER TABLE conversations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
+ALTER TABLE reports ENABLE ROW LEVEL SECURITY;
+ALTER TABLE blocks ENABLE ROW LEVEL SECURITY;
+ALTER TABLE push_tokens ENABLE ROW LEVEL SECURITY;
+ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE boosts ENABLE ROW LEVEL SECURITY;
+
+
+
+-- =============================================
+-- FUNÇÃO: increment_like_count
+-- Data: 02/12/2025
+-- Descrição: Incrementa o contador de likes diários do usuário (Faltava no arquivo)
+-- =============================================
+
+CREATE OR REPLACE FUNCTION increment_like_count(user_id UUID)
+RETURNS VOID AS c:\Users\Administrator\Downloads\pega-ou-passa
+BEGIN
+    -- Verificação de segurança: usuário só pode incrementar seu próprio contador
+    IF auth.uid() != user_id THEN
+        RAISE EXCEPTION 'Permissão negada';
+    END IF;
+
+    UPDATE profiles
+    SET daily_likes_count = daily_likes_count + 1
+    WHERE id = user_id;
+END;
+c:\Users\Administrator\Downloads\pega-ou-passa LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+
+-- =============================================
+-- SEGURANÇA: Proteger colunas sensíveis de profiles
+-- Data: 02/12/2025
+-- Descrição: Impede que usuários alterem status VIP e contadores via API
+-- =============================================
+
+CREATE OR REPLACE FUNCTION protect_profile_fields()
+RETURNS TRIGGER AS c:\Users\Administrator\Downloads\pega-ou-passa
+BEGIN
+    -- Se for service_role (admin/sistema), permite tudo
+    IF (auth.role() = 'service_role') THEN
+        RETURN NEW;
+    END IF;
+
+    -- Verificar se campos sensíveis foram alterados
+    IF (NEW.is_vip IS DISTINCT FROM OLD.is_vip) OR
+       (NEW.vip_expires_at IS DISTINCT FROM OLD.vip_expires_at) OR
+       (NEW.is_verified IS DISTINCT FROM OLD.is_verified) OR
+       (NEW.daily_likes_count IS DISTINCT FROM OLD.daily_likes_count) OR
+       (NEW.daily_likes_reset_at IS DISTINCT FROM OLD.daily_likes_reset_at) OR
+       (NEW.boost_expires_at IS DISTINCT FROM OLD.boost_expires_at) THEN
+        RAISE EXCEPTION 'Você não tem permissão para alterar campos protegidos (VIP, Verificação, Boost, Likes).';
+    END IF;
+
+    RETURN NEW;
+END;
+c:\Users\Administrator\Downloads\pega-ou-passa LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_protect_profile_fields
+BEFORE UPDATE ON profiles
+FOR EACH ROW
+EXECUTE FUNCTION protect_profile_fields();
+
+
+-- =============================================
+-- SEGURANÇA: Permitir deletar própria conta
+-- Data: 02/12/2025
+-- Descrição: Policy para permitir exclusão de conta
+-- =============================================
+
+CREATE POLICY "Usuários podem deletar próprio perfil"
+ON profiles FOR DELETE
+USING (auth.uid() = id);
+
+
+-- =============================================
+-- CORREÇÃO: Policies faltantes para Interesses
+-- Data: 02/12/2025
+-- Descrição: Permitir gestão de interesses
+-- =============================================
+
+-- 1. Tabela interests (Lista de interesses do sistema)
+ALTER TABLE interests ENABLE ROW LEVEL SECURITY;
+
+-- Todos podem ver a lista de interesses disponíveis
+DROP POLICY IF EXISTS "Interesses são públicos" ON interests;
+CREATE POLICY "Interesses são públicos"
+ON interests FOR SELECT
+USING (true);
+
+-- Apenas service_role pode modificar (padrão do RLS deny-all para insert/update/delete)
+
+
+-- 2. Tabela user_interests (Vínculo usuário-interesse)
+-- Todos podem ver interesses dos usuários (para mostrar no perfil/card)
+DROP POLICY IF EXISTS "Ver interesses de usuários" ON user_interests;
+CREATE POLICY "Ver interesses de usuários"
+ON user_interests FOR SELECT
+USING (true);
+
+-- Usuários podem adicionar seus próprios interesses
+DROP POLICY IF EXISTS "Usuários podem adicionar interesses" ON user_interests;
+CREATE POLICY "Usuários podem adicionar interesses"
+ON user_interests FOR INSERT
+WITH CHECK (auth.uid() = user_id);
+
+-- Usuários podem remover seus próprios interesses
+DROP POLICY IF EXISTS "Usuários podem remover interesses" ON user_interests;
+CREATE POLICY "Usuários podem remover interesses"
+ON user_interests FOR DELETE
+USING (auth.uid() = user_id);
+
