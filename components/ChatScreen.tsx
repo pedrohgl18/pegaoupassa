@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Send, MoreVertical, Image as ImageIcon, Mic, Trash2, AlertTriangle, Crown, Loader2, StopCircle, X, ZoomIn, Flag, Reply, Smile, Check } from 'lucide-react';
-import { messages as messagesApi, matches as matchesApi, supabase, pushNotifications, reports, messageReactions } from '../lib/supabase';
+import { ArrowLeft, Send, MoreVertical, Image as ImageIcon, Mic, Trash2, AlertTriangle, Crown, Loader2, StopCircle, X, ZoomIn, Flag, Reply, Smile, Check, Ban } from 'lucide-react';
+import { messages as messagesApi, matches as matchesApi, supabase, pushNotifications, reports, messageReactions, safety } from '../lib/supabase';
 
 interface Message {
   id: string;
@@ -148,6 +148,19 @@ const ChatScreen: React.FC<ChatScreenProps> = ({
       console.error(error);
     } else {
       onUnmatch();
+    }
+  };
+
+  const handleBlock = async () => {
+    if (!confirm(`Tem certeza que deseja bloquear ${otherUserName}? Vocês não poderão mais se ver.`)) return;
+
+    // Bloqueia e desfaz o match automaticamente
+    const { error } = await safety.block(currentUserId, otherUserId);
+    if (error) {
+      alert('Erro ao bloquear usuário');
+    } else {
+      await matchesApi.unmatch(matchId);
+      onUnmatch(); // Volta para a lista
     }
   };
 
@@ -678,8 +691,17 @@ const ChatScreen: React.FC<ChatScreenProps> = ({
                     }}
                     className="w-full px-4 py-3 text-left text-amber-600 hover:bg-amber-50 rounded-xl flex items-center gap-3 font-bold text-sm transition-colors"
                   >
-                    <Flag size={18} />
                     Denunciar Usuário
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowMenu(false);
+                      handleBlock();
+                    }}
+                    className="w-full px-4 py-3 text-left text-zinc-700 hover:bg-zinc-50 rounded-xl flex items-center gap-3 font-bold text-sm transition-colors"
+                  >
+                    <Ban size={18} />
+                    Bloquear Usuário
                   </button>
                   <div className="h-px bg-zinc-100 mx-2 my-1" />
                   <button

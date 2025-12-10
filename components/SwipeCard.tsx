@@ -52,7 +52,8 @@ const SwipeCard: React.FC<SwipeCardProps> = ({
     : { title: "Mistério Astral", description: "Os astros estão em silêncio...", color: "bg-zinc-100 border-zinc-200" };
 
   // Vibe Data
-  const activeVibe = profile.vibeStatus ? VIBES.find(v => v.id === profile.vibeStatus) : null;
+  const isVibeExpired = profile.vibeExpiresAt ? new Date() > new Date(profile.vibeExpiresAt) : false;
+  const activeVibe = (profile.vibeStatus && !isVibeExpired) ? VIBES.find(v => v.id === profile.vibeStatus) : null;
 
   const handleTap = (e: React.MouseEvent<HTMLDivElement>) => {
     if (Math.abs(dragOffset) > 10) return;
@@ -127,8 +128,15 @@ const SwipeCard: React.FC<SwipeCardProps> = ({
 
         {/* ================= FRONT SIDE ================= */}
         <div
-          className="absolute inset-0 w-full h-full bg-black backface-hidden rounded-[32px] overflow-hidden shadow-2xl"
-          style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}
+          className={clsx(
+            "absolute inset-0 w-full h-full bg-black backface-hidden rounded-[32px] overflow-hidden shadow-2xl",
+            activeVibe ? `border-4 ${activeVibe.color.replace('from-', 'border-').split(' ')[0].replace('500', '500')}` : ""
+          )}
+          style={{
+            backfaceVisibility: 'hidden',
+            WebkitBackfaceVisibility: 'hidden',
+            boxShadow: activeVibe ? `0 0 20px ${activeVibe.color.includes('amber') || activeVibe.color.includes('orange') ? 'rgba(245, 158, 11, 0.5)' : 'rgba(139, 92, 246, 0.5)'}` : undefined // Simple glow fallback
+          }}
           onClick={handleTap}
         >
           {/* Photo */}
@@ -149,8 +157,7 @@ const SwipeCard: React.FC<SwipeCardProps> = ({
             </div>
           </div>
 
-          {/* Gradients */}
-          <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none" />
+
 
           {/* Photo Indicators */}
           {photos.length > 1 && (
@@ -161,39 +168,47 @@ const SwipeCard: React.FC<SwipeCardProps> = ({
             </div>
           )}
 
-          {/* Info Section - CLEAN: Name, Age, Distance, Match %, Vibe */}
-          <div className="absolute bottom-0 left-0 right-0 pb-[calc(100px+env(safe-area-inset-bottom))] px-4 sm:px-6 z-30 mb-4 pointer-events-none">
+          {/* Info Section - Stacked Layout with Safety Margin */}
+          <div className="absolute bottom-0 left-0 right-0 pb-[calc(110px+env(safe-area-inset-bottom))] px-5 z-30 pointer-events-none flex flex-col items-start gap-1">
 
-            {/* Top Row: Badges */}
-            <div className="flex flex-wrap gap-2 mb-2">
-              {/* Vibe Badge (Modo Agora) */}
+            {/* Layer 3: Tags (Top) - Subtler visually */}
+            <div className="flex flex-wrap gap-2 mb-1 w-full items-center justify-start">
+              {/* Vibe Badge - Compact & Glassy */}
               {activeVibe && (
-                <div className={`px-3 py-1.5 rounded-full flex items-center gap-2 shadow-lg backdrop-blur-md border border-white/20 animate-in fade-in slide-in-from-bottom-2 ${activeVibe.color.replace('text-', 'bg-').replace('500', '500/80')}`}>
-                  <span className="text-lg">{activeVibe.emoji}</span>
-                  <span className="text-xs font-bold text-white tracking-wide uppercase">{activeVibe.label}</span>
+                <div className={`
+                  px-2.5 py-1 rounded-full flex items-center gap-1.5 shadow-sm backdrop-blur-md border border-white/20 
+                  bg-gradient-to-r ${activeVibe.color.replace('from-', 'from-').replace('to-', 'to-')}
+                `}>
+                  <span className="text-sm leading-none drop-shadow-md filter">{activeVibe.emoji}</span>
+                  <span className="text-[10px] font-bold text-white tracking-wide uppercase drop-shadow-md">{activeVibe.label}</span>
                 </div>
               )}
 
-              {/* Compatibility Badge */}
+              {/* Compatibility Badge - Subtle Outline/Glass */}
               {compatibility > 0 && (
-                <div className="bg-zinc-900/60 backdrop-blur-md px-3 py-1 rounded-full flex items-center gap-1.5 border border-white/10">
-                  <Sparkles size={12} className="text-yellow-400" fill="#FACC15" />
-                  <span className="text-xs font-bold text-white">{compatibility}% Match</span>
+                <div className="bg-black/30 backdrop-blur-md px-2.5 py-1 rounded-full flex items-center gap-1 border border-white/10 shadow-sm">
+                  <Sparkles size={10} className="text-yellow-400" fill="#FACC15" />
+                  <span className="text-[10px] font-bold text-white/90 drop-shadow-md">{compatibility}%</span>
                 </div>
               )}
             </div>
 
-            {/* Name + Age */}
-            <div className="flex items-end gap-2">
-              <h1 className="text-4xl font-black text-white drop-shadow-xl tracking-tight leading-none">{profile.name}</h1>
-              <span className="text-2xl font-bold text-white/90 mb-0.5 drop-shadow-md">{profile.age}</span>
-              {profile.verified && <BadgeCheck className="text-blue-400 w-6 h-6 mb-1" fill="white" />}
+            {/* Layer 2: Name + Age (Middle) - Large & Shadowed */}
+            <div className="flex items-baseline gap-2 drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)]">
+              <h1 className="text-4xl font-black text-white tracking-tight leading-none">{profile.name}</h1>
+              <span className="text-2xl font-medium text-white/95">{profile.age}</span>
+              {profile.verified && <BadgeCheck className="text-blue-400 w-6 h-6 self-center ml-0.5" fill="white" />}
             </div>
 
-            {/* Distance */}
-            <div className="flex items-center gap-1.5 text-white/80 font-medium text-sm mt-1.5">
-              <MapPin size={14} className="text-white/60" />
-              <span>{Math.round(profile.distance || 0)} km de distância</span>
+            {/* Layer 1: Location (Bottom) - Shadowed */}
+            <div className="flex items-center gap-1.5 text-white/90 font-medium text-sm drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
+              <MapPin size={14} className="text-white/80" />
+              <span>
+                {profile.distance !== undefined && profile.distance < 1
+                  ? `${Math.round(profile.distance * 1000)}m de distância`
+                  : `${Math.round(profile.distance || 0)} km de distância`
+                }
+              </span>
             </div>
           </div>
         </div>
@@ -213,7 +228,11 @@ const SwipeCard: React.FC<SwipeCardProps> = ({
             <h2 className="text-4xl font-black text-zinc-900 leading-none tracking-tight">{profile.name}, {profile.age}</h2>
             {profile.distance && (
               <span className="text-sm font-semibold text-zinc-400 mt-1 flex items-center justify-center gap-1">
-                <MapPin size={12} /> {Math.round(profile.distance)} km daqui
+                <MapPin size={12} />
+                {profile.distance !== undefined && profile.distance < 1
+                  ? `${Math.round(profile.distance * 1000)}m daqui`
+                  : `${Math.round(profile.distance)} km daqui`
+                }
               </span>
             )}
           </div>
@@ -233,7 +252,7 @@ const SwipeCard: React.FC<SwipeCardProps> = ({
               <div className="relative z-10">
                 <div className="flex items-center gap-2 mb-2">
                   <Sparkles size={16} className="text-violet-600" />
-                  <h3 className="font-black text-violet-900 text-[10px] uppercase tracking-widest">Sinastria Astral</h3>
+                  <h3 className="font-black text-violet-900 text-[10px] uppercase tracking-widest">Combinação Astral</h3>
                 </div>
                 <h4 className="text-lg font-bold text-zinc-800 mb-1 leading-tight">{sinastriaVerdict.title}</h4>
                 <p className="text-zinc-600 text-sm font-medium leading-relaxed">"{sinastriaVerdict.description}"</p>

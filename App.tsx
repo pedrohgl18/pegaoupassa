@@ -367,6 +367,8 @@ const App: React.FC = () => {
           education: p.education,
           height: p.height,
           interests: p.user_interests?.map((ui: any) => ui.interest) || [],
+          vibeStatus: p.vibe_status,
+          vibeExpiresAt: p.vibe_expires_at,
         }));
 
         // Filter out duplicates if any
@@ -660,7 +662,8 @@ const App: React.FC = () => {
       .from('profiles')
       .update({
         vibe_status: vibeId,
-        vibe_expires_at: expiresAt
+        vibe_expires_at: expiresAt,
+        last_vibe_activation: new Date().toISOString()
       })
       .eq('id', user.id);
 
@@ -670,6 +673,7 @@ const App: React.FC = () => {
   // Drag Handlers
   const handleTouchStart = (e: React.TouchEvent | React.MouseEvent) => {
     if (lastDirection) return; // Don't allow drag during animation
+    if (isTopCardFlipped) return; // Don't allow drag if card is flipped
     const y = 'touches' in e ? (e as React.TouchEvent).touches[0].clientY : (e as React.MouseEvent).clientY;
     setDragStart({ y });
     setIsDragging(true);
@@ -677,6 +681,7 @@ const App: React.FC = () => {
 
   const handleTouchMove = (e: React.TouchEvent | React.MouseEvent) => {
     if (!dragStart || !isDragging) return;
+    if (isTopCardFlipped) return; // Don't allow drag if card is flipped
     const y = 'touches' in e ? (e as React.TouchEvent).touches[0].clientY : (e as React.MouseEvent).clientY;
     const deltaY = y - dragStart.y;
     setDragOffset(deltaY);
@@ -782,7 +787,7 @@ const App: React.FC = () => {
         </div>
 
         {/* Action Buttons - Only show for other profiles AND if not coming from chat */}
-        {!isSelf && !activeChat && (
+        {/* {!isSelf && !activeChat && (
           <div className="h-24 bg-black flex items-center justify-center gap-8 pb-4 pt-2">
             <button
               onClick={handlePassFromViewer}
@@ -797,17 +802,17 @@ const App: React.FC = () => {
               <Heart size={32} fill="white" />
             </button>
           </div>
-        )}
+        )} */}
       </div>
     );
   };
 
   /* Login Screen - Updated for Neutral/Modern Look (Replaces Tropical) */
   const renderLogin = () => (
-    <div className="flex flex-col h-full w-full relative bg-zinc-950 overflow-hidden text-white">
+    <div className="flex flex-col h-full w-full relative bg-[#2e1065] overflow-hidden text-white">
       {/* Background Ambience (Subtle) */}
-      <div className="absolute top-[-20%] left-[-20%] w-[140%] h-[140%] bg-[radial-gradient(circle_at_50%_50%,_rgba(139,92,246,0.1),_transparent_70%)] animate-pulse" style={{ animationDuration: '6s' }} />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[100%] h-[100%] bg-[radial-gradient(circle_at_50%_50%,_rgba(236,72,153,0.1),_transparent_70%)] animate-pulse" style={{ animationDuration: '8s' }} />
+      <div className="absolute top-[-20%] left-[-20%] w-[140%] h-[140%] bg-[radial-gradient(circle_at_50%_50%,_rgba(167,139,250,0.15),_transparent_70%)] animate-pulse" style={{ animationDuration: '6s' }} />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[100%] h-[100%] bg-[radial-gradient(circle_at_50%_50%,_rgba(236,72,153,0.15),_transparent_70%)] animate-pulse" style={{ animationDuration: '8s' }} />
 
       {/* Main Content */}
       <div className="relative z-10 flex flex-col items-center justify-center h-full px-6 text-center">
@@ -995,11 +1000,11 @@ const App: React.FC = () => {
           {/* Top Bar - Status VIP/Free - Redesigned */}
           {/* Top Bar - Status VIP/Free - Minimalist */}
           <div className="absolute top-0 left-0 right-0 z-20 pointer-events-none">
-            <div className="flex justify-center pt-12 pb-4 bg-gradient-to-b from-black/80 via-black/40 to-transparent">
+            <div className="flex justify-center pt-24 pb-4 bg-gradient-to-b from-black/80 via-black/40 to-transparent">
               {!isVip && !isTopCardFlipped && (
                 <div className="flex items-center gap-3 pointer-events-auto">
                   {/* Progress Bar Minimal */}
-                  <div className="flex flex-col gap-1 w-32">
+                  <div className="flex flex-col gap-1 w-28">
                     <div className="flex justify-between items-end px-1">
                       <span className="text-[10px] font-bold text-white/80 uppercase tracking-wider">Likes</span>
                       <span className="text-[10px] font-bold text-white/80">{swipeCount}/{DAILY_FREE_SWIPES}</span>
@@ -1026,26 +1031,26 @@ const App: React.FC = () => {
           </div>
 
           {/* Floating Action Buttons - Redesigned Area */}
-          <div
+          {/* <div
             className="absolute right-4 z-20 flex flex-col gap-4 items-center"
             style={{ bottom: 'calc(100px + env(safe-area-inset-bottom, 0px))' }}
-          >
-            {/* Pega (Down) - Like */}
-            <button
+          > */}
+          {/* Pega (Down) - Like */}
+          {/* <button
               onClick={() => handleSwipe('down')}
               className="w-[70px] h-[70px] rounded-full bg-brasil-green flex items-center justify-center shadow-2xl shadow-brasil-green/40 hover:scale-105 active:scale-95 transition-all border-4 border-white/10 group"
             >
               <ThumbsUp size={36} className="text-white group-hover:rotate-12 transition-transform" fill="white" />
-            </button>
+            </button> */}
 
-            {/* Passa (Up) - Pass */}
-            <button
+          {/* Passa (Up) - Pass */}
+          {/* <button
               onClick={() => handleSwipe('up')}
               className="w-[70px] h-[70px] rounded-full bg-zinc-900/90 backdrop-blur-md flex items-center justify-center hover:bg-black active:scale-95 transition-all shadow-2xl border border-white/10 group"
             >
               <X size={36} className="text-white/80 group-hover:text-white transition-colors" strokeWidth={3} />
             </button>
-          </div>
+          </div> */}
 
           {/* Tutorial Overlay */}
           {showTutorial && (

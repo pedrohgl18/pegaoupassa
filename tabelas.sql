@@ -1134,3 +1134,11 @@ CREATE POLICY "Usuários podem remover interesses"
 ON user_interests FOR DELETE
 USING (auth.uid() = user_id);
 
+
+-- =============================================
+-- MIGRAÇÃO: Adicionar last_vibe_activation
+-- Data: 29/11/2025
+-- Descrição: Controle de limite de tempo para o Modo Agora
+-- =============================================
+
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS last_vibe_activation TIMESTAMP WITH TIME ZONE;

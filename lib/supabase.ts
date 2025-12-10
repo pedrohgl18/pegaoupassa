@@ -993,11 +993,11 @@ export const zodiac = {
 
   // Obter descrição da compatibilidade
   getCompatibilityText: (percentage: number): string => {
-    if (percentage >= 90) return 'Almas gêmeas! 🔥'
-    if (percentage >= 75) return 'Combinação perfeita! 💕'
-    if (percentage >= 60) return 'Bom potencial! 💫'
-    if (percentage >= 45) return 'Pode dar certo! 🌟'
-    return 'Opostos se atraem? 🤔'
+    if (percentage >= 90) return 'Alma Gêmea! Pode marcar o casamento 💍'
+    if (percentage >= 75) return 'Química Pura! 🔥 Vai dar namoro'
+    if (percentage >= 60) return 'Tem Futuro! ✨ Só não enrola'
+    if (percentage >= 45) return 'Pagou pra ver! 🎲 Ousadia pura'
+    return 'Desafio Aceito? 😈 Os opostos se atraem...'
   },
 }
 

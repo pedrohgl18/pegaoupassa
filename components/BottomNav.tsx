@@ -24,7 +24,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ currentScreen, onNavigate }) => {
       className="absolute left-0 right-0 z-50 flex justify-center pointer-events-none"
       style={{ bottom: 'calc(16px + env(safe-area-inset-bottom, 0px))' }}
     >
-      <div className="bg-white/90 backdrop-blur-xl border border-white/20 rounded-full shadow-2xl px-6 py-3 flex items-center gap-8 pointer-events-auto transform transition-all duration-300 hover:scale-105">
+      <div className="bg-white/90 backdrop-blur-xl border border-white/20 rounded-full shadow-2xl px-6 py-3 flex items-center gap-8 pointer-events-auto transform transition-all duration-300 hover:scale-105 max-w-xs sm:max-w-sm w-auto">
         {navItems.map((item) => {
           const isActive = currentScreen === item.id;
           const Icon = item.icon;

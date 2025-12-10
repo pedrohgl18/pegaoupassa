@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Loader2, Plus, X, Briefcase, GraduationCap, Ruler, Sparkles, Settings as SettingsIcon, Tag, ChevronRight } from 'lucide-react';
 import Button from './Button';
 import { profiles, photos as photosApi, interests } from '../lib/supabase';
-import { Settings } from './Settings';
+import { profiles, photos as photosApi, interests } from '../lib/supabase';
 import InterestSelector from './InterestSelector';
 
 const ZODIAC_SIGNS = [
@@ -33,7 +33,6 @@ const EditProfile: React.FC<EditProfileProps> = ({ userId, onBack, onSave, onLog
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
   const [showInterestsModal, setShowInterestsModal] = useState(false);
 
   // Form State
@@ -172,9 +171,7 @@ const EditProfile: React.FC<EditProfileProps> = ({ userId, onBack, onSave, onLog
     );
   }
 
-  if (showSettings) {
-    return <Settings onClose={() => setShowSettings(false)} onLogout={onLogout} />;
-  }
+
 
   return (
     <div className="flex flex-col h-full w-full bg-zinc-50 animate-in slide-in-from-right">
@@ -185,12 +182,6 @@ const EditProfile: React.FC<EditProfileProps> = ({ userId, onBack, onSave, onLog
         </button>
         <h1 className="text-lg font-bold text-zinc-900">Editar Perfil</h1>
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => setShowSettings(true)}
-            className="p-2 text-zinc-500 hover:bg-zinc-100 rounded-full"
-          >
-            <SettingsIcon size={24} />
-          </button>
           <button
             onClick={handleSave}
             disabled={saving}

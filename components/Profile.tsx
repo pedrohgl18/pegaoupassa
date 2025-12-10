@@ -2,6 +2,7 @@ import React from 'react';
 import { Crown, Pencil, SlidersHorizontal, ChevronRight, Star, Settings, LogOut, MapPin, Sparkles, Heart, User, Lock } from 'lucide-react';
 import Button from './Button';
 import { ScreenState } from '../types';
+import { Settings } from './Settings';
 
 interface ProfileProps {
     user: any;
@@ -32,6 +33,7 @@ const Profile: React.FC<ProfileProps> = ({
     matchesCount,
     receivedLikesCount,
 }) => {
+    const [showSettings, setShowSettings] = useState(false);
     const avatarUrl = user?.user_metadata?.avatar_url || profile?.photos?.[0]?.url || "https://picsum.photos/seed/me/400/400";
     const hasCoverPhoto = profile?.photos?.length > 1;
 
@@ -156,7 +158,7 @@ const Profile: React.FC<ProfileProps> = ({
                             {profile?.vibeStatus ? (
                                 <span className="text-2xl animate-pulse">✨</span>
                             ) : (
-                                <div className="w-3 h-3 bg-red-500 rounded-full animate-ping absolute top-0 right-0" />
+                                <div className="w-3 h-3 bg-violet-600 rounded-full animate-ping absolute top-0 right-0" />
                             )}
                             <Sparkles size={24} className={profile?.vibeStatus ? "text-purple-600" : "text-zinc-400"} />
                         </div>
@@ -220,6 +222,22 @@ const Profile: React.FC<ProfileProps> = ({
                         <ChevronRight size={20} className="text-zinc-300 group-hover:text-secondary transition-colors" />
                     </button>
 
+                    <button
+                        onClick={() => setShowSettings(true)}
+                        className="w-full p-4 bg-white rounded-2xl border border-zinc-100 shadow-sm flex items-center justify-between group hover:border-zinc-400/30 transition-all active:scale-[0.98]"
+                    >
+                        <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 rounded-full bg-zinc-50 text-zinc-600 flex items-center justify-center group-hover:bg-zinc-600 group-hover:text-white transition-colors">
+                                <Settings size={20} />
+                            </div>
+                            <div className="text-left">
+                                <p className="font-bold text-zinc-800">Configurações</p>
+                                <p className="text-xs text-zinc-400">Notificações, conta, privacidade</p>
+                            </div>
+                        </div>
+                        <ChevronRight size={20} className="text-zinc-300 group-hover:text-zinc-600 transition-colors" />
+                    </button>
+
                     {!isVip && (
                         <button
                             onClick={() => onNavigate(ScreenState.VIP)}
@@ -268,6 +286,9 @@ const Profile: React.FC<ProfileProps> = ({
 
                 <div className="h-4" />
             </div>
+            {showSettings && (
+                <Settings onClose={() => setShowSettings(false)} onLogout={onLogout} />
+            )}
         </div >
     );
 };
