@@ -42,6 +42,17 @@
     - Definir JAVA_HOME: `$env:JAVA_HOME = "C:\Program Files\Android\Android Studio\jbr"`
     - `./gradlew assembleDebug`
 
+### 📱 Regras de UI/UX (Android First)
+
+1.  **Safe Areas**: SEMPRE respeitar as barras do sistema (status bar e navigation bar).
+    *   Use `env(safe-area-inset-top)` e `env(safe-area-inset-bottom)`.
+    *   Evite colocar botões interativos nos extremos da tela sem margem de segurança.
+2.  **Paleta de Cores**: O app é **CLARO** (Light Mode).
+    *   Evite fundos pretos/escuras (`slate-900`, `bg-black`, etc) em cards e modais.
+    *   Use `bg-white` ou `bg-zinc-50` para superfícies.
+    *   Texto principal: `text-zinc-900`.
+    *   Texto secundário: `text-zinc-500`.
+
 ### 🗄️ Banco de Dados (Supabase)
 
 ### 🗄️ Banco de Dados (Supabase)

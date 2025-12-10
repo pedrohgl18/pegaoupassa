@@ -44,9 +44,10 @@ const SwipeCard: React.FC<SwipeCardProps> = ({
   }
 
   // Get Sinastria Verdict (Funny) if signs exist
+  // FIXED: Passed compatibility number to the function
   const sinastriaVerdict = (myZodiacSign && profile.zodiacSign)
     ? getSinastriaVerdict(compatibility)
-    : { title: "Mistério Astral", description: "Os astros estão em silêncio...", color: "bg-gray-800" };
+    : { title: "Mistério Astral", description: "Os astros estão em silêncio...", color: "bg-zinc-100 border-zinc-200" };
 
   // Vibe Data
   const activeVibe = profile.vibeStatus ? VIBES.find(v => v.id === profile.vibeStatus) : null;
@@ -55,9 +56,6 @@ const SwipeCard: React.FC<SwipeCardProps> = ({
     if (Math.abs(dragOffset) > 10) return;
     if (!isActive) return;
 
-    // If card is flipped, tapping usually flips back or does nothing specific (maybe scroll)
-    // We'll let the user click the "Flip Back" button specifically, or tap anywhere to flip back?
-    // Let's keep tap regions on Front only.
     if (isFlipped) return;
 
     const { clientX, currentTarget } = e;
@@ -113,8 +111,8 @@ const SwipeCard: React.FC<SwipeCardProps> = ({
 
         {/* ================= FRONT SIDE ================= */}
         <div
-          className="absolute inset-0 w-full h-full bg-black backface-hidden rounded-[32px] overflow-hidden"
-          style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }} // Ensure backface hidden
+          className="absolute inset-0 w-full h-full bg-black backface-hidden rounded-[32px] overflow-hidden shadow-2xl"
+          style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}
           onClick={handleTap}
         >
           {/* Photo */}
@@ -136,13 +134,13 @@ const SwipeCard: React.FC<SwipeCardProps> = ({
           </div>
 
           {/* Gradients */}
-          <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none" />
+          <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none" />
 
-          {/* Flip Button - Top Right */}
-          <div className="absolute top-4 right-4 z-50 pointer-events-auto">
+          {/* Flip Button - SAFE AREA FIX */}
+          <div className="absolute top-[calc(1rem+env(safe-area-inset-top))] right-4 z-50 pointer-events-auto">
             <button
               onClick={handleFlip}
-              className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center text-white border border-white/10 hover:bg-black/60 transition-all active:scale-95"
+              className="w-10 h-10 rounded-full bg-black/30 backdrop-blur-md flex items-center justify-center text-white border border-white/20 hover:bg-black/50 transition-all active:scale-95 shadow-lg"
             >
               <RotateCw size={20} />
             </button>
@@ -157,115 +155,118 @@ const SwipeCard: React.FC<SwipeCardProps> = ({
             </div>
           )}
 
-          {/* Info Section */}
-          <div className="absolute bottom-0 left-0 right-0 pb-[calc(100px+env(safe-area-inset-bottom))] px-6 flex flex-col gap-2 z-30 pointer-events-none">
+          {/* Info Section - CLEAN: Name, Age, Distance, Match %, Vibe */}
+          <div className="absolute bottom-0 left-0 right-0 pb-[calc(100px+env(safe-area-inset-bottom))] px-6 flex flex-col gap-1 z-30 pointer-events-none mb-4">
+
+            {/* Vibe Badge (Modo Agora) */}
+            {activeVibe && (
+              <div className={`self-start px-3 py-1.5 rounded-full flex items-center gap-2 mb-2 shadow-lg backdrop-blur-md border border-white/20 animate-in fade-in slide-in-from-bottom-2 ${activeVibe.color.replace('text-', 'bg-').replace('500', '500/80')}`}>
+                <span className="text-lg">{activeVibe.emoji}</span>
+                <span className="text-xs font-bold text-white tracking-wide uppercase">{activeVibe.label}</span>
+              </div>
+            )}
+
             {/* Compatibility Badge */}
             {compatibility > 0 && (
-              <div className="self-start glass-strong px-3 py-1 rounded-full flex items-center gap-1.5 mb-1">
-                <Heart size={12} className="text-accent" fill="#FFD600" />
+              <div className="self-start bg-zinc-900/60 backdrop-blur-md px-3 py-1 rounded-full flex items-center gap-1.5 mb-2 border border-white/10">
+                <Sparkles size={12} className="text-yellow-400" fill="#FACC15" />
                 <span className="text-xs font-bold text-white">{compatibility}% Match</span>
               </div>
             )}
 
-            <div className="flex items-end gap-3">
-              <h1 className="text-4xl font-black text-white drop-shadow-xl tracking-tight">{profile.name}</h1>
-              <span className="text-2xl font-bold text-gray-300 mb-1">{profile.age}</span>
-              {profile.verified && <BadgeCheck className="text-primary w-6 h-6 mb-1.5" fill="white" />}
+            <div className="flex items-end gap-3 translate-y-1">
+              <h1 className="text-4xl font-black text-white drop-shadow-xl tracking-tight leading-none">{profile.name}</h1>
+              <span className="text-2xl font-bold text-white/90 mb-0.5 shadow-black/50 drop-shadow-md">{profile.age}</span>
+              {profile.verified && <BadgeCheck className="text-blue-400 w-6 h-6 mb-1" fill="white" />}
             </div>
 
-            <div className="flex flex-wrap gap-2 text-sm text-gray-200 font-medium">
-              {profile.profession && (
-                <span className="flex items-center gap-1"><Briefcase size={14} /> {profile.profession}</span>
-              )}
-              {Math.round(profile.distance || 0) < 100 && (
-                <span className="flex items-center gap-1"><MapPin size={14} /> {Math.round(profile.distance || 0)}km</span>
-              )}
+            {/* Distance - ADDED BACK */}
+            <div className="flex items-center gap-1.5 text-white/80 font-medium text-sm mt-1 ml-1">
+              <MapPin size={14} className="text-white/60" />
+              <span>{Math.round(profile.distance || 0)} km de distância</span>
             </div>
-
-
           </div>
         </div>
 
-        {/* ================= BACK SIDE (DETAILS/SINASTRIA) ================= */}
+        {/* ================= BACK SIDE (DETAILS - LIGHT MODE) ================= */}
         <div
-          className="absolute inset-0 w-full h-full bg-slate-900 rounded-[32px] overflow-y-auto overflow-x-hidden [transform:rotateY(180deg)] backface-hidden px-6 py-8"
+          className="absolute inset-0 w-full h-full bg-white rounded-[32px] overflow-y-auto overflow-x-hidden [transform:rotateY(180deg)] backface-hidden px-6 py-8"
           style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}
         >
           <button
             onClick={handleFlip}
-            className="absolute top-4 right-4 z-50 w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white"
+            className="absolute top-4 right-4 z-50 w-10 h-10 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-900 border border-zinc-200 hover:bg-zinc-200 transition-all active:scale-95"
           >
             <RotateCw size={20} className="transform rotate-180" />
           </button>
 
           {/* Photos (Small Gallery) */}
-          <div className="flex gap-2 overflow-x-auto pb-4 mb-4 scrollbar-hide">
+          <div className="flex gap-2 overflow-x-auto pb-4 mb-2 scrollbar-hide pt-8">
             {photos.map((photo, i) => (
-              <img key={i} src={photo} className="w-20 h-28 object-cover rounded-lg flex-shrink-0" />
+              <img key={i} src={photo} className="w-20 h-28 object-cover rounded-xl flex-shrink-0 border border-zinc-100 shadow-sm" />
             ))}
           </div>
 
-          {/* Sinastria Verdict Card */}
+          <div className="mb-6">
+            <h2 className="text-3xl font-black text-zinc-900 leading-tight mb-1">{profile.name}, {profile.age}</h2>
+            <span className="text-zinc-500 font-medium text-sm block">{profile.profession || 'Não informado'}</span>
+          </div>
+
+          {/* Sinastria Verdict Card - FIXED & LIGHT THEME */}
           {compatibility > 0 && (
-            <div className={`p-5 rounded-2xl mb-6 relative overflow-hidden ${sinastriaVerdict.color} shadow-lg`}>
-              <div className="absolute top-0 right-0 -mt-2 -mr-2 w-16 h-16 bg-white/10 rounded-full blur-xl animate-pulse" />
+            <div className={`p-5 rounded-2xl mb-6 relative overflow-hidden bg-gradient-to-br from-violet-50 to-fuchsia-50 border border-violet-100 shadow-sm`}>
               <div className="relative z-10">
                 <div className="flex items-center gap-2 mb-2">
-                  <Sparkles size={18} className="text-white" />
-                  <h3 className="font-black text-white text-lg uppercase tracking-wide">Sinastria</h3>
+                  <Sparkles size={18} className="text-violet-600" />
+                  <h3 className="font-black text-violet-900 text-xs uppercase tracking-wide">Sinastria Astral</h3>
                 </div>
-                <h4 className="text-xl font-bold text-white mb-1 leading-tight">{sinastriaVerdict.title}</h4>
-                <p className="text-white/90 text-sm italic">"{sinastriaVerdict.description}"</p>
+                <h4 className="text-lg font-bold text-zinc-800 mb-1 leading-tight">{sinastriaVerdict.title}</h4>
+                <p className="text-zinc-600 text-sm italic">"{sinastriaVerdict.description}"</p>
               </div>
             </div>
           )}
 
-          {/* Bio */}
-          <div className="mb-6">
-            <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Sobre Mim</h3>
-            <p className="text-white text-lg leading-relaxed font-medium">
-              {profile.bio || "Sem biografia... Mistério total! 🕵️‍♂️"}
-            </p>
-          </div>
-
-          {/* Details Grid */}
+          {/* Details Grid - ALL INFO */}
+          <h3 className="text-zinc-400 text-xs font-bold uppercase tracking-wider mb-3">Detalhes</h3>
           <div className="grid grid-cols-2 gap-3 mb-6">
-            {profile.zodiacSign && (
-              <div className="bg-white/5 p-3 rounded-xl border border-white/5">
-                <span className="text-xs text-gray-400 block mb-1">Signo</span>
-                <span className="text-white font-bold flex items-center gap-2"><Sparkles size={14} className="text-yellow-400" /> {profile.zodiacSign}</span>
-              </div>
-            )}
-            {profile.height && (
-              <div className="bg-white/5 p-3 rounded-xl border border-white/5">
-                <span className="text-xs text-gray-400 block mb-1">Altura</span>
-                <span className="text-white font-bold flex items-center gap-2"><Ruler size={14} className="text-blue-400" /> {profile.height}cm</span>
-              </div>
-            )}
-            {profile.education && (
-              <div className="bg-white/5 p-3 rounded-xl border border-white/5 col-span-2">
-                <span className="text-xs text-gray-400 block mb-1">Escolaridade</span>
-                <span className="text-white font-bold flex items-center gap-2"><GraduationCap size={14} className="text-purple-400" /> {profile.education}</span>
-              </div>
-            )}
+            <div className="bg-zinc-50 p-3 rounded-xl border border-zinc-100">
+              <span className="text-xs text-zinc-400 block mb-1">Signo</span>
+              <span className="text-zinc-900 font-bold flex items-center gap-2">
+                <Sparkles size={14} className="text-violet-500" /> {profile.zodiacSign || "----"}
+              </span>
+            </div>
+
+            <div className="bg-zinc-50 p-3 rounded-xl border border-zinc-100">
+              <span className="text-xs text-zinc-400 block mb-1">Altura</span>
+              <span className="text-zinc-900 font-bold flex items-center gap-2">
+                <Ruler size={14} className="text-blue-500" /> {profile.height ? `${profile.height}m` : '----'}
+              </span>
+            </div>
+
+            <div className="bg-zinc-50 p-3 rounded-xl border border-zinc-100 col-span-2">
+              <span className="text-xs text-zinc-400 block mb-1">Escolaridade</span>
+              <span className="text-zinc-900 font-bold flex items-center gap-2">
+                <GraduationCap size={14} className="text-emerald-500" /> {profile.education || "----"}
+              </span>
+            </div>
           </div>
 
           {/* Interests */}
-          {profile.interests && (
+          {profile.interests && profile.interests.length > 0 && (
             <div>
-              <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Interesses</h3>
+              <h3 className="text-zinc-400 text-xs font-bold uppercase tracking-wider mb-3">Interesses</h3>
               <div className="flex flex-wrap gap-2">
                 {profile.interests.map(i => (
-                  <div key={i.id} className="bg-white/10 px-3 py-1.5 rounded-full flex items-center gap-1.5 border border-white/5">
+                  <div key={i.id} className="bg-white px-3 py-1.5 rounded-full flex items-center gap-1.5 border border-zinc-200 shadow-sm">
                     <span>{i.emoji}</span>
-                    <span className="text-white text-sm font-medium">{i.name}</span>
+                    <span className="text-zinc-700 text-sm font-bold">{i.name}</span>
                   </div>
                 ))}
               </div>
             </div>
           )}
 
-          <div className="h-24" /> {/* Spacer for bottom actions */}
+          <div className="h-32" /> {/* Spacer for bottom actions */}
         </div>
 
       </div>
@@ -273,13 +274,13 @@ const SwipeCard: React.FC<SwipeCardProps> = ({
   );
 };
 
-// Helper Utility for Sinastria Verdicts (Creative & Funny)
+// Helper Utility for Sinastria Verdicts
 const getSinastriaVerdict = (percentage: number) => {
-  if (percentage >= 90) return { title: "Alma Gêmea (Corre!)", description: "Vocês combinam mais que feijoada e caipirinha. Já marca o casamento!", color: "bg-gradient-to-br from-pink-600 to-rose-600" };
-  if (percentage >= 80) return { title: "Química Explosiva", description: "Cuidado pra não incendiar a casa. A tensão aqui é real!", color: "bg-gradient-to-br from-orange-500 to-red-600" };
-  if (percentage >= 70) return { title: "Vai dar Bom", description: "Tem futuro, hein? Só não esquece de responder o 'Bom dia'.", color: "bg-gradient-to-br from-emerald-500 to-green-600" };
-  if (percentage >= 50) return { title: "Pagou pra Ver", description: "Pode ser incrível ou um desastre. Só tem um jeito de descobrir...", color: "bg-gradient-to-br from-blue-500 to-indigo-600" };
-  return { title: "Desafio Aceito?", description: "Os astros dizem 'não', mas quem liga? Prove que eles estão errados!", color: "bg-gradient-to-br from-gray-600 to-gray-800" };
+  if (percentage >= 90) return { title: "Alma Gêmea (Corre!)", description: "Vocês combinam mais que feijoada e caipirinha. Já marca o casamento!", color: "violet" };
+  if (percentage >= 80) return { title: "Química Explosiva", description: "Cuidado pra não incendiar a casa. A tensão aqui é real!", color: "rose" };
+  if (percentage >= 70) return { title: "Vai dar Bom", description: "Tem futuro, hein? Só não esquece de responder o 'Bom dia'.", color: "emerald" };
+  if (percentage >= 50) return { title: "Pagou pra Ver", description: "Pode ser incrível ou um desastre. Só tem um jeito de descobrir...", color: "blue" };
+  return { title: "Desafio Aceito?", description: "Os astros dizem 'não', mas quem liga? Prove que eles estão errados!", color: "gray" };
 };
 
 export default SwipeCard;
