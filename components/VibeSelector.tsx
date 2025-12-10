@@ -37,21 +37,21 @@ const VibeSelector: React.FC<VibeSelectorProps> = ({ currentVibe, onSelectVibe, 
             />
 
             {/* Modal */}
-            <div className="bg-[#1E293B] w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 pointer-events-auto shadow-2xl animate-in slide-in-from-bottom duration-300 border-t border-white/10 relative z-10">
+            <div className="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 pointer-events-auto shadow-2xl animate-in slide-in-from-bottom duration-300 relative z-10">
 
                 {/* Handle for mobile */}
-                <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-6" />
+                <div className="w-12 h-1.5 bg-zinc-200 rounded-full mx-auto mb-6" />
 
                 <div className="flex justify-between items-center mb-6">
                     <div>
-                        <h2 className="text-2xl font-black text-white flex items-center gap-2">
+                        <h2 className="text-2xl font-black text-zinc-900 flex items-center gap-2">
                             Modo Agora <span className="animate-pulse">🔴</span>
                         </h2>
-                        <p className="text-sm text-gray-400">O que você quer fazer <span className="text-accent font-bold">agora</span>?</p>
+                        <p className="text-sm text-zinc-500">O que você quer fazer <span className="text-violet-600 font-bold">agora</span>?</p>
                     </div>
                     <button
                         onClick={onClose}
-                        className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-white hover:bg-white/10"
+                        className="w-10 h-10 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-600 hover:bg-zinc-200 border border-zinc-200"
                     >
                         <X size={20} />
                     </button>
@@ -63,32 +63,32 @@ const VibeSelector: React.FC<VibeSelectorProps> = ({ currentVibe, onSelectVibe, 
                             key={vibe.id}
                             onClick={() => onSelectVibe(vibe.id)}
                             className={`p-4 rounded-2xl border transition-all duration-300 flex items-center gap-3 relative overflow-hidden group ${currentVibe === vibe.id
-                                    ? 'border-accent bg-accent/10'
-                                    : 'border-white/5 bg-white/5 hover:bg-white/10'
+                                ? 'border-violet-500 bg-violet-50'
+                                : 'border-zinc-100 bg-zinc-50 hover:bg-zinc-100'
                                 }`}
                         >
                             {/* Background gradient on hover/active */}
-                            <div className={`absolute inset-0 bg-gradient-to-br ${vibe.color} opacity-0 group-hover:opacity-10 transition-opacity`} />
+                            <div className={`absolute inset-0 bg-gradient-to-br ${vibe.color} opacity-0 group-hover:opacity-5 transition-opacity`} />
 
-                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center bg-gradient-to-br ${vibe.color} shadow-lg`}>
+                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center bg-gradient-to-br ${vibe.color} shadow-md`}>
                                 <vibe.icon size={20} className="text-white" />
                             </div>
 
                             <div className="text-left">
-                                <span className="block font-bold text-white text-sm">{vibe.label}</span>
-                                <span className="text-xs text-gray-400">Dura 1h</span>
+                                <span className={`block font-bold text-sm ${currentVibe === vibe.id ? 'text-violet-900' : 'text-zinc-700'}`}>{vibe.label}</span>
+                                <span className="text-xs text-zinc-400">Dura 1h</span>
                             </div>
 
                             {currentVibe === vibe.id && (
-                                <div className="absolute right-3 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-accent shadow-[0_0_10px_#FFD600]" />
+                                <div className="absolute right-3 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-violet-600 shadow-sm" />
                             )}
                         </button>
                     ))}
                 </div>
 
-                <p className="text-center text-xs text-gray-500 mt-6 flex items-center justify-center gap-1.5">
+                <p className="text-center text-xs text-zinc-400 mt-6 flex items-center justify-center gap-1.5">
                     <Clock size={12} />
-                    Seu status somem automaticamente
+                    Seu status some automaticamente
                 </p>
 
             </div>
