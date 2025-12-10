@@ -98,6 +98,7 @@ const App: React.FC = () => {
   const [filterZodiac, setFilterZodiac] = useState<string>('');
   const [myLocation, setMyLocation] = useState<{ latitude: number, longitude: number } | null>(null);
   const [filtersLoaded, setFiltersLoaded] = useState(false);
+  const [isTopCardFlipped, setIsTopCardFlipped] = useState(false);
   const [showVipSettingsModal, setShowVipSettingsModal] = useState(false);
   const [showVibeSelector, setShowVibeSelector] = useState(false);
 
@@ -531,6 +532,7 @@ const App: React.FC = () => {
     setTimeout(() => {
       setLastDirection(null);
       setFeedProfiles(prev => prev.slice(1)); // Remove first profile
+      setIsTopCardFlipped(false); // Reset flip state for next card
 
       // Fetch more if running low
       if (feedProfiles.length < 3) {
@@ -950,6 +952,7 @@ const App: React.FC = () => {
           {/* Current Profile (Active) */}
           {currentProfile && (
             <div
+              key={currentProfile.id}
               className={`absolute inset-0 transition-transform duration-500 ease-in-out ${lastDirection === 'up' ? '-translate-y-full opacity-0' :
                 lastDirection === 'down' ? 'translate-y-full opacity-0' : 'translate-y-0'
                 }`}
@@ -972,6 +975,7 @@ const App: React.FC = () => {
                   zodiac: filterZodiac
                 }}
                 myInterests={profile?.user_interests?.map((ui: any) => ui.interest?.id) || []}
+                onFlip={(flipped) => setIsTopCardFlipped(flipped)}
               />
             </div>
           )}
@@ -992,7 +996,7 @@ const App: React.FC = () => {
           {/* Top Bar - Status VIP/Free - Minimalist */}
           <div className="absolute top-0 left-0 right-0 z-20 pointer-events-none">
             <div className="flex justify-center pt-12 pb-4 bg-gradient-to-b from-black/80 via-black/40 to-transparent">
-              {!isVip && (
+              {!isVip && !isTopCardFlipped && (
                 <div className="flex items-center gap-3 pointer-events-auto">
                   {/* Progress Bar Minimal */}
                   <div className="flex flex-col gap-1 w-32">
@@ -1049,24 +1053,35 @@ const App: React.FC = () => {
               className="absolute inset-0 z-50 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center text-white"
               onClick={dismissTutorial}
             >
-              <div className="flex flex-col items-center animate-bounce mb-8">
-                <ChevronUp size={48} className="text-white/50" />
-                <span className="font-bold text-xl mb-2">PASSAR</span>
-                <span className="text-sm text-zinc-400">Deslize para cima</span>
+              <div className="flex flex-col items-center animate-bounce mb-6">
+                <ChevronUp size={40} className="text-white/50" />
+                <span className="font-bold text-lg mb-1">PASSAR</span>
+                <span className="text-xs text-zinc-400">Deslize para cima</span>
               </div>
 
-              <div className="w-20 h-32 border-2 border-white/30 rounded-full flex items-center justify-center relative my-4">
-                <div className="w-16 h-16 bg-white/20 rounded-full absolute animate-ping" />
-                <Hand size={40} />
+              <div className="w-20 h-28 border-2 border-white/30 rounded-full flex items-center justify-center relative my-3">
+                <div className="w-14 h-14 bg-white/20 rounded-full absolute animate-ping" />
+                <Hand size={36} />
               </div>
 
-              <div className="flex flex-col items-center animate-bounce mt-8">
-                <span className="text-sm text-zinc-400">Deslize para baixo</span>
-                <span className="font-bold text-xl mt-2 text-brasil-green">PEGAR</span>
-                <ChevronDown size={48} className="text-brasil-green/50" />
+              <div className="flex flex-col items-center animate-bounce mt-6 mb-6">
+                <span className="text-xs text-zinc-400">Deslize para baixo</span>
+                <span className="font-bold text-lg mt-1 text-brasil-green">PEGAR</span>
+                <ChevronDown size={40} className="text-brasil-green/50" />
               </div>
 
-              <p className="absolute bottom-28 text-sm text-white/50">Toque para começar</p>
+              {/* Flip Card Instruction */}
+              <div className="flex items-center gap-3 bg-white/10 px-4 py-3 rounded-2xl border border-white/20 mt-4">
+                <div className="w-8 h-8 bg-violet-600 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                  ℹ️
+                </div>
+                <div>
+                  <span className="text-sm font-bold block">Ver detalhes</span>
+                  <span className="text-xs text-zinc-400">Toque no lado direito do card</span>
+                </div>
+              </div>
+
+              <p className="absolute bottom-20 text-sm text-white/50">Toque para começar</p>
             </div>
           )}
         </div>

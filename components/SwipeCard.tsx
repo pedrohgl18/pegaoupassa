@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Profile } from '../types';
-import { BadgeCheck, MapPin, Sparkles, GraduationCap, Ruler, X, Heart, Layers, ArrowLeft } from 'lucide-react';
+import { BadgeCheck, MapPin, Sparkles, GraduationCap, Ruler, X, Heart, Briefcase } from 'lucide-react';
 import { zodiac } from '../lib/supabase';
 import { VIBES } from './VibeSelector';
 import clsx from 'clsx';
@@ -18,6 +18,7 @@ interface SwipeCardProps {
   };
   myInterests?: string[];
   hasActions?: boolean;
+  onFlip?: (isFlipped: boolean) => void;
 }
 
 const SwipeCard: React.FC<SwipeCardProps> = ({
@@ -29,7 +30,8 @@ const SwipeCard: React.FC<SwipeCardProps> = ({
   myZodiacSign,
   activeFilters,
   myInterests,
-  hasActions = true
+  hasActions = true,
+  onFlip
 }) => {
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
@@ -56,12 +58,29 @@ const SwipeCard: React.FC<SwipeCardProps> = ({
     if (Math.abs(dragOffset) > 10) return;
     if (!isActive) return;
 
-    if (isFlipped) return;
-
-    const { clientX, currentTarget } = e;
-    const { left, width } = currentTarget.getBoundingClientRect();
+    const { clientX, clientY, currentTarget } = e;
+    const { left, width, top, height } = currentTarget.getBoundingClientRect();
     const x = clientX - left;
+    const y = clientY - top;
 
+    // If card is flipped, tap anywhere to flip back
+    if (isFlipped) {
+      setIsFlipped(false);
+      if (onFlip) onFlip(false);
+      return;
+    }
+
+    // Right-center area tap = flip card (right 25% of width, middle 50% of height)
+    const isRightArea = x > width * 0.75;
+    const isCenterVertical = y > height * 0.25 && y < height * 0.75;
+
+    if (isRightArea && isCenterVertical) {
+      setIsFlipped(true);
+      if (onFlip) onFlip(true);
+      return;
+    }
+
+    // Normal photo navigation
     if (x < width / 2) {
       setCurrentPhotoIndex(prev => Math.max(0, prev - 1));
     } else {
@@ -69,10 +88,7 @@ const SwipeCard: React.FC<SwipeCardProps> = ({
     }
   };
 
-  const handleFlip = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsFlipped(!isFlipped);
-  };
+  // handleFlip not needed anymore - using handleTap
 
   // Styles logic
   const likeOpacity = swipeDirection === 'down' ? 1 : Math.max(0, Math.min(dragOffset / 150, 1));
@@ -145,11 +161,11 @@ const SwipeCard: React.FC<SwipeCardProps> = ({
             </div>
           )}
 
-          {/* Info Section - CLEAN: Name, Age, Distance, Match %, Vibe + FLIP BUTTON */}
-          <div className="absolute bottom-0 left-0 right-0 pb-[calc(100px+env(safe-area-inset-bottom))] px-4 sm:px-6 z-30 mb-4">
+          {/* Info Section - CLEAN: Name, Age, Distance, Match %, Vibe */}
+          <div className="absolute bottom-0 left-0 right-0 pb-[calc(100px+env(safe-area-inset-bottom))] px-4 sm:px-6 z-30 mb-4 pointer-events-none">
 
             {/* Top Row: Badges */}
-            <div className="flex flex-wrap gap-2 mb-2 pointer-events-none">
+            <div className="flex flex-wrap gap-2 mb-2">
               {/* Vibe Badge (Modo Agora) */}
               {activeVibe && (
                 <div className={`px-3 py-1.5 rounded-full flex items-center gap-2 shadow-lg backdrop-blur-md border border-white/20 animate-in fade-in slide-in-from-bottom-2 ${activeVibe.color.replace('text-', 'bg-').replace('500', '500/80')}`}>
@@ -167,25 +183,15 @@ const SwipeCard: React.FC<SwipeCardProps> = ({
               )}
             </div>
 
-            {/* Main Row: Flip Button (LEFT) + Name/Age */}
-            <div className="flex items-end gap-3">
-              {/* Flip Button - LEFT SIDE to avoid action buttons on right */}
-              <button
-                onClick={handleFlip}
-                className="pointer-events-auto w-11 h-11 rounded-full bg-white/20 backdrop-blur-lg flex items-center justify-center text-white border border-white/30 hover:bg-white/30 transition-all active:scale-95 shadow-xl flex-shrink-0"
-              >
-                <Layers className="w-5 h-5" />
-              </button>
-
-              <div className="flex items-end gap-2 pointer-events-none">
-                <h1 className="text-4xl font-black text-white drop-shadow-xl tracking-tight leading-none">{profile.name}</h1>
-                <span className="text-2xl font-bold text-white/90 mb-0.5 drop-shadow-md">{profile.age}</span>
-                {profile.verified && <BadgeCheck className="text-blue-400 w-6 h-6 mb-1" fill="white" />}
-              </div>
+            {/* Name + Age */}
+            <div className="flex items-end gap-2">
+              <h1 className="text-4xl font-black text-white drop-shadow-xl tracking-tight leading-none">{profile.name}</h1>
+              <span className="text-2xl font-bold text-white/90 mb-0.5 drop-shadow-md">{profile.age}</span>
+              {profile.verified && <BadgeCheck className="text-blue-400 w-6 h-6 mb-1" fill="white" />}
             </div>
 
             {/* Distance */}
-            <div className="flex items-center gap-1.5 text-white/80 font-medium text-sm mt-1.5 ml-14 pointer-events-none">
+            <div className="flex items-center gap-1.5 text-white/80 font-medium text-sm mt-1.5">
               <MapPin size={14} className="text-white/60" />
               <span>{Math.round(profile.distance || 0)} km de distância</span>
             </div>
@@ -194,68 +200,81 @@ const SwipeCard: React.FC<SwipeCardProps> = ({
 
         {/* ================= BACK SIDE (DETAILS - LIGHT MODE) ================= */}
         <div
-          className="absolute inset-0 w-full h-full bg-white rounded-[32px] overflow-y-auto overflow-x-hidden [transform:rotateY(180deg)] backface-hidden px-5 pt-4 pb-8"
+          className="absolute inset-0 w-full h-full bg-white rounded-[32px] overflow-y-auto overflow-x-hidden [transform:rotateY(180deg)] backface-hidden px-6 py-8"
           style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsFlipped(false);
+            if (onFlip) onFlip(false);
+          }}
         >
-          {/* Header with Back Button */}
-          <div className="flex items-center justify-between mb-4">
-            <button
-              onClick={handleFlip}
-              className="w-10 h-10 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-700 border border-zinc-200 hover:bg-zinc-200 transition-all active:scale-95"
-            >
-              <ArrowLeft size={20} />
-            </button>
-            <h2 className="text-lg font-bold text-zinc-900">{profile.name}, {profile.age}</h2>
-            <div className="w-10" /> {/* Spacer for centering */}
+          {/* Header - CENTERED - NAME FIRST */}
+          <div className="text-center mb-6 mt-2">
+            <h2 className="text-4xl font-black text-zinc-900 leading-none tracking-tight">{profile.name}, {profile.age}</h2>
+            {profile.distance && (
+              <span className="text-sm font-semibold text-zinc-400 mt-1 flex items-center justify-center gap-1">
+                <MapPin size={12} /> {Math.round(profile.distance)} km daqui
+              </span>
+            )}
           </div>
 
-          {/* Name + Profession */}
-          <div className="mb-4">
-            <span className="text-zinc-500 font-medium text-sm block">{profile.profession || 'Profissão não informada'}</span>
-          </div>
-
-          {/* Photos (Small Gallery) - MOVED BELOW HEADER */}
-          <div className="flex gap-2 overflow-x-auto pb-3 mb-4 scrollbar-hide">
+          {/* Photos (Small Gallery) */}
+          <div className="flex gap-3 overflow-x-auto pb-4 mb-6 scrollbar-hide justify-center px-4">
             {photos.map((photo, i) => (
-              <img key={i} src={photo} className="w-16 h-20 object-cover rounded-lg flex-shrink-0 border border-zinc-100 shadow-sm" />
+              <div key={i} className="relative group flex-shrink-0">
+                <img src={photo} className="w-16 h-20 object-cover rounded-2xl border-2 border-white shadow-md group-hover:scale-105 transition-transform" />
+              </div>
             ))}
           </div>
 
-          {/* Sinastria Verdict Card - FIXED & LIGHT THEME */}
+          {/* Sinastria Verdict Card */}
           {compatibility > 0 && (
-            <div className={`p-5 rounded-2xl mb-6 relative overflow-hidden bg-gradient-to-br from-violet-50 to-fuchsia-50 border border-violet-100 shadow-sm`}>
+            <div className={`p-5 rounded-2xl mb-6 relative overflow-hidden bg-gradient-to-br from-violet-50 to-fuchsia-50 border border-violet-100/50 shadow-sm`}>
               <div className="relative z-10">
                 <div className="flex items-center gap-2 mb-2">
-                  <Sparkles size={18} className="text-violet-600" />
-                  <h3 className="font-black text-violet-900 text-xs uppercase tracking-wide">Sinastria Astral</h3>
+                  <Sparkles size={16} className="text-violet-600" />
+                  <h3 className="font-black text-violet-900 text-[10px] uppercase tracking-widest">Sinastria Astral</h3>
                 </div>
                 <h4 className="text-lg font-bold text-zinc-800 mb-1 leading-tight">{sinastriaVerdict.title}</h4>
-                <p className="text-zinc-600 text-sm italic">"{sinastriaVerdict.description}"</p>
+                <p className="text-zinc-600 text-sm font-medium leading-relaxed">"{sinastriaVerdict.description}"</p>
               </div>
             </div>
           )}
 
-          {/* Details Grid - ALL INFO */}
-          <h3 className="text-zinc-400 text-xs font-bold uppercase tracking-wider mb-3">Detalhes</h3>
-          <div className="grid grid-cols-2 gap-3 mb-6">
-            <div className="bg-zinc-50 p-3 rounded-xl border border-zinc-100">
-              <span className="text-xs text-zinc-400 block mb-1">Signo</span>
-              <span className="text-zinc-900 font-bold flex items-center gap-2">
-                <Sparkles size={14} className="text-violet-500" /> {profile.zodiacSign || "----"}
+          {/* Details Grid - IMPROVED VISUALS */}
+          <h3 className="text-zinc-900 text-sm font-bold mb-4 flex items-center gap-2">
+            Sobre {profile.name.split(' ')[0]}
+          </h3>
+          <div className="grid grid-cols-2 gap-3 mb-8">
+            <div className="bg-zinc-50 p-4 rounded-2xl border border-zinc-100 flex flex-col gap-1 items-start hover:bg-zinc-100 transition-colors">
+              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wide">Profissão</span>
+              <span className="text-zinc-800 font-bold text-sm flex items-center gap-2 leading-tight">
+                <Briefcase size={14} className="text-amber-500 flex-shrink-0" />
+                <span className="truncate w-full">{profile.profession || "----"}</span>
               </span>
             </div>
 
-            <div className="bg-zinc-50 p-3 rounded-xl border border-zinc-100">
-              <span className="text-xs text-zinc-400 block mb-1">Altura</span>
-              <span className="text-zinc-900 font-bold flex items-center gap-2">
-                <Ruler size={14} className="text-blue-500" /> {profile.height ? `${profile.height}m` : '----'}
+            <div className="bg-zinc-50 p-4 rounded-2xl border border-zinc-100 flex flex-col gap-1 items-start hover:bg-zinc-100 transition-colors">
+              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wide">Signo</span>
+              <span className="text-zinc-800 font-bold text-sm flex items-center gap-2">
+                <Sparkles size={14} className="text-violet-500 flex-shrink-0" />
+                {profile.zodiacSign || "----"}
               </span>
             </div>
 
-            <div className="bg-zinc-50 p-3 rounded-xl border border-zinc-100 col-span-2">
-              <span className="text-xs text-zinc-400 block mb-1">Escolaridade</span>
-              <span className="text-zinc-900 font-bold flex items-center gap-2">
-                <GraduationCap size={14} className="text-emerald-500" /> {profile.education || "----"}
+            <div className="bg-zinc-50 p-4 rounded-2xl border border-zinc-100 flex flex-col gap-1 items-start hover:bg-zinc-100 transition-colors">
+              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wide">Altura</span>
+              <span className="text-zinc-800 font-bold text-sm flex items-center gap-2">
+                <Ruler size={14} className="text-blue-500 flex-shrink-0" />
+                {profile.height ? `${profile.height}m` : '----'}
+              </span>
+            </div>
+
+            <div className="bg-zinc-50 p-4 rounded-2xl border border-zinc-100 flex flex-col gap-1 items-start hover:bg-zinc-100 transition-colors">
+              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wide">Escolaridade</span>
+              <span className="text-zinc-800 font-bold text-sm flex items-center gap-2 leading-tight">
+                <GraduationCap size={14} className="text-emerald-500 flex-shrink-0" />
+                <span className="truncate w-full">{profile.education || "----"}</span>
               </span>
             </div>
           </div>
@@ -275,7 +294,10 @@ const SwipeCard: React.FC<SwipeCardProps> = ({
             </div>
           )}
 
-          <div className="h-32" /> {/* Spacer for bottom actions */}
+          <div className="h-24" /> {/* Spacer */}
+
+          {/* Tap hint */}
+          <p className="text-center text-xs text-zinc-400 mt-4">Toque para voltar</p>
         </div>
 
       </div>
