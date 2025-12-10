@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Profile } from '../types';
-import { BadgeCheck, MapPin, Sparkles, Briefcase, GraduationCap, Ruler, ThumbsUp, X, Heart, RotateCw, Info } from 'lucide-react';
+import { BadgeCheck, MapPin, Sparkles, GraduationCap, Ruler, X, Heart, Layers, ArrowLeft } from 'lucide-react';
 import { zodiac } from '../lib/supabase';
 import { VIBES } from './VibeSelector';
 import clsx from 'clsx';
@@ -136,55 +136,56 @@ const SwipeCard: React.FC<SwipeCardProps> = ({
           {/* Gradients */}
           <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none" />
 
-          {/* Flip Button - RESPONSIVE SAFE AREA FIX */}
-          <button
-            onClick={handleFlip}
-            className="absolute z-50 pointer-events-auto w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center text-white border border-white/20 hover:bg-black/60 transition-all active:scale-95 shadow-lg"
-            style={{
-              top: 'max(1rem, env(safe-area-inset-top, 16px))',
-              right: 'max(1rem, env(safe-area-inset-right, 16px))'
-            }}
-          >
-            <RotateCw className="w-4 h-4 sm:w-5 sm:h-5" />
-          </button>
-
           {/* Photo Indicators */}
           {photos.length > 1 && (
-            <div className="absolute top-2 left-0 right-0 z-30 px-3 flex gap-1" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+            <div className="absolute top-3 left-0 right-0 z-30 px-4 flex gap-1.5" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
               {photos.map((_, index) => (
-                <div key={index} className={`h-1 rounded-full flex-1 transition-all duration-300 ${index === currentPhotoIndex ? 'bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)]' : 'bg-white/30'}`} />
+                <div key={index} className={`h-1 rounded-full flex-1 transition-all duration-300 ${index === currentPhotoIndex ? 'bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)]' : 'bg-white/40'}`} />
               ))}
             </div>
           )}
 
-          {/* Info Section - CLEAN: Name, Age, Distance, Match %, Vibe */}
-          <div className="absolute bottom-0 left-0 right-0 pb-[calc(100px+env(safe-area-inset-bottom))] px-4 sm:px-6 flex flex-col gap-1 z-30 pointer-events-none mb-4">
+          {/* Info Section - CLEAN: Name, Age, Distance, Match %, Vibe + FLIP BUTTON */}
+          <div className="absolute bottom-0 left-0 right-0 pb-[calc(100px+env(safe-area-inset-bottom))] px-4 sm:px-6 z-30 mb-4">
 
+            {/* Top Row: Badges */}
+            <div className="flex flex-wrap gap-2 mb-2 pointer-events-none">
+              {/* Vibe Badge (Modo Agora) */}
+              {activeVibe && (
+                <div className={`px-3 py-1.5 rounded-full flex items-center gap-2 shadow-lg backdrop-blur-md border border-white/20 animate-in fade-in slide-in-from-bottom-2 ${activeVibe.color.replace('text-', 'bg-').replace('500', '500/80')}`}>
+                  <span className="text-lg">{activeVibe.emoji}</span>
+                  <span className="text-xs font-bold text-white tracking-wide uppercase">{activeVibe.label}</span>
+                </div>
+              )}
 
-            {/* Vibe Badge (Modo Agora) */}
-            {activeVibe && (
-              <div className={`self-start px-3 py-1.5 rounded-full flex items-center gap-2 mb-2 shadow-lg backdrop-blur-md border border-white/20 animate-in fade-in slide-in-from-bottom-2 ${activeVibe.color.replace('text-', 'bg-').replace('500', '500/80')}`}>
-                <span className="text-lg">{activeVibe.emoji}</span>
-                <span className="text-xs font-bold text-white tracking-wide uppercase">{activeVibe.label}</span>
-              </div>
-            )}
-
-            {/* Compatibility Badge */}
-            {compatibility > 0 && (
-              <div className="self-start bg-zinc-900/60 backdrop-blur-md px-3 py-1 rounded-full flex items-center gap-1.5 mb-2 border border-white/10">
-                <Sparkles size={12} className="text-yellow-400" fill="#FACC15" />
-                <span className="text-xs font-bold text-white">{compatibility}% Match</span>
-              </div>
-            )}
-
-            <div className="flex items-end gap-3 translate-y-1">
-              <h1 className="text-4xl font-black text-white drop-shadow-xl tracking-tight leading-none">{profile.name}</h1>
-              <span className="text-2xl font-bold text-white/90 mb-0.5 shadow-black/50 drop-shadow-md">{profile.age}</span>
-              {profile.verified && <BadgeCheck className="text-blue-400 w-6 h-6 mb-1" fill="white" />}
+              {/* Compatibility Badge */}
+              {compatibility > 0 && (
+                <div className="bg-zinc-900/60 backdrop-blur-md px-3 py-1 rounded-full flex items-center gap-1.5 border border-white/10">
+                  <Sparkles size={12} className="text-yellow-400" fill="#FACC15" />
+                  <span className="text-xs font-bold text-white">{compatibility}% Match</span>
+                </div>
+              )}
             </div>
 
-            {/* Distance - ADDED BACK */}
-            <div className="flex items-center gap-1.5 text-white/80 font-medium text-sm mt-1 ml-1">
+            {/* Main Row: Flip Button (LEFT) + Name/Age */}
+            <div className="flex items-end gap-3">
+              {/* Flip Button - LEFT SIDE to avoid action buttons on right */}
+              <button
+                onClick={handleFlip}
+                className="pointer-events-auto w-11 h-11 rounded-full bg-white/20 backdrop-blur-lg flex items-center justify-center text-white border border-white/30 hover:bg-white/30 transition-all active:scale-95 shadow-xl flex-shrink-0"
+              >
+                <Layers className="w-5 h-5" />
+              </button>
+
+              <div className="flex items-end gap-2 pointer-events-none">
+                <h1 className="text-4xl font-black text-white drop-shadow-xl tracking-tight leading-none">{profile.name}</h1>
+                <span className="text-2xl font-bold text-white/90 mb-0.5 drop-shadow-md">{profile.age}</span>
+                {profile.verified && <BadgeCheck className="text-blue-400 w-6 h-6 mb-1" fill="white" />}
+              </div>
+            </div>
+
+            {/* Distance */}
+            <div className="flex items-center gap-1.5 text-white/80 font-medium text-sm mt-1.5 ml-14 pointer-events-none">
               <MapPin size={14} className="text-white/60" />
               <span>{Math.round(profile.distance || 0)} km de distância</span>
             </div>
@@ -193,26 +194,31 @@ const SwipeCard: React.FC<SwipeCardProps> = ({
 
         {/* ================= BACK SIDE (DETAILS - LIGHT MODE) ================= */}
         <div
-          className="absolute inset-0 w-full h-full bg-white rounded-[32px] overflow-y-auto overflow-x-hidden [transform:rotateY(180deg)] backface-hidden px-6 py-8"
+          className="absolute inset-0 w-full h-full bg-white rounded-[32px] overflow-y-auto overflow-x-hidden [transform:rotateY(180deg)] backface-hidden px-5 pt-4 pb-8"
           style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}
         >
-          <button
-            onClick={handleFlip}
-            className="absolute top-4 right-4 z-50 w-10 h-10 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-900 border border-zinc-200 hover:bg-zinc-200 transition-all active:scale-95"
-          >
-            <RotateCw size={20} className="transform rotate-180" />
-          </button>
-
-          {/* Photos (Small Gallery) */}
-          <div className="flex gap-2 overflow-x-auto pb-4 mb-2 scrollbar-hide pt-8">
-            {photos.map((photo, i) => (
-              <img key={i} src={photo} className="w-20 h-28 object-cover rounded-xl flex-shrink-0 border border-zinc-100 shadow-sm" />
-            ))}
+          {/* Header with Back Button */}
+          <div className="flex items-center justify-between mb-4">
+            <button
+              onClick={handleFlip}
+              className="w-10 h-10 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-700 border border-zinc-200 hover:bg-zinc-200 transition-all active:scale-95"
+            >
+              <ArrowLeft size={20} />
+            </button>
+            <h2 className="text-lg font-bold text-zinc-900">{profile.name}, {profile.age}</h2>
+            <div className="w-10" /> {/* Spacer for centering */}
           </div>
 
-          <div className="mb-6">
-            <h2 className="text-3xl font-black text-zinc-900 leading-tight mb-1">{profile.name}, {profile.age}</h2>
-            <span className="text-zinc-500 font-medium text-sm block">{profile.profession || 'Não informado'}</span>
+          {/* Name + Profession */}
+          <div className="mb-4">
+            <span className="text-zinc-500 font-medium text-sm block">{profile.profession || 'Profissão não informada'}</span>
+          </div>
+
+          {/* Photos (Small Gallery) - MOVED BELOW HEADER */}
+          <div className="flex gap-2 overflow-x-auto pb-3 mb-4 scrollbar-hide">
+            {photos.map((photo, i) => (
+              <img key={i} src={photo} className="w-16 h-20 object-cover rounded-lg flex-shrink-0 border border-zinc-100 shadow-sm" />
+            ))}
           </div>
 
           {/* Sinastria Verdict Card - FIXED & LIGHT THEME */}
