@@ -14,6 +14,7 @@ export interface Profile {
   interests?: { id: string; name: string; emoji: string }[];
   vibeStatus?: string;
   vibeExpiresAt?: string;
+  neighborhood?: string;
 }
 
 export interface Chat {

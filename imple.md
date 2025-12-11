@@ -160,7 +160,8 @@
 | Filtro de gênero | ✅ | Funcional |
 | Geolocalização real | ✅ | API BigDataCloud (Strict Mode: Cidade L8, Bairro L10) |
 | Filtros avançados | ✅ | Altura e Signo implementados |
-| Aplicar filtros na busca | ✅ | Query no banco com Haversine |
+| Aplicar filtros na busca | ✅ | Query no banco via RPC (PostGIS/Cube) - Otimizado (11/12/2025) |
+| Modularização App.tsx | ✅ | Decomposição em Hooks e Screens (hooks/, screens/, components/) |
 
 ---
 
@@ -309,3 +310,74 @@ O contador de likes resetava ao recarregar a página, permitindo likes infinitos
 - Adicionado `useEffect` em `App.tsx` para carregar `daily_likes_count` do perfil ao iniciar.
 - Chamada explícita para `swipes.incrementLikeCount` ao dar Swipe Down (Like) em `App.tsx`.
 
+
+---
+
+## 13. Arquitetura e Guia de Desenvolvimento (Pós-Refatoração)
+
+> **Adicionado em 11/12/2025**
+> O projeto sofreu uma **refatoração massiva** para modularizar o antigo monolito `App.tsx`.
+> Abaixo está o guia de onde encontrar cada parte do código.
+
+### 🏛️ Estrutura de Pastas
+
+```
+src/
+├── App.tsx             # [Coordenador] Inicializa hooks globais e passa estado para o Router
+├── AppRouter.tsx       # [Roteador] Gerencia navegação e renderização condicional de telas
+├── hooks/              # [Lógica] Hooks customizados (Regras de Negócio)
+│   ├── useAuth.ts          # Autenticação, Perfil, Sessão
+│   ├── useFeed.ts          # Busca de perfis, Filtros (Idade, Distância)
+│   ├── useGeolocation.ts   # GPS, Reverse Geocoding, Permissões
+│   ├── useMatchData.ts     # Lista de Matches, Likes Recebidos, Realtime Chat
+│   ├── useNotifications.ts # Push Notifications, Deep Links
+│   ├── useSwipeAction.ts   # Lógica do Swipe (Like/Pass), Criação de Match
+│   └── useAppNavigation.ts # Estado de navegação (currentScreen)
+├── screens/            # [Telas] Componentes de página inteira
+│   ├── LoginScreen.tsx     # Tela de Login (Google Btn)
+│   └── HomeScreen.tsx      # Feed Principal, Swipe Cards, Gestos
+├── components/         # [UI] Componentes reutilizáveis
+│   ├── FilterModal.tsx     # Modal de filtros (Distância, Idade...)
+│   ├── VipSettingsModal.tsx# Configurações VIP (Incógnito, Recibos)
+│   ├── ProfileViewer.tsx   # Overlay para ver perfil de quem deu like
+│   └── ... (outros componentes menores)
+└── lib/                # [Infra] Configurações de serviços
+    ├── supabase.ts         # Cliente Supabase, RPCs, Types
+    └── ...
+```
+
+### 🔍 Onde eu acho... ?
+
+| Se eu quero mexer em... | Devo ir em... |
+|-------------------------|---------------|
+| **Lógica de Login** | `hooks/useAuth.ts` |
+| **Visual da Tela de Login** | `screens/LoginScreen.tsx` |
+| **Card do Feed / Swipe** | `screens/HomeScreen.tsx` |
+| **Regras do Swipe (Like/Pass)** | `hooks/useSwipeAction.ts` |
+| **Filtros (Idade, Distância)** | `hooks/useFeed.ts` (Lógica) e `components/FilterModal.tsx` (UI) |
+| **GPS / Localização** | `hooks/useGeolocation.ts` |
+| **Push Notifications** | `hooks/useNotifications.ts` |
+| **Lista de Conversas** | `hooks/useMatchData.ts` (Dados) e `components/ChatList.tsx` (UI) |
+| **Navegação entre Telas** | `AppRouter.tsx` |
+
+### 🛠️ Como Adicionar Nova Funcionalidade
+
+1.  **Nova Tela**:
+    *   Crie o arquivo em `screens/NovaTela.tsx`.
+    *   Adicione o estado no `enum ScreenState` em `types.ts`.
+    *   Adicione a rota no `AppRouter.tsx`.
+    *   Se precisar de dados globais, passe via props no `App.tsx`.
+
+2.  **Nova Lógica de Negócio**:
+    *   Se for reutilizável ou complexa, crie um Hook em `hooks/useNovaLogica.ts`.
+    *   Instancie no `App.tsx` e passe o resultado para onde for necessário.
+
+3.  **Novo Componente UI**:
+    *   Crie em `components/NovoComponente.tsx`.
+    *   Mantenha-o "burro" (recebendo dados via props) sempre que possível.
+
+### ⚠️ Regras de Ouro (Refatoração)
+
+1.  **App.tsx deve ser limpo**: Ele serve apenas para "colar" os hooks e passar para o roteador. Não escreva JSX complexo ou `useEffect` de lógica de negócio nele (exceto inicializações globais).
+2.  **Hooks devem ser focados**: Um hook deve fazer uma coisa bem feita (`useGeolocation` só cuida de GPS).
+3.  **Separation of Concerns**: UI fica em `screens/` ou `components/`. Lógica fica em `hooks/`.
