@@ -188,7 +188,7 @@ src/
 | **P1** | Distribuição Geográfica | Gráfico por estado/cidade | ✅ Concluído |
 | **P1** | Banir Usuário | Soft delete (is_active = false) | ✅ Concluído |
 | **P1** | Fila de Denúncias | Ver e resolver reports | ✅ Concluído |
-| **P2** | Gráficos Temporais | Curva de crescimento com `recharts` | ⏳ Pendente |
+| **P2** | Gráficos Temporais | Curva de crescimento (7/30 dias) | ✅ Concluído |
 | **P2** | Export CSV | Baixar lista de usuários | ⏳ Pendente |
 | **P3** | Logs de Auditoria | Tabela `admin_logs` | ⏳ Pendente |
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
-import { ArrowLeft, LayoutDashboard, Users, MapPin, Database, Shield, Crown, Ban, Search, ChevronDown, ChevronUp, RefreshCw, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
+import { ArrowLeft, LayoutDashboard, Users, MapPin, Database, Shield, Crown, Ban, Search, ChevronDown, ChevronUp, RefreshCw, AlertTriangle, CheckCircle, XCircle, TrendingUp } from 'lucide-react';
 
 // ============================================
 // CONSTANTES DE ACESSO
@@ -119,7 +119,7 @@ interface AdminRouterProps {
 
 const AdminRouter: React.FC<AdminRouterProps> = ({ onClose }) => {
     const { user } = useAuth();
-    const [activeTab, setActiveTab] = useState<'dashboard' | 'users' | 'geography' | 'quota' | 'reports'>('dashboard');
+    const [activeTab, setActiveTab] = useState<'dashboard' | 'users' | 'geography' | 'quota' | 'reports' | 'analytics'>('dashboard');
     const [stats, setStats] = useState<AdminStats | null>(null);
     const [users, setUsers] = useState<UserRow[]>([]);
     const [geoData, setGeoData] = useState<GeoData[]>([]);
@@ -131,6 +131,8 @@ const AdminRouter: React.FC<AdminRouterProps> = ({ onClose }) => {
     const [filterVip, setFilterVip] = useState<'all' | 'vip' | 'free'>('all');
     const [reports, setReports] = useState<ReportRow[]>([]);
     const [reportsFilter, setReportsFilter] = useState<'pending' | 'all'>('pending');
+    const [growthData, setGrowthData] = useState<{ date: string; users: number; matches: number }[]>([]);
+    const [growthPeriod, setGrowthPeriod] = useState<7 | 30>(7);
 
     // Verificar acesso
     const isAdmin = user?.email === ADMIN_EMAIL;
@@ -337,6 +339,43 @@ const AdminRouter: React.FC<AdminRouterProps> = ({ onClose }) => {
         fetchReports();
     };
 
+    // Buscar dados de crescimento temporal
+    const fetchGrowthData = async () => {
+        const days = growthPeriod;
+        const results: { date: string; users: number; matches: number }[] = [];
+
+        for (let i = days - 1; i >= 0; i--) {
+            const date = new Date();
+            date.setDate(date.getDate() - i);
+            const dateStr = date.toISOString().split('T')[0];
+            const nextDate = new Date(date);
+            nextDate.setDate(nextDate.getDate() + 1);
+            const nextDateStr = nextDate.toISOString().split('T')[0];
+
+            // Contagem de usuários criados naquele dia
+            const { count: usersCount } = await supabase
+                .from('profiles')
+                .select('*', { count: 'exact', head: true })
+                .gte('created_at', dateStr)
+                .lt('created_at', nextDateStr);
+
+            // Contagem de matches criados naquele dia
+            const { count: matchesCount } = await supabase
+                .from('matches')
+                .select('*', { count: 'exact', head: true })
+                .gte('created_at', dateStr)
+                .lt('created_at', nextDateStr);
+
+            results.push({
+                date: date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+                users: usersCount || 0,
+                matches: matchesCount || 0,
+            });
+        }
+
+        setGrowthData(results);
+    };
+
     // Effects
     useEffect(() => {
         if (isAdmin) {
@@ -362,6 +401,12 @@ const AdminRouter: React.FC<AdminRouterProps> = ({ onClose }) => {
             fetchReports();
         }
     }, [activeTab, reportsFilter]);
+
+    useEffect(() => {
+        if (isAdmin && activeTab === 'analytics') {
+            fetchGrowthData();
+        }
+    }, [activeTab, growthPeriod]);
 
     // Se não é admin, bloqueia
     if (!isAdmin) {
@@ -654,11 +699,11 @@ const AdminRouter: React.FC<AdminRouterProps> = ({ onClose }) => {
                                         <div className="flex items-start justify-between mb-3">
                                             <div className="flex items-center gap-2">
                                                 <AlertTriangle className={`w-4 h-4 ${r.status === 'pending' ? 'text-amber-500' :
-                                                        r.status === 'resolved' ? 'text-red-500' : 'text-zinc-400'
+                                                    r.status === 'resolved' ? 'text-red-500' : 'text-zinc-400'
                                                     }`} />
                                                 <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${r.status === 'pending' ? 'bg-amber-100 text-amber-700' :
-                                                        r.status === 'resolved' ? 'bg-red-100 text-red-700' :
-                                                            'bg-zinc-100 text-zinc-600'
+                                                    r.status === 'resolved' ? 'bg-red-100 text-red-700' :
+                                                        'bg-zinc-100 text-zinc-600'
                                                     }`}>
                                                     {r.status === 'pending' ? 'Pendente' :
                                                         r.status === 'resolved' ? 'Banido' : 'Ignorado'}
@@ -728,6 +773,107 @@ const AdminRouter: React.FC<AdminRouterProps> = ({ onClose }) => {
                         )}
                     </div>
                 );
+
+            case 'analytics':
+                const maxValue = Math.max(
+                    ...growthData.map(d => Math.max(d.users, d.matches)),
+                    1
+                );
+
+                return (
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <h2 className="text-lg font-semibold text-zinc-900">Crescimento</h2>
+                            <div className="flex gap-1 bg-zinc-100 rounded-lg p-1">
+                                <button
+                                    onClick={() => setGrowthPeriod(7)}
+                                    className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${growthPeriod === 7 ? 'bg-white text-violet-600 shadow-sm' : 'text-zinc-500'
+                                        }`}
+                                >
+                                    7 dias
+                                </button>
+                                <button
+                                    onClick={() => setGrowthPeriod(30)}
+                                    className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${growthPeriod === 30 ? 'bg-white text-violet-600 shadow-sm' : 'text-zinc-500'
+                                        }`}
+                                >
+                                    30 dias
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Legenda */}
+                        <div className="flex gap-4 text-xs">
+                            <div className="flex items-center gap-1">
+                                <div className="w-3 h-3 rounded bg-violet-500" />
+                                <span className="text-zinc-600">Novos Usuários</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                                <div className="w-3 h-3 rounded bg-pink-500" />
+                                <span className="text-zinc-600">Matches</span>
+                            </div>
+                        </div>
+
+                        {/* Gráfico de Barras */}
+                        <div className="bg-white rounded-xl p-4 border border-zinc-100">
+                            {growthData.length === 0 ? (
+                                <div className="flex items-center justify-center h-48">
+                                    <RefreshCw className="w-6 h-6 text-violet-500 animate-spin" />
+                                </div>
+                            ) : (
+                                <div className="space-y-3">
+                                    {growthData.map((day, i) => (
+                                        <div key={day.date} className="flex items-center gap-3">
+                                            <span className="w-10 text-xs text-zinc-400 text-right">{day.date}</span>
+                                            <div className="flex-1 flex gap-1">
+                                                {/* Barra de Usuários */}
+                                                <div
+                                                    className="h-4 bg-violet-500 rounded-sm transition-all"
+                                                    style={{ width: `${(day.users / maxValue) * 50}%`, minWidth: day.users > 0 ? '4px' : '0' }}
+                                                    title={`${day.users} usuários`}
+                                                />
+                                                {/* Barra de Matches */}
+                                                <div
+                                                    className="h-4 bg-pink-500 rounded-sm transition-all"
+                                                    style={{ width: `${(day.matches / maxValue) * 50}%`, minWidth: day.matches > 0 ? '4px' : '0' }}
+                                                    title={`${day.matches} matches`}
+                                                />
+                                            </div>
+                                            <div className="flex gap-2 text-xs text-zinc-500 w-16 justify-end">
+                                                <span className="text-violet-600">{day.users}</span>
+                                                <span className="text-pink-500">{day.matches}</span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Totais */}
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="bg-violet-50 rounded-xl p-4 border border-violet-100">
+                                <div className="text-2xl font-bold text-violet-600">
+                                    {growthData.reduce((sum, d) => sum + d.users, 0)}
+                                </div>
+                                <div className="text-xs text-violet-500">Novos Usuários ({growthPeriod}d)</div>
+                            </div>
+                            <div className="bg-pink-50 rounded-xl p-4 border border-pink-100">
+                                <div className="text-2xl font-bold text-pink-600">
+                                    {growthData.reduce((sum, d) => sum + d.matches, 0)}
+                                </div>
+                                <div className="text-xs text-pink-500">Matches ({growthPeriod}d)</div>
+                            </div>
+                        </div>
+
+                        <button
+                            onClick={fetchGrowthData}
+                            className="w-full py-3 bg-violet-500 text-white rounded-lg font-medium flex items-center justify-center gap-2"
+                        >
+                            <RefreshCw className="w-4 h-4" />
+                            Atualizar
+                        </button>
+                    </div>
+                );
         }
     };
 
@@ -749,11 +895,11 @@ const AdminRouter: React.FC<AdminRouterProps> = ({ onClose }) => {
                 {/* Tabs */}
                 <div className="flex border-t border-zinc-100">
                     {[
-                        { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-                        { id: 'users', icon: Users, label: 'Usuários' },
+                        { id: 'dashboard', icon: LayoutDashboard, label: 'Home' },
+                        { id: 'users', icon: Users, label: 'Users' },
                         { id: 'reports', icon: AlertTriangle, label: 'Reports' },
-                        { id: 'geography', icon: MapPin, label: 'Geo' },
-                        { id: 'quota', icon: Database, label: 'Quotas' },
+                        { id: 'analytics', icon: TrendingUp, label: 'Growth' },
+                        { id: 'quota', icon: Database, label: 'Quota' },
                     ].map(tab => (
                         <button
                             key={tab.id}
