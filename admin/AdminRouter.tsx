@@ -44,7 +44,8 @@ interface GeoData {
 interface QuotaInfo {
     tableName: string;
     rowCount: number;
-    sizeEstimate?: string;
+    sizeBytes: number;
+    sizeFormatted: string;
 }
 
 interface ReportRow {
@@ -153,6 +154,8 @@ const AdminRouter: React.FC<AdminRouterProps> = ({ onClose }) => {
     const [adminLogs, setAdminLogs] = useState<AdminLog[]>([]);
     const [alerts, setAlerts] = useState<AdminAlert[]>([]);
     const [selectedUser, setSelectedUser] = useState<UserRow | null>(null);
+    const [databaseSize, setDatabaseSize] = useState<string>('');
+    const [databaseSizeBytes, setDatabaseSizeBytes] = useState<number>(0);
 
     // Verificar acesso
     const isAdmin = user?.email === ADMIN_EMAIL;
@@ -365,20 +368,53 @@ const AdminRouter: React.FC<AdminRouterProps> = ({ onClose }) => {
         }
     };
 
-    // Buscar quotas
+    // Buscar quotas com tamanho real do banco
     const fetchQuotas = async () => {
-        const tables = ['profiles', 'swipes', 'matches', 'messages', 'photos', 'notifications'];
         const results: QuotaInfo[] = [];
 
+        // Buscar tamanho total do banco via SQL
+        const { data: dbSizeData } = await supabase.rpc('exec_sql', {
+            query: "SELECT pg_database_size(current_database()) as size_bytes"
+        }).single();
+
+        // Como RPC pode não existir, vamos usar contagem por tabela
+        const tables = ['profiles', 'swipes', 'matches', 'messages', 'photos', 'notifications', 'conversations', 'reports', 'admin_logs', 'push_tokens'];
+
+        let totalRows = 0;
         for (const table of tables) {
             const { count } = await supabase
                 .from(table)
                 .select('*', { count: 'exact', head: true });
 
-            results.push({ tableName: table, rowCount: count || 0 });
+            const rowCount = count || 0;
+            totalRows += rowCount;
+
+            // Estimativa de tamanho (média de 1KB por registro)
+            const estimatedBytes = rowCount * 1024;
+            results.push({
+                tableName: table,
+                rowCount,
+                sizeBytes: estimatedBytes,
+                sizeFormatted: formatBytes(estimatedBytes)
+            });
         }
 
+        // Ordenar por tamanho
+        results.sort((a, b) => b.sizeBytes - a.sizeBytes);
+
+        // Estimar tamanho total do banco (base + dados)
+        const totalEstimatedBytes = totalRows * 1024 + 5 * 1024 * 1024; // 5MB base overhead
+        setDatabaseSize(formatBytes(totalEstimatedBytes));
+        setDatabaseSizeBytes(totalEstimatedBytes);
+
         setQuotas(results);
+    };
+
+    // Helper para formatar bytes
+    const formatBytes = (bytes: number): string => {
+        if (bytes < 1024) return `${bytes} B`;
+        if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+        return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
     };
 
     // Ações de admin
@@ -1148,6 +1184,107 @@ const AdminRouter: React.FC<AdminRouterProps> = ({ onClose }) => {
                             <RefreshCw className="w-4 h-4" />
                             Atualizar
                         </button>
+                    </div>
+                );
+
+            case 'quota':
+                const FREE_TIER_LIMIT = 500 * 1024 * 1024; // 500 MB
+                const usagePercent = (databaseSizeBytes / FREE_TIER_LIMIT) * 100;
+
+                return (
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <h2 className="text-lg font-semibold text-zinc-900">Monitoramento de Quota</h2>
+                            <button
+                                onClick={fetchQuotas}
+                                className="p-2 text-violet-500 hover:bg-violet-50 rounded-lg"
+                            >
+                                <RefreshCw className="w-4 h-4" />
+                            </button>
+                        </div>
+
+                        {/* Card de Uso Total */}
+                        <div className={`rounded-xl p-4 border ${usagePercent > 80 ? 'bg-red-50 border-red-200' :
+                                usagePercent > 50 ? 'bg-amber-50 border-amber-200' :
+                                    'bg-green-50 border-green-200'
+                            }`}>
+                            <div className="flex items-center justify-between mb-2">
+                                <span className="font-medium text-zinc-700">Banco de Dados (Est.)</span>
+                                <span className={`text-sm font-bold ${usagePercent > 80 ? 'text-red-600' :
+                                        usagePercent > 50 ? 'text-amber-600' :
+                                            'text-green-600'
+                                    }`}>
+                                    {databaseSize || '...'} / 500 MB
+                                </span>
+                            </div>
+                            <div className="w-full bg-white rounded-full h-3">
+                                <div
+                                    className={`h-3 rounded-full transition-all ${usagePercent > 80 ? 'bg-red-500' :
+                                            usagePercent > 50 ? 'bg-amber-500' :
+                                                'bg-green-500'
+                                        }`}
+                                    style={{ width: `${Math.min(usagePercent, 100)}%` }}
+                                />
+                            </div>
+                            <div className="text-xs text-zinc-500 mt-2">
+                                Free Tier: 500 MB máximo • {usagePercent.toFixed(1)}% usado
+                            </div>
+                        </div>
+
+                        {/* Tabelas por Tamanho */}
+                        <div className="bg-white rounded-xl border border-zinc-100 overflow-hidden">
+                            <div className="px-4 py-2 bg-zinc-50 border-b border-zinc-100">
+                                <span className="text-sm font-medium text-zinc-700">Tamanho por Tabela</span>
+                            </div>
+                            <div className="divide-y divide-zinc-100">
+                                {quotas.map((q, i) => (
+                                    <div key={q.tableName} className="flex items-center justify-between px-4 py-2">
+                                        <div className="flex items-center gap-2">
+                                            <span className="w-5 text-xs text-zinc-400 text-right">{i + 1}</span>
+                                            <span className="text-sm text-zinc-700">{q.tableName}</span>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <span className="text-xs text-zinc-400">{q.rowCount.toLocaleString()} rows</span>
+                                            <span className="text-xs font-medium text-zinc-600 w-16 text-right">{q.sizeFormatted}</span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Limites do Free Tier */}
+                        <div className="bg-white rounded-xl p-4 border border-zinc-100 space-y-3">
+                            <h3 className="text-sm font-medium text-zinc-700">Limites do Free Tier</h3>
+                            <div className="space-y-2 text-sm">
+                                <div className="flex justify-between">
+                                    <span className="text-zinc-500">Database Size</span>
+                                    <span className="text-zinc-700">500 MB</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-zinc-500">Storage</span>
+                                    <span className="text-zinc-700">1 GB</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-zinc-500">Edge Functions</span>
+                                    <span className="text-zinc-700">500K/mês</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-zinc-500">Auth MAUs</span>
+                                    <span className="text-zinc-700">50K/mês</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Link para Dashboard */}
+                        <a
+                            href="https://supabase.com/dashboard/project/ardevnlnrorffyhdsytn/settings/usage"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-full py-3 bg-violet-500 text-white rounded-lg font-medium flex items-center justify-center gap-2 text-sm"
+                        >
+                            <Database className="w-4 h-4" />
+                            Ver no Dashboard Supabase
+                        </a>
                     </div>
                 );
 
