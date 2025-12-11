@@ -1187,3 +1187,59 @@ CREATE POLICY "Allow authenticated users to insert logs" ON admin_logs
 CREATE POLICY "Allow authenticated users to read logs" ON admin_logs
     FOR SELECT TO authenticated
     USING (true);
+
+
+-- =============================================
+-- FUNÇÃO RPC: get_database_metrics
+-- Data: 11/12/2025
+-- Descrição: Retorna métricas reais do banco para o Admin Panel
+-- =============================================
+
+CREATE OR REPLACE FUNCTION get_database_metrics()
+RETURNS JSON
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    result JSON;
+BEGIN
+    SELECT json_build_object(
+        'database_size_bytes', pg_database_size(current_database()),
+        'database_size_pretty', pg_size_pretty(pg_database_size(current_database())),
+        'storage', (
+            SELECT json_agg(json_build_object(
+                'bucket_id', bucket_id,
+                'files_count', files_count,
+                'total_bytes', total_bytes
+            ))
+            FROM (
+                SELECT 
+                    bucket_id,
+                    COUNT(*) as files_count,
+                    COALESCE(SUM((metadata->>'size')::bigint), 0) as total_bytes
+                FROM storage.objects
+                GROUP BY bucket_id
+            ) buckets
+        ),
+        'tables', (
+            SELECT json_agg(json_build_object(
+                'table_name', table_name,
+                'size_bytes', size_bytes,
+                'size_pretty', size_pretty
+            ))
+            FROM (
+                SELECT 
+                    t.relname AS table_name,
+                    pg_total_relation_size(t.relid) AS size_bytes,
+                    pg_size_pretty(pg_total_relation_size(t.relid)) AS size_pretty
+                FROM pg_catalog.pg_statio_user_tables t
+                WHERE t.schemaname = 'public'
+                ORDER BY pg_total_relation_size(t.relid) DESC
+                LIMIT 15
+            ) tables
+        )
+    ) INTO result;
+    
+    RETURN result;
+END;
+$$;

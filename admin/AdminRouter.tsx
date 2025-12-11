@@ -43,9 +43,14 @@ interface GeoData {
 
 interface QuotaInfo {
     tableName: string;
-    rowCount: number;
     sizeBytes: number;
-    sizeFormatted: string;
+    sizePretty: string;
+}
+
+interface StorageBucket {
+    bucketId: string;
+    filesCount: number;
+    totalBytes: number;
 }
 
 interface ReportRow {
@@ -156,6 +161,8 @@ const AdminRouter: React.FC<AdminRouterProps> = ({ onClose }) => {
     const [selectedUser, setSelectedUser] = useState<UserRow | null>(null);
     const [databaseSize, setDatabaseSize] = useState<string>('');
     const [databaseSizeBytes, setDatabaseSizeBytes] = useState<number>(0);
+    const [storageData, setStorageData] = useState<StorageBucket[]>([]);
+    const [totalStorageBytes, setTotalStorageBytes] = useState<number>(0);
 
     // Verificar acesso
     const isAdmin = user?.email === ADMIN_EMAIL;
@@ -368,46 +375,46 @@ const AdminRouter: React.FC<AdminRouterProps> = ({ onClose }) => {
         }
     };
 
-    // Buscar quotas com tamanho real do banco
+    // Buscar quotas com dados REAIS via RPC
     const fetchQuotas = async () => {
-        const results: QuotaInfo[] = [];
+        try {
+            // Chamar RPC que retorna métricas reais do banco
+            const { data, error } = await supabase.rpc('get_database_metrics');
 
-        // Buscar tamanho total do banco via SQL
-        const { data: dbSizeData } = await supabase.rpc('exec_sql', {
-            query: "SELECT pg_database_size(current_database()) as size_bytes"
-        }).single();
+            if (error) {
+                console.error('Erro ao buscar métricas:', error);
+                return;
+            }
 
-        // Como RPC pode não existir, vamos usar contagem por tabela
-        const tables = ['profiles', 'swipes', 'matches', 'messages', 'photos', 'notifications', 'conversations', 'reports', 'admin_logs', 'push_tokens'];
+            if (data) {
+                // Database size
+                setDatabaseSize(data.database_size_pretty || '');
+                setDatabaseSizeBytes(data.database_size_bytes || 0);
 
-        let totalRows = 0;
-        for (const table of tables) {
-            const { count } = await supabase
-                .from(table)
-                .select('*', { count: 'exact', head: true });
+                // Storage buckets
+                if (data.storage && Array.isArray(data.storage)) {
+                    const buckets: StorageBucket[] = data.storage.map((s: any) => ({
+                        bucketId: s.bucket_id,
+                        filesCount: s.files_count,
+                        totalBytes: parseInt(s.total_bytes) || 0
+                    }));
+                    setStorageData(buckets);
+                    setTotalStorageBytes(buckets.reduce((sum, b) => sum + b.totalBytes, 0));
+                }
 
-            const rowCount = count || 0;
-            totalRows += rowCount;
-
-            // Estimativa de tamanho (média de 1KB por registro)
-            const estimatedBytes = rowCount * 1024;
-            results.push({
-                tableName: table,
-                rowCount,
-                sizeBytes: estimatedBytes,
-                sizeFormatted: formatBytes(estimatedBytes)
-            });
+                // Tables
+                if (data.tables && Array.isArray(data.tables)) {
+                    const tables: QuotaInfo[] = data.tables.map((t: any) => ({
+                        tableName: t.table_name,
+                        sizeBytes: t.size_bytes,
+                        sizePretty: t.size_pretty
+                    }));
+                    setQuotas(tables);
+                }
+            }
+        } catch (err) {
+            console.error('Erro ao buscar quotas:', err);
         }
-
-        // Ordenar por tamanho
-        results.sort((a, b) => b.sizeBytes - a.sizeBytes);
-
-        // Estimar tamanho total do banco (base + dados)
-        const totalEstimatedBytes = totalRows * 1024 + 5 * 1024 * 1024; // 5MB base overhead
-        setDatabaseSize(formatBytes(totalEstimatedBytes));
-        setDatabaseSizeBytes(totalEstimatedBytes);
-
-        setQuotas(results);
     };
 
     // Helper para formatar bytes
@@ -1188,8 +1195,10 @@ const AdminRouter: React.FC<AdminRouterProps> = ({ onClose }) => {
                 );
 
             case 'quota':
-                const FREE_TIER_LIMIT = 500 * 1024 * 1024; // 500 MB
-                const usagePercent = (databaseSizeBytes / FREE_TIER_LIMIT) * 100;
+                const DB_FREE_LIMIT = 500 * 1024 * 1024; // 500 MB
+                const STORAGE_FREE_LIMIT = 1 * 1024 * 1024 * 1024; // 1 GB
+                const dbPercent = (databaseSizeBytes / DB_FREE_LIMIT) * 100;
+                const storagePercent = (totalStorageBytes / STORAGE_FREE_LIMIT) * 100;
 
                 return (
                     <div className="space-y-4">
@@ -1203,15 +1212,15 @@ const AdminRouter: React.FC<AdminRouterProps> = ({ onClose }) => {
                             </button>
                         </div>
 
-                        {/* Card de Uso Total */}
-                        <div className={`rounded-xl p-4 border ${usagePercent > 80 ? 'bg-red-50 border-red-200' :
-                                usagePercent > 50 ? 'bg-amber-50 border-amber-200' :
+                        {/* Database Size */}
+                        <div className={`rounded-xl p-4 border ${dbPercent > 80 ? 'bg-red-50 border-red-200' :
+                                dbPercent > 50 ? 'bg-amber-50 border-amber-200' :
                                     'bg-green-50 border-green-200'
                             }`}>
                             <div className="flex items-center justify-between mb-2">
-                                <span className="font-medium text-zinc-700">Banco de Dados (Est.)</span>
-                                <span className={`text-sm font-bold ${usagePercent > 80 ? 'text-red-600' :
-                                        usagePercent > 50 ? 'text-amber-600' :
+                                <span className="font-medium text-zinc-700">📊 Database</span>
+                                <span className={`text-sm font-bold ${dbPercent > 80 ? 'text-red-600' :
+                                        dbPercent > 50 ? 'text-amber-600' :
                                             'text-green-600'
                                     }`}>
                                     {databaseSize || '...'} / 500 MB
@@ -1219,34 +1228,66 @@ const AdminRouter: React.FC<AdminRouterProps> = ({ onClose }) => {
                             </div>
                             <div className="w-full bg-white rounded-full h-3">
                                 <div
-                                    className={`h-3 rounded-full transition-all ${usagePercent > 80 ? 'bg-red-500' :
-                                            usagePercent > 50 ? 'bg-amber-500' :
+                                    className={`h-3 rounded-full transition-all ${dbPercent > 80 ? 'bg-red-500' :
+                                            dbPercent > 50 ? 'bg-amber-500' :
                                                 'bg-green-500'
                                         }`}
-                                    style={{ width: `${Math.min(usagePercent, 100)}%` }}
+                                    style={{ width: `${Math.min(dbPercent, 100)}%` }}
                                 />
                             </div>
                             <div className="text-xs text-zinc-500 mt-2">
-                                Free Tier: 500 MB máximo • {usagePercent.toFixed(1)}% usado
+                                {dbPercent.toFixed(1)}% usado • Dados reais via PostgreSQL
                             </div>
                         </div>
 
-                        {/* Tabelas por Tamanho */}
+                        {/* Storage Size */}
+                        <div className={`rounded-xl p-4 border ${storagePercent > 80 ? 'bg-red-50 border-red-200' :
+                                storagePercent > 50 ? 'bg-amber-50 border-amber-200' :
+                                    'bg-green-50 border-green-200'
+                            }`}>
+                            <div className="flex items-center justify-between mb-2">
+                                <span className="font-medium text-zinc-700">📁 Storage</span>
+                                <span className={`text-sm font-bold ${storagePercent > 80 ? 'text-red-600' :
+                                        storagePercent > 50 ? 'text-amber-600' :
+                                            'text-green-600'
+                                    }`}>
+                                    {formatBytes(totalStorageBytes)} / 1 GB
+                                </span>
+                            </div>
+                            <div className="w-full bg-white rounded-full h-3">
+                                <div
+                                    className={`h-3 rounded-full transition-all ${storagePercent > 80 ? 'bg-red-500' :
+                                            storagePercent > 50 ? 'bg-amber-500' :
+                                                'bg-green-500'
+                                        }`}
+                                    style={{ width: `${Math.min(storagePercent, 100)}%` }}
+                                />
+                            </div>
+                            {storageData.length > 0 && (
+                                <div className="mt-3 space-y-1">
+                                    {storageData.map(bucket => (
+                                        <div key={bucket.bucketId} className="flex justify-between text-xs">
+                                            <span className="text-zinc-500">{bucket.bucketId}</span>
+                                            <span className="text-zinc-600">{bucket.filesCount} arquivos • {formatBytes(bucket.totalBytes)}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Tabelas por Tamanho Real */}
                         <div className="bg-white rounded-xl border border-zinc-100 overflow-hidden">
                             <div className="px-4 py-2 bg-zinc-50 border-b border-zinc-100">
-                                <span className="text-sm font-medium text-zinc-700">Tamanho por Tabela</span>
+                                <span className="text-sm font-medium text-zinc-700">📋 Tamanho por Tabela (Real)</span>
                             </div>
-                            <div className="divide-y divide-zinc-100">
+                            <div className="divide-y divide-zinc-100 max-h-64 overflow-y-auto">
                                 {quotas.map((q, i) => (
                                     <div key={q.tableName} className="flex items-center justify-between px-4 py-2">
                                         <div className="flex items-center gap-2">
                                             <span className="w-5 text-xs text-zinc-400 text-right">{i + 1}</span>
                                             <span className="text-sm text-zinc-700">{q.tableName}</span>
                                         </div>
-                                        <div className="flex items-center gap-3">
-                                            <span className="text-xs text-zinc-400">{q.rowCount.toLocaleString()} rows</span>
-                                            <span className="text-xs font-medium text-zinc-600 w-16 text-right">{q.sizeFormatted}</span>
-                                        </div>
+                                        <span className="text-xs font-medium text-zinc-600">{q.sizePretty}</span>
                                     </div>
                                 ))}
                             </div>
@@ -1254,23 +1295,31 @@ const AdminRouter: React.FC<AdminRouterProps> = ({ onClose }) => {
 
                         {/* Limites do Free Tier */}
                         <div className="bg-white rounded-xl p-4 border border-zinc-100 space-y-3">
-                            <h3 className="text-sm font-medium text-zinc-700">Limites do Free Tier</h3>
-                            <div className="space-y-2 text-sm">
-                                <div className="flex justify-between">
-                                    <span className="text-zinc-500">Database Size</span>
-                                    <span className="text-zinc-700">500 MB</span>
+                            <h3 className="text-sm font-medium text-zinc-700">📌 Limites do Free Tier</h3>
+                            <div className="grid grid-cols-2 gap-2 text-xs">
+                                <div className="bg-zinc-50 rounded-lg p-2">
+                                    <div className="text-zinc-400">Database</div>
+                                    <div className="font-medium text-zinc-700">500 MB</div>
                                 </div>
-                                <div className="flex justify-between">
-                                    <span className="text-zinc-500">Storage</span>
-                                    <span className="text-zinc-700">1 GB</span>
+                                <div className="bg-zinc-50 rounded-lg p-2">
+                                    <div className="text-zinc-400">Storage</div>
+                                    <div className="font-medium text-zinc-700">1 GB</div>
                                 </div>
-                                <div className="flex justify-between">
-                                    <span className="text-zinc-500">Edge Functions</span>
-                                    <span className="text-zinc-700">500K/mês</span>
+                                <div className="bg-zinc-50 rounded-lg p-2">
+                                    <div className="text-zinc-400">Edge Functions</div>
+                                    <div className="font-medium text-zinc-700">500K/mês</div>
                                 </div>
-                                <div className="flex justify-between">
-                                    <span className="text-zinc-500">Auth MAUs</span>
-                                    <span className="text-zinc-700">50K/mês</span>
+                                <div className="bg-zinc-50 rounded-lg p-2">
+                                    <div className="text-zinc-400">Auth MAUs</div>
+                                    <div className="font-medium text-zinc-700">50K/mês</div>
+                                </div>
+                                <div className="bg-zinc-50 rounded-lg p-2">
+                                    <div className="text-zinc-400">Bandwidth</div>
+                                    <div className="font-medium text-zinc-700">5 GB/mês</div>
+                                </div>
+                                <div className="bg-zinc-50 rounded-lg p-2">
+                                    <div className="text-zinc-400">Realtime</div>
+                                    <div className="font-medium text-zinc-700">200 conexões</div>
                                 </div>
                             </div>
                         </div>
@@ -1280,10 +1329,9 @@ const AdminRouter: React.FC<AdminRouterProps> = ({ onClose }) => {
                             href="https://supabase.com/dashboard/project/ardevnlnrorffyhdsytn/settings/usage"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="w-full py-3 bg-violet-500 text-white rounded-lg font-medium flex items-center justify-center gap-2 text-sm"
+                            className="block w-full py-3 bg-violet-500 text-white rounded-lg font-medium text-center text-sm"
                         >
-                            <Database className="w-4 h-4" />
-                            Ver no Dashboard Supabase
+                            Ver Métricas Completas no Supabase
                         </a>
                     </div>
                 );
