@@ -161,40 +161,9 @@ export const profiles = {
     return { data, error }
   },
 
-  // Criar perfil inicial (apenas com email, para onboarding progressivo)
-  createInitial: async (id: string, email: string) => {
-    console.log('profiles.createInitial - ID:', id, 'Email:', email)
-
-    try {
-      const startTime = Date.now()
-      const { data, error } = await supabase
-        .from('profiles')
-        .insert({
-          id,
-          email,
-          onboarding_step: 0,
-          onboarding_completed: false,
-          is_active: false,
-        })
-        .select()
-        .single()
-
-      console.log('profiles.createInitial - Tempo:', Date.now() - startTime, 'ms')
-      console.log('profiles.createInitial - Data:', data ? 'created' : 'null')
-      console.log('profiles.createInitial - Error:', error)
-      return { data, error }
-    } catch (err) {
-      console.error('profiles.createInitial - EXCEÇÃO:', err)
-      return { data: null, error: err as any }
-    }
-  },
-
   // Criar ou atualizar perfil inicial (usa UPSERT para evitar erros de duplicata)
   upsertInitial: async (id: string, email: string) => {
-    console.log('profiles.upsertInitial - ID:', id, 'Email:', email)
-
     try {
-      const startTime = Date.now()
       const { data, error } = await supabase
         .from('profiles')
         .upsert({
@@ -205,42 +174,16 @@ export const profiles = {
           is_active: false,
         }, {
           onConflict: 'id',
-          ignoreDuplicates: false, // Retorna o registro existente
+          ignoreDuplicates: false,
         })
         .select()
         .single()
 
-      console.log('profiles.upsertInitial - Tempo:', Date.now() - startTime, 'ms')
-      console.log('profiles.upsertInitial - Data:', data)
-      console.log('profiles.upsertInitial - Error:', error)
       return { data, error }
     } catch (err) {
       console.error('profiles.upsertInitial - EXCEÇÃO:', err)
       return { data: null, error: err as any }
     }
-  },
-
-  // Criar perfil completo (método legado, mantido por compatibilidade)
-  create: async (profile: {
-    id: string
-    email: string
-    name: string
-    bio?: string
-    birth_date: string
-    gender: 'male' | 'female' | 'other'
-    looking_for: 'male' | 'female' | 'both'
-  }) => {
-    const { data, error } = await supabase
-      .from('profiles')
-      .insert({
-        ...profile,
-        onboarding_step: 4,
-        onboarding_completed: true,
-        is_active: true,
-      })
-      .select()
-      .single()
-    return { data, error }
   },
 
   // Atualizar step do onboarding

@@ -375,31 +375,6 @@ export function useAuth() {
     return { error }
   }, [state.user])
 
-  // Atualizar step do onboarding
-  const updateOnboardingStep = useCallback(async (step: number, data: Record<string, any>) => {
-    if (!state.user) {
-      return { error: new Error('Usuário não autenticado') }
-    }
-
-    const { data: updatedProfile, error } = await profiles.updateOnboarding(
-      state.user.id,
-      data,
-      step
-    )
-
-    if (error) {
-      console.error('Erro ao atualizar onboarding:', error)
-      return { error }
-    }
-
-    setState(prev => ({
-      ...prev,
-      profile: updatedProfile,
-    }))
-
-    return { data: updatedProfile, error: null }
-  }, [state.user])
-
   // Atualizar perfil
   const updateProfile = useCallback(async (updates: Partial<ProfileWithAll>) => {
     if (!state.user) {
@@ -431,34 +406,6 @@ export function useAuth() {
     }
   }, [state.user, state.session, loadProfile])
 
-  // Criar perfil (legacy)
-  const createProfile = useCallback(async (profileData: {
-    name: string
-    bio?: string
-    birth_date: string
-    gender: 'male' | 'female' | 'other'
-    looking_for: 'male' | 'female' | 'both'
-  }) => {
-    if (!state.user) {
-      return { error: new Error('Usuário não autenticado') }
-    }
-
-    const { data, error } = await profiles.create({
-      id: state.user.id,
-      email: state.user.email || '',
-      ...profileData,
-    })
-
-    if (error) return { error }
-
-    setState(prev => ({ ...prev, profile: data }))
-    return { data, error: null }
-  }, [state.user])
-
-  // Manualmente atualizar o estado do perfil (Optimistic UI)
-  const setProfileState = useCallback((newProfile: ProfileWithAll | null) => {
-    setState(prev => ({ ...prev, profile: newProfile }))
-  }, [])
 
   return {
     // Estado
@@ -476,17 +423,16 @@ export function useAuth() {
     isVip: state.profile?.is_vip || false,
 
     // Actions
-    setProfileState,
     signInWithGoogle,
     signOut,
-    createProfile,
     updateProfile,
-    updateOnboardingStep,
     refreshProfile,
     loadProfile: async () => {
       if (state.user && state.session?.access_token) {
         const profile = await loadProfile(state.user, state.session.access_token)
-        setState(prev => ({ ...prev, profile }))
+        if (profile) {
+          setState(prev => ({ ...prev, profile }))
+        }
       }
     },
   }

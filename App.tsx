@@ -48,7 +48,6 @@ const App: React.FC = () => {
     isVip: userIsVip,
     signInWithGoogle,
     signOut,
-    createProfile,
     updateProfile,
     refreshProfile,
   } = useAuth();
@@ -771,8 +770,6 @@ const App: React.FC = () => {
     setLoginLoading(false);
     // O redirect é feito automaticamente pelo useEffect
   };
-
-  // handleOnboardingComplete removido - Onboarding agora usa window.location.reload()
 
   const handleLogout = async () => {
     await signOut();
