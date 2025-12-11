@@ -13,7 +13,7 @@ import RangeSlider from './components/RangeSlider';
 import Profile from './components/Profile';
 import ChatList from './components/ChatList';
 import VipScreen from './components/VipScreen';
-import ReceivedLikesList from './components/ReceivedLikesList';
+
 import VibeSelector from './components/VibeSelector';
 import LoadingScreen from './components/LoadingScreen';
 import { useAuth } from './hooks/useAuth';
@@ -123,7 +123,15 @@ const App: React.FC = () => {
 
   // Geolocation Setup (Android/iOS)
   useEffect(() => {
+    let intervalId: any;
+    let appStateListener: any;
+
     const setupLocation = async () => {
+      // Se já temos localização salva no perfil e o state está vazio, usa a do perfil (Persistência Offline)
+      if (!myLocation && profile?.latitude && profile?.longitude) {
+        setMyLocation({ latitude: profile.latitude, longitude: profile.longitude });
+      }
+
       if (!user) return;
 
       try {
@@ -139,47 +147,104 @@ const App: React.FC = () => {
           }
         }
 
-        // Get current position
-        const position = await Geolocation.getCurrentPosition();
-        if (position) {
-          const { latitude, longitude } = position.coords;
-          setMyLocation({ latitude, longitude });
-          setLocationDenied(false);
-
-          // Reverse Geocoding (City, State, Neighborhood)
+        const updateLocation = async () => {
           try {
-            const response = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=pt`);
-            const data = await response.json();
-            const city = data.city || data.locality || '';
-            const state = data.principalSubdivision || '';
-            const neighborhood = data.localityInfo?.administrative?.find((x: any) => x.order === 6)?.name || ''; // Heuristic for neighborhood
+            // Get current position
+            const position = await Geolocation.getCurrentPosition();
+            if (position) {
+              const { latitude, longitude } = position.coords;
+              setMyLocation({ latitude, longitude });
+              setLocationDenied(false);
 
-            if (user) {
-              console.log('Updating location detailed:', latitude, longitude, city, state, neighborhood);
-              await profiles.update(user.id, {
-                latitude,
-                longitude,
-                city,
-                state,
-                neighborhood
-              });
+              // Reverse Geocoding (City, State, Neighborhood)
+              try {
+                const apiKey = import.meta.env.VITE_BIGDATACLOUD_API_KEY;
+                const baseUrl = apiKey
+                  ? 'https://api-bdc.net/data/reverse-geocode'
+                  : 'https://api.bigdatacloud.net/data/reverse-geocode-client';
+
+                const url = `${baseUrl}?latitude=${latitude}&longitude=${longitude}&localityLanguage=pt${apiKey ? `&key=${apiKey}` : ''}`;
+
+                const response = await fetch(url);
+                const data = await response.json();
+
+                // Log para debug dos dados retornados pela API
+                console.log('Reverse Geocode Response:', data);
+
+                // Parsing Refinado (City & State)
+                const city = data.city || data.localityName || data.locality || '';
+                const state = data.principalSubdivision || '';
+
+                // Parsing Refinado (Neighborhood)
+                let neighborhood = '';
+
+                // 1. Tentar pegar por adminLevel 10 (Padrão BDC para Bairro)
+                if (data.localityInfo?.administrative) {
+                  const adminNeighborhood = data.localityInfo.administrative.find((x: any) =>
+                    x.adminLevel === 10 || // Padrão exato para bairro
+                    (x.description && x.description.includes('neighborhood')) // Fallback por descrição
+                  );
+                  if (adminNeighborhood) {
+                    neighborhood = adminNeighborhood.name;
+                  }
+                }
+
+                // 2. Fallback: Tentar locality se for diferente da cidade
+                if (!neighborhood && data.locality && data.locality !== city) {
+                  neighborhood = data.locality;
+                }
+
+                if (user) {
+                  console.log('Updating location detailed:', { latitude, longitude, city, state, neighborhood });
+                  await profiles.update(user.id, {
+                    latitude,
+                    longitude,
+                    city,
+                    state,
+                    neighborhood
+                  });
+                }
+              } catch (geoErr) {
+                console.error('Error in reverse geocoding:', geoErr);
+                // Update lat/long anyway if geocoding fails
+                await profiles.update(user.id, { latitude, longitude });
+              }
             }
-          } catch (geoErr) {
-            console.error('Error in reverse geocoding:', geoErr);
-            // Update lat/long anyway if geocoding fails
-            await profiles.update(user.id, { latitude, longitude });
+          } catch (err) {
+            console.error('Error getting specific location:', err);
           }
-        }
+        };
+
+        // Executar imediatamente
+        updateLocation();
+
+        // Configurar Polling (15 minutos)
+        intervalId = setInterval(updateLocation, 15 * 60 * 1000);
+
+        // Configurar Resume (Ao voltar para o app)
+        const { App: CapacitorApp } = await import('@capacitor/app');
+        appStateListener = await CapacitorApp.addListener('appStateChange', ({ isActive }) => {
+          if (isActive) {
+            console.log('App resumed, updating location...');
+            updateLocation();
+          }
+        });
+
       } catch (err) {
-        console.error('Error getting location:', err);
-        setLocationDenied(true); // Treat error as denial/failure to enforce check
+        console.error('Error getting location permission:', err);
+        setLocationDenied(true);
       }
     };
 
-    if (isAuthenticated) {
+    if (isAuthenticated && user?.id) {
       setupLocation();
     }
-  }, [user, isAuthenticated]);
+
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+      if (appStateListener) appStateListener.remove();
+    };
+  }, [isAuthenticated, user?.id, profile]);
 
   // Hardware Back Button Handler (Android)
   useEffect(() => {
@@ -272,6 +337,21 @@ const App: React.FC = () => {
       }
     };
 
+    const handlePushNotificationReceived = (event: CustomEvent) => {
+      const data = event.detail;
+      console.log('Push notification received in foreground:', data);
+
+      // Lógica de Supressão In-App (Se já estiver no chat, não incomodar)
+      if (data.type === 'message' && activeChat?.conversationId === data.data.conversationId) {
+        console.log('Notificação suprimida: Usuário já está no chat ativo.');
+        return;
+      }
+
+      // TODO: Mostrar um Toast/Snackbar customizado aqui para outras notificações
+      // const { Toast } = await import('@capacitor/toast');
+      // Toast.show({ text: `${data.title}: ${data.body}`, duration: 'long' });
+    };
+
     // Função para abrir o chat
     const openChatFromNotification = async (conversationId: string, userId: string) => {
       // Primeiro ir para a tela de chat
@@ -325,9 +405,11 @@ const App: React.FC = () => {
     }
 
     window.addEventListener('push-notification-tap', handleNotificationTap as EventListener);
+    window.addEventListener('push-notification', handlePushNotificationReceived as EventListener);
 
     return () => {
       window.removeEventListener('push-notification-tap', handleNotificationTap as EventListener);
+      window.removeEventListener('push-notification', handlePushNotificationReceived as EventListener);
     };
   }, [user]);
 
@@ -377,31 +459,9 @@ const App: React.FC = () => {
   // Fetch Feed when entering Home
   useEffect(() => {
     if (currentScreen === ScreenState.HOME && user && feedProfiles.length === 0 && filtersLoaded) {
-      // Get location first if possible
-      if (navigator.geolocation && !myLocation) {
-        navigator.geolocation.getCurrentPosition(
-          async (position) => {
-            const { latitude, longitude } = position.coords;
-            setMyLocation({ latitude, longitude });
-
-            // Update profile in background
-            if (user) {
-              await profiles.update(user.id, { latitude, longitude });
-            }
-
-            // Fetch feed with location
-            fetchFeed({ latitude, longitude });
-          },
-          (err) => {
-            console.error("Location error:", err);
-            fetchFeed(); // Fetch without location
-          }
-        );
-      } else {
-        fetchFeed(myLocation || undefined);
-      }
+      fetchFeed(myLocation || undefined);
     }
-  }, [currentScreen, user, filtersLoaded]);
+  }, [currentScreen, user?.id, filtersLoaded, myLocation]);
 
   // ... (Fetch Matches useEffect) ...
 
@@ -585,8 +645,11 @@ const App: React.FC = () => {
   }, [user]);
 
   // Actions
-  const handleSwipe = async (direction: SwipeDirection) => {
-    if (!user || !currentProfile) return;
+  const handleSwipe = async (direction: SwipeDirection, targetId?: string, forceMatch: boolean = false) => {
+    // Determine which ID to use (viewingProfile or current feed profile)
+    const swipedProfileId = targetId || currentProfile?.id;
+
+    if (!user || !swipedProfileId) return;
 
     // Vertical Logic:
     // UP = PASS (Next Profile)
@@ -595,82 +658,101 @@ const App: React.FC = () => {
     const action = direction === 'down' ? 'like' : 'pass';
 
     if (direction === 'down') {
-      // "Pega" logic - check limits
-      if (swipeCount >= DAILY_FREE_SWIPES && !isVip) {
+      // "Pega" logic - check limits (skip check if forceMatch/VIP logic handles it)
+      if (swipeCount >= DAILY_FREE_SWIPES && !isVip && !forceMatch) {
         setCurrentScreen(ScreenState.VIP);
         return;
       }
-      setSwipeCount(prev => prev + 1);
+      if (!forceMatch) setSwipeCount(prev => prev + 1);
     }
 
     setLastDirection(direction);
 
     // Animate transition and update state
-    setTimeout(() => {
+    setTimeout(async () => {
       setLastDirection(null);
-      setFeedProfiles(prev => prev.slice(1)); // Remove first profile
-      setIsTopCardFlipped(false); // Reset flip state for next card
+      setIsTopCardFlipped(false);
+      setDragOffset(0);
 
-      // Fetch more if running low
-      if (feedProfiles.length < 3) {
-        fetchFeed();
-      }
-    }, 300);
-
-    // Call API
-    try {
-      console.log('Enviando swipe:', { userId: user.id, profileId: currentProfile.id, action });
-      const { match, error } = await swipes.create(user.id, currentProfile.id, action);
-
-      console.log('Resposta do swipe:', JSON.stringify({ match, error }, null, 2));
-
-      if (error) {
-        console.error('Erro ao registrar swipe:', error);
+      // Optimistic UI Update
+      // Only remove from feed if we are swiping on the feed (not viewingProfile)
+      if (!targetId) {
+        setFeedProfiles(prev => prev.slice(1));
       }
 
-      // Se houve match, enviar push notification para ambos
-      if (match) {
-        console.log('MATCH ENCONTRADO!', match);
-        // Fetch my photo for the modal
-        const myPhoto = user.user_metadata.avatar_url || 'https://picsum.photos/200';
+      // API Call
+      try {
+        const { match, error } = await swipes.create(user.id, swipedProfileId, action);
 
-        setMatchModalData({
-          isOpen: true,
-          theirName: currentProfile.name,
-          theirPhotoUrl: currentProfile.imageUrl,
-          myPhotoUrl: myPhoto,
-        });
+        if (error) {
+          console.error('Erro no swipe:', error);
+          // Reverter em caso de erro crítico (opcional)
+        }
 
-        // Tentar enviar mensagem de quebra-gelo automática (Bio)
-        if (profile?.bio) {
-          console.log('Enviando quebra-gelo automático...');
-          // Aguardar um pouco para garantir que a trigger criou a conversa
-          setTimeout(async () => {
-            try {
-              const { data: conversation } = await supabase
-                .from('conversations')
-                .select('id')
-                .eq('match_id', match.id)
-                .single();
+        if (match) {
+          // Trigger Match UI
+          const profileData = targetId ? viewingProfile : currentProfile;
+          if (profileData) {
+            const myPhoto = user.user_metadata.avatar_url || 'https://picsum.photos/200';
+            setMatchModalData({
+              isOpen: true,
+              theirName: profileData.name,
+              theirPhotoUrl: profileData.imageUrl,
+              myPhotoUrl: myPhoto,
+            });
 
-              if (conversation) {
-                await messages.send(conversation.id, user.id, profile.bio, currentProfile.id);
-                console.log('Quebra-gelo enviado com sucesso!');
-              } else {
-                console.log('Conversa não encontrada para envio do quebra-gelo.');
+            // Se estamos visualizando um perfil VIP, fecha o viewer
+            if (targetId) setViewingProfile(null);
+          }
+        }
+
+        // Se foi um PASS no visualizador, fecha o visualizador
+        if (action === 'pass' && targetId) {
+          setViewingProfile(null);
+        }
+
+        // Send Ice Breaker if Match
+        if (match && (targetId ? viewingProfile : currentProfile)) {
+          const matchedProfile = targetId ? viewingProfile : currentProfile;
+
+          if (matchedProfile && profile?.bio) {
+            // ... ice breaker logic ...
+            setTimeout(async () => {
+              try {
+                const { data: matchesData } = await matches.getAll(user.id);
+                if (matchesData) {
+                  const matchRecord = matchesData.find((m: any) =>
+                    m.user1_id === matchedProfile.id || m.user2_id === matchedProfile.id
+                  );
+
+                  const conversation = Array.isArray(matchRecord?.conversation)
+                    ? matchRecord?.conversation[0]
+                    : matchRecord?.conversation;
+
+                  if (conversation) {
+                    await messages.send(conversation.id, user.id, profile.bio, matchedProfile.id);
+                    console.log('Quebra-gelo enviado com sucesso!');
+                  }
+                }
+              } catch (err) {
+                console.error('Error sending icebreaker:', err);
               }
-            } catch (err) {
-              console.error('Erro ao enviar quebra-gelo:', err);
-            }
-          }, 1000); // 1 segundo de delay
+            }, 1000);
+          }
         }
 
         // Refresh matches list in background
         fetchMatches();
+
+        // If swiping on feed, check if we need more profiles
+        if (!targetId && feedProfiles.length < 5) {
+          fetchFeed();
+        }
+
+      } catch (err) {
+        console.error('Erro na requisição de swipe:', err);
       }
-    } catch (err) {
-      console.error('Erro na requisição de swipe:', err);
-    }
+    }, 200); // 200ms delay for animation
   };
 
   const handleLogin = async () => {
@@ -762,9 +844,17 @@ const App: React.FC = () => {
 
     const threshold = 100; // px to trigger swipe
     if (dragOffset > threshold) {
-      handleSwipe('down');
+      if (viewingProfile) {
+        handleSwipe('down', viewingProfile.id, true);
+      } else {
+        handleSwipe('down');
+      }
     } else if (dragOffset < -threshold) {
-      handleSwipe('up');
+      if (viewingProfile) {
+        handleSwipe('up', viewingProfile.id, true);
+      } else {
+        handleSwipe('up');
+      }
     }
 
     setDragStart(null);
@@ -833,12 +923,28 @@ const App: React.FC = () => {
       }
     };
 
+    // Simplified handlers that wrap the main handlers but pass event
+    // We reuse the main handleTouchStart/Move/End from App component 
+    // because they update the same drag state used by various components
+
     return (
-      <div className="absolute inset-0 z-50 bg-black flex flex-col animate-in slide-in-from-bottom duration-300">
+      <div
+        className="absolute inset-0 z-50 bg-black flex flex-col animate-in slide-in-from-bottom duration-300"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onMouseDown={handleTouchStart}
+        onMouseMove={handleTouchMove}
+        onMouseUp={handleTouchEnd}
+        onMouseLeave={handleTouchEnd}
+      >
         {/* Header with Back button - Moved down to avoid photo bar */}
-        <div className="absolute top-12 left-4 z-50">
+        <div className="absolute top-12 left-4 z-50 pointer-events-auto">
           <button
-            onClick={() => setViewingProfile(null)}
+            onClick={(e) => {
+              e.stopPropagation(); // Prevent drag start
+              setViewingProfile(null);
+            }}
             className="w-10 h-10 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/10 shadow-lg"
           >
             <ChevronLeft size={24} />
@@ -850,29 +956,38 @@ const App: React.FC = () => {
           <SwipeCard
             profile={viewingProfile}
             isActive={true}
+            swipeDirection={lastDirection} // Pass animation state
+            dragOffset={dragOffset}        // Pass header drag effect
             myZodiacSign={profile?.zodiac_sign}
             myInterests={profile?.user_interests?.map((ui: any) => ui.interest?.id) || []}
             hasActions={!activeChat}
           />
         </div>
 
-        {/* Action Buttons - Only show for other profiles AND if not coming from chat */}
-        {/* {!isSelf && !activeChat && (
-          <div className="h-24 bg-black flex items-center justify-center gap-8 pb-4 pt-2">
+        {/* Action Buttons (Like/Pass) - Properly hooked up */}
+        {!activeChat && (
+          <div className="absolute bottom-10 left-0 right-0 flex justify-center items-center gap-8 pointer-events-auto z-50">
             <button
-              onClick={handlePassFromViewer}
-              className="w-14 h-14 rounded-full bg-gradient-to-b from-zinc-700 to-zinc-800 border border-white/10 flex items-center justify-center text-white hover:bg-zinc-700 transition-colors shadow-lg"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleSwipe('up', viewingProfile.id, true);
+              }}
+              className="w-16 h-16 rounded-full bg-zinc-800/80 backdrop-blur-md flex items-center justify-center text-zinc-400 hover:text-white transition-colors border border-white/10 shadow-lg"
             >
-              <X size={28} />
+              <X size={32} />
             </button>
+
             <button
-              onClick={handleLikeFromViewer}
-              className="w-16 h-16 rounded-full bg-gradient-to-b from-brasil-green-light to-brasil-green flex items-center justify-center text-white shadow-lg shadow-brasil-green/40 hover:scale-105 transition-transform border-2 border-white/20"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleSwipe('down', viewingProfile.id, true);
+              }}
+              className="w-20 h-20 rounded-full bg-gradient-to-b from-brasil-green-light to-brasil-green flex items-center justify-center text-white shadow-xl shadow-brasil-green/30 hover:scale-105 active:scale-95 transition-all border-4 border-white/10"
             >
-              <Heart size={32} fill="white" />
+              <Heart size={40} className="fill-white" />
             </button>
           </div>
-        )} */}
+        )}
       </div>
     );
   };

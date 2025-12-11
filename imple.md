@@ -196,7 +196,7 @@
 | NotificaÃ§Ã£o de match | âœ… | Via cÃ³digo (swipes.create) |
 | NotificaÃ§Ã£o de mensagem | âœ… | Via cÃ³digo (ChatScreen.handleSend) |
 | NotificaÃ§Ã£o de like | âœ… | Implementado (swipes.create) |
-| ConfiguraÃ§Ãµes de notificaÃ§Ã£o | â³ | Ativar/desativar tipos |
+| ConfiguraÃ§Ãµes de notificaÃ§Ã£o | âœ… | Canais Android (Msg, Match, Like) e Agrupamento |
 
 ---
 
@@ -376,3 +376,7 @@ Se parar em "Chamando profiles.getById..." sem retornar, o cliente Supabase volt
 | 10/12/2025 | **VIP V2** | Tela VIP atualizada para Violet/Purple. Adicionado "Modo Agora Ilimitado" na lista. |
 | 10/12/2025 | **RefatoraÃ§Ã£o Perfil** | Movido Configurações para menu do perfil. Renomeado VIP para "Modo VIP Lendário". |
 | 10/12/2025 | **CorreÃ§Ã£o Bugs** | Corrigido erro 400 em "Usuários Bloqueados" (query Supabase) e crash em "Deletar Conta". |
+| 10/12/2025 | **Correção Geolocation** | Corrigido loop infinito de permissão no Android e removido conflito com API Web. |
+| 10/12/2025 | **Correção Types** | Adicionado campo `neighborhood` em `lib/supabase.ts` para persistir bairro no banco. |
+| 10/12/2025 | **API Geolocation** | Integrada API Key da BigDataCloud e melhorada lógica de parsing de endereço (Bairro/Cidade/Estado). |
+| 10/12/2025 | **Lógica Geolation** | Adicionado polling (15min), atualização ao retomar app e persistência offline da localização. Parsing refinado para evitar "Região Metropolitana". |

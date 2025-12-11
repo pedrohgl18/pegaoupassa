@@ -66,7 +66,7 @@ async function getAccessToken() {
   const pemContents = FIREBASE_PRIVATE_KEY.replace("-----BEGIN PRIVATE KEY-----", "").replace("-----END PRIVATE KEY-----", "").replace(/\s/g, "");
   const binaryKey = Uint8Array.from(atob(pemContents), (c) => c.charCodeAt(0));
   const cryptoKey = await crypto.subtle.importKey("pkcs8", binaryKey, { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" }, false, ["sign"]);
-  
+
   const encoder = new TextEncoder();
   const signature = await crypto.subtle.sign("RSASSA-PKCS1-v1_5", cryptoKey, encoder.encode(signInput));
   const signatureB64 = btoa(String.fromCharCode(...new Uint8Array(signature))).replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
@@ -86,9 +86,30 @@ async function getAccessToken() {
   return tokenData.access_token;
 }
 
-async function sendFCMNotification(token, title, body, data) {
+async function sendFCMNotification(token, title, body, data, type) {
   try {
     const accessToken = await getAccessToken();
+    // Mapear canal e tag baseado no tipo
+    let channelId = 'messages';
+    let tag: string | undefined = undefined;
+
+    switch (type) {
+      case 'message':
+        channelId = 'messages';
+        if (data?.conversationId) tag = `chat_${data.conversationId}`;
+        break;
+      case 'match':
+        channelId = 'matches';
+        if (data?.matchId) tag = `match_${data.matchId}`;
+        break;
+      case 'like':
+        channelId = 'likes';
+        tag = 'likes_summary'; // Agrupar likes para evitar spam
+        break;
+      default:
+        channelId = 'messages';
+    }
+
     const message = {
       message: {
         token,
@@ -97,7 +118,8 @@ async function sendFCMNotification(token, title, body, data) {
           priority: "high",
           notification: {
             sound: "default",
-            channel_id: "messages",
+            channel_id: channelId,
+            tag: tag, // Agrupamento/Stacking
             visibility: "public",
             notification_priority: "PRIORITY_MAX",
             default_sound: true,
@@ -155,7 +177,7 @@ serve(async (req) => {
       });
     }
 
-    const results = await Promise.all(tokens.map((t) => sendFCMNotification(t.token, title, body, data)));
+    const results = await Promise.all(tokens.map((t) => sendFCMNotification(t.token, title, body, data, type)));
 
     await supabase.from("notifications").insert({
       user_id: userId,

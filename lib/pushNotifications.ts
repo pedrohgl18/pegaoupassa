@@ -30,7 +30,7 @@ export const initPushNotifications = async (userId: string) => {
   try {
     // Remover listeners antigos para evitar duplicação
     await PushNotifications.removeAllListeners();
-    
+
     // Verificar permissões
     let permStatus = await PushNotifications.checkPermissions();
 
@@ -67,10 +67,54 @@ export const initPushNotifications = async (userId: string) => {
     // Registrar para receber notificações - DEPOIS de configurar listeners
     await PushNotifications.register();
 
+    // Criar canais de notificação (Android)
+    if (Capacitor.getPlatform() === 'android') {
+      await createNotificationChannels();
+    }
+
     return { success: true };
   } catch (error) {
     console.error('Push Notifications: Erro na inicialização:', error);
     return { success: false, reason: 'error', error };
+  }
+};
+
+// Criar canais de notificação (Android)
+const createNotificationChannels = async () => {
+  try {
+    await PushNotifications.createChannel({
+      id: 'messages',
+      name: 'Mensagens',
+      description: 'Receba notificações de novas mensagens',
+      importance: 5, // High
+      visibility: 1, // Public
+      sound: 'default',
+      vibration: true,
+    });
+
+    await PushNotifications.createChannel({
+      id: 'matches',
+      name: 'Matches',
+      description: 'Receba notificações de novos matches',
+      importance: 5, // High
+      visibility: 1, // Public
+      sound: 'default',
+      vibration: true,
+    });
+
+    await PushNotifications.createChannel({
+      id: 'likes',
+      name: 'Curtidas',
+      description: 'Receba notificações quando alguém te curtir',
+      importance: 3, // Default
+      visibility: 1, // Public
+      sound: 'default',
+      vibration: false, // Menos intrusivo
+    });
+
+    console.log('Push Notifications: Canais criados com sucesso');
+  } catch (error) {
+    console.error('Push Notifications: Erro ao criar canais:', error);
   }
 };
 
@@ -99,7 +143,7 @@ const saveTokenToDatabase = async (userId: string, token: string) => {
 // Handler para notificações em foreground
 const handleForegroundNotification = (notification: any) => {
   const data = notification.data as PushNotificationData;
-  
+
   // Disparar evento customizado para o React ouvir
   window.dispatchEvent(new CustomEvent('push-notification', {
     detail: {
@@ -127,7 +171,7 @@ export const removePushToken = async (userId: string) => {
       .from('push_tokens')
       .delete()
       .eq('user_id', userId);
-    
+
     console.log('Push Notifications: Token removido');
   } catch (err) {
     console.error('Push Notifications: Erro ao remover token:', err);
@@ -137,7 +181,7 @@ export const removePushToken = async (userId: string) => {
 // Remover todos os listeners (cleanup)
 export const removePushListeners = async () => {
   if (!isNativePlatform()) return;
-  
+
   await PushNotifications.removeAllListeners();
   console.log('Push Notifications: Listeners removidos');
 };

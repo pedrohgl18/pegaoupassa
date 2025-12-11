@@ -34,8 +34,9 @@ const Profile: React.FC<ProfileProps> = ({
     receivedLikesCount,
 }) => {
     const [showSettings, setShowSettings] = useState(false);
-    const avatarUrl = profile?.photos?.[0]?.url || "https://picsum.photos/seed/me/400/400";
-    const hasCoverPhoto = profile?.photos?.length > 1;
+    const sortedPhotos = profile?.photos?.slice().sort((a: any, b: any) => a.position - b.position) || [];
+    const avatarUrl = sortedPhotos[0]?.url || "https://picsum.photos/seed/me/400/400";
+    const hasCoverPhoto = sortedPhotos.length > 1;
 
     return (
         <div className="flex flex-col h-full w-full bg-zinc-50 animate-fade-in overflow-y-auto no-scrollbar pb-24">
@@ -74,7 +75,7 @@ const Profile: React.FC<ProfileProps> = ({
                     </h1>
                     <div className="flex items-center justify-center gap-1 text-zinc-500 text-sm font-medium">
                         <MapPin size={14} />
-                        {profile?.city ? `${profile.city}, ${profile.state}` : 'Brasil'}
+                        {profile?.neighborhood ? `${profile.neighborhood}, ${profile.city}` : (profile?.city ? `${profile.city}, ${profile.state}` : 'Brasil')}
                     </div>
                 </div>
 

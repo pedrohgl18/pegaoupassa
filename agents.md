@@ -29,18 +29,24 @@
 3. **NUNCA executar `npm run dev`** - O desenvolvedor sempre roda manualmente quando necessário
 4. **NUNCA usar timeouts em chamadas ao Supabase** - Deixar as queries executarem normalmente
 5. **NUNCA adicionar logs/console.log** - Só adicionar logs quando o desenvolvedor pedir explicitamente. Sempre buscar ler o código e resolver o problema sem depender de logs
-6. **SEMPRE rodar os comandos de build/sync e analisar a saída** - Exceto `npm run dev`
-7. **SEMPRE atualizar `imple.md`** quando uma funcionalidade for adicionada, modificada ou removida
-8. **O arquivo `imple.md` é a fonte da verdade** - Sempre consultá-lo para saber o estado atual do projeto
-9. **NUNCA assumir/adivinhar** - O estado do banco deve ser verificado via MCP (`list_tables`, `execute_sql` etc) **ANTES** de gerar código que dependa dele. Só pergunte ao desenvolvedor se a informação não estiver disponível via MCP.
+1.  **NUNCA criar outros arquivos `.md`** - Usar apenas `agents.md` e `imple.md`
+2.  **NUNCA criar outros arquivos `.sql`** - Todas as queries vão em `tabelas.sql`
+3.  **NUNCA executar `npm run dev`** - O desenvolvedor sempre roda manualmente quando necessário
+4.  **NUNCA usar timeouts em chamadas ao Supabase** - Deixar as queries executarem normalmente
+5.  **NUNCA adicionar logs/console.log** - Só adicionar logs quando o desenvolvedor pedir explicitamente. Sempre buscar ler o código e resolver o problema sem depender de logs
+6.  **SEMPRE rodar os comandos de build/sync e analisar a saída** - Exceto `npm run dev`
+7.  **SEMPRE atualizar `imple.md`** quando uma funcionalidade for adicionada, modificada ou removida
+8.  **O arquivo `imple.md` é a fonte da verdade** - Sempre consultá-lo para saber o estado atual do projeto
+9.  **NUNCA assumir/adivinhar** - O estado do banco deve ser verificado via MCP (`list_tables`, `execute_sql` etc) **ANTES** de gerar código que dependa dele. Só pergunte ao desenvolvedor se a informação não estiver disponível via MCP.
 10. **Buckets do Supabase Storage usam RLS** - NÃO são públicos por padrão. Usar URLs assinadas quando necessário
 11. **SEMPRE subir para o GitHub** ao finalizar uma tarefa: `git push -u origin main`
-12. **SEMPRE gerar build Android** ao finalizar uma tarefa, executando na ordem:
+12. **SEMPRE gerar build Android** ao finalizar uma tarefa, executando COMANDOS SEPARADOS (um por vez, sem `&` ou `&&`):
     - `npm run build`
     - `npx cap sync android`
     - `cd android`
-    - Definir JAVA_HOME: `$env:JAVA_HOME = "C:\Program Files\Android\Android Studio\jbr"`
+    - `$env:JAVA_HOME = "C:\Program Files\Android\Android Studio\jbr"`
     - `./gradlew assembleDebug`
+    - **IMPORTANTE**: Usar sempre PowerShell no VSCode. Nunca usar comandos Linux (ls, cp, etc) se não tiverem alias.
 
 ### 📱 Regras de UI/UX (Android First)
 

@@ -286,6 +286,7 @@ export const profiles = {
     vibe_status: string
     vibe_expires_at: string
     last_vibe_activation: string
+    neighborhood: string
   }>) => {
     const { data, error } = await supabase
       .from('profiles')
@@ -909,7 +910,7 @@ export const pushNotifications = {
     return pushNotifications.send(
       userId,
       '💚 Alguém te curtiu!',
-      `${likerName} curtiu você! Seja VIP para ver quem.`,
+      'Alguém curtiu você! Seja VIP para ver quem.', // Privacidade: Nome removido
       'like'
     )
   },
