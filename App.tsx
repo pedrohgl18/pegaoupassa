@@ -776,8 +776,8 @@ const App: React.FC = () => {
   const handleOnboardingComplete = async (photos?: string[]) => {
     console.log('Onboarding completado, fotos:', photos);
 
-    // Refresh no background para garantir sincronia com banco
-    refreshProfile();
+    // REMOVIDO: refreshProfile causing race condition with optimistic update
+    // refreshProfile();
 
     if (user && profile) {
       // Optimistic Update: Construir objeto de fotos manualmente para exibir imediatamente
