@@ -46,7 +46,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ userId, profile }) => {
 
   // Salvar step 1: Nome e Bio
   const handleStep1Complete = async () => {
-    if (!name.trim()) return;
+    if (!name.trim() || !bio.trim()) return;
     setSaving(true);
     const { error } = await profiles.updateOnboarding(userId, {
       name: name.trim(),
@@ -69,7 +69,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ userId, profile }) => {
 
   // Salvar step 3: Dados pessoais
   const handleStep3Complete = async () => {
-    if (!birthDate || !gender || !interestedIn) return;
+    if (!birthDate || !gender || !interestedIn || !profession.trim() || !height || !education) return;
     setSaving(true);
     const { error } = await profiles.updateOnboarding(userId, {
       birth_date: birthDate,
@@ -186,7 +186,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ userId, profile }) => {
         </div>
       </div>
       <div className="pb-8 pt-4">
-        <Button fullWidth onClick={handleStep1Complete} disabled={!name.trim() || saving} className="!bg-violet-600 !bg-none hover:!bg-violet-700 text-white !shadow-lg !shadow-violet-500/30">
+        <Button fullWidth onClick={handleStep1Complete} disabled={!name.trim() || !bio.trim() || saving} className="!bg-violet-600 !bg-none hover:!bg-violet-700 text-white !shadow-lg !shadow-violet-500/30">
           {saving ? <Loader2 size={20} className="animate-spin mr-2" /> : null}
           Próximo <ChevronRight size={20} />
         </Button>
@@ -292,7 +292,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ userId, profile }) => {
         </div>
       </div>
       <div className="pb-8 pt-4">
-        <Button fullWidth onClick={handleStep3Complete} disabled={!birthDate || !gender || !interestedIn || saving} className="bg-violet-600 hover:bg-violet-700 text-white shadow-lg shadow-violet-500/30">
+        <Button fullWidth onClick={handleStep3Complete} disabled={!birthDate || !gender || !interestedIn || !profession.trim() || !height || !education || saving} className="bg-violet-600 hover:bg-violet-700 text-white shadow-lg shadow-violet-500/30">
           {saving ? <Loader2 size={20} className="animate-spin mr-2" /> : null}
           Próximo <ChevronRight size={20} />
         </Button>
