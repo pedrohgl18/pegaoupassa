@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
-import { ArrowLeft, LayoutDashboard, Users, MapPin, Database, Shield, Crown, Ban, Search, ChevronDown, ChevronUp, RefreshCw, AlertTriangle, CheckCircle, XCircle, TrendingUp } from 'lucide-react';
+import { ArrowLeft, LayoutDashboard, Users, MapPin, Database, Shield, Crown, Ban, Search, ChevronDown, ChevronUp, RefreshCw, AlertTriangle, CheckCircle, XCircle, TrendingUp, FileText } from 'lucide-react';
 
 // ============================================
 // CONSTANTES DE ACESSO
@@ -57,6 +57,16 @@ interface ReportRow {
     created_at: string;
     reporter: { name: string; email: string; photos: { url: string }[] };
     reported: { name: string; email: string; photos: { url: string }[]; is_active: boolean };
+}
+
+interface AdminLog {
+    id: string;
+    admin_id: string;
+    action: string;
+    target_user_id: string | null;
+    details: any;
+    created_at: string;
+    target_user?: { name: string; email: string };
 }
 
 // ============================================
@@ -119,7 +129,7 @@ interface AdminRouterProps {
 
 const AdminRouter: React.FC<AdminRouterProps> = ({ onClose }) => {
     const { user } = useAuth();
-    const [activeTab, setActiveTab] = useState<'dashboard' | 'users' | 'geography' | 'quota' | 'reports' | 'analytics'>('dashboard');
+    const [activeTab, setActiveTab] = useState<'dashboard' | 'users' | 'geography' | 'quota' | 'reports' | 'analytics' | 'logs'>('dashboard');
     const [stats, setStats] = useState<AdminStats | null>(null);
     const [users, setUsers] = useState<UserRow[]>([]);
     const [geoData, setGeoData] = useState<GeoData[]>([]);
@@ -134,6 +144,7 @@ const AdminRouter: React.FC<AdminRouterProps> = ({ onClose }) => {
     const [growthData, setGrowthData] = useState<{ date: string; users: number; matches: number }[]>([]);
     const [growthPeriod, setGrowthPeriod] = useState<7 | 30>(7);
     const [analyticsView, setAnalyticsView] = useState<'growth' | 'geo'>('growth');
+    const [adminLogs, setAdminLogs] = useState<AdminLog[]>([]);
 
     // Verificar acesso
     const isAdmin = user?.email === ADMIN_EMAIL;
@@ -292,6 +303,14 @@ const AdminRouter: React.FC<AdminRouterProps> = ({ onClose }) => {
         }
 
         await supabase.from('profiles').update(updates).eq('id', userId);
+
+        // Logar ação
+        await logAdminAction(
+            currentVip ? 'vip_removed' : 'vip_granted',
+            userId,
+            { duration_days: currentVip ? null : 30 }
+        );
+
         fetchUsers();
     };
 
@@ -299,7 +318,40 @@ const AdminRouter: React.FC<AdminRouterProps> = ({ onClose }) => {
         if (currentActive && !confirm('Tem certeza que deseja banir este usuário?')) return;
 
         await supabase.from('profiles').update({ is_active: !currentActive }).eq('id', userId);
+
+        // Logar ação
+        await logAdminAction(
+            currentActive ? 'user_banned' : 'user_unbanned',
+            userId
+        );
+
         fetchUsers();
+    };
+
+    // Função de logging
+    const logAdminAction = async (action: string, targetUserId?: string | null, details?: any) => {
+        if (!user?.id) return;
+
+        await supabase.from('admin_logs').insert({
+            admin_id: user.id,
+            action,
+            target_user_id: targetUserId || null,
+            details: details || null
+        });
+    };
+
+    // Buscar logs
+    const fetchLogs = async () => {
+        const { data } = await supabase
+            .from('admin_logs')
+            .select(`
+                *,
+                target_user:profiles!admin_logs_target_user_id_fkey(name, email)
+            `)
+            .order('created_at', { ascending: false })
+            .limit(50);
+
+        setAdminLogs(data || []);
     };
 
     // Buscar denúncias
@@ -336,6 +388,13 @@ const AdminRouter: React.FC<AdminRouterProps> = ({ onClose }) => {
         await supabase.from('reports').update({
             status: action === 'ban' ? 'resolved' : 'dismissed'
         }).eq('id', reportId);
+
+        // Logar ação
+        await logAdminAction(
+            action === 'ban' ? 'report_resolved' : 'report_dismissed',
+            report.reported_id,
+            { report_id: reportId, reason: report.reason }
+        );
 
         fetchReports();
     };
@@ -408,6 +467,12 @@ const AdminRouter: React.FC<AdminRouterProps> = ({ onClose }) => {
             fetchGrowthData();
         }
     }, [activeTab, growthPeriod]);
+
+    useEffect(() => {
+        if (isAdmin && activeTab === 'logs') {
+            fetchLogs();
+        }
+    }, [activeTab]);
 
     // Se não é admin, bloqueia
     if (!isAdmin) {
@@ -788,8 +853,8 @@ const AdminRouter: React.FC<AdminRouterProps> = ({ onClose }) => {
                             <button
                                 onClick={() => { setAnalyticsView('growth'); fetchGrowthData(); }}
                                 className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all flex items-center justify-center gap-2 ${analyticsView === 'growth'
-                                        ? 'bg-violet-500 text-white shadow-lg shadow-violet-200'
-                                        : 'bg-white text-zinc-600 border border-zinc-200'
+                                    ? 'bg-violet-500 text-white shadow-lg shadow-violet-200'
+                                    : 'bg-white text-zinc-600 border border-zinc-200'
                                     }`}
                             >
                                 <TrendingUp className="w-4 h-4" />
@@ -798,8 +863,8 @@ const AdminRouter: React.FC<AdminRouterProps> = ({ onClose }) => {
                             <button
                                 onClick={() => { setAnalyticsView('geo'); fetchGeoData(); }}
                                 className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all flex items-center justify-center gap-2 ${analyticsView === 'geo'
-                                        ? 'bg-violet-500 text-white shadow-lg shadow-violet-200'
-                                        : 'bg-white text-zinc-600 border border-zinc-200'
+                                    ? 'bg-violet-500 text-white shadow-lg shadow-violet-200'
+                                    : 'bg-white text-zinc-600 border border-zinc-200'
                                     }`}
                             >
                                 <MapPin className="w-4 h-4" />
@@ -897,8 +962,8 @@ const AdminRouter: React.FC<AdminRouterProps> = ({ onClose }) => {
                                             key={type}
                                             onClick={() => setGeoGroupBy(type)}
                                             className={`flex-1 py-2 rounded-lg text-xs font-medium transition-colors ${geoGroupBy === type
-                                                    ? 'bg-violet-100 text-violet-700'
-                                                    : 'bg-zinc-100 text-zinc-500'
+                                                ? 'bg-violet-100 text-violet-700'
+                                                : 'bg-zinc-100 text-zinc-500'
                                                 }`}
                                         >
                                             {type === 'state' ? 'Estado' : type === 'city' ? 'Cidade' : 'Bairro'}
@@ -948,6 +1013,72 @@ const AdminRouter: React.FC<AdminRouterProps> = ({ onClose }) => {
                         </button>
                     </div>
                 );
+
+            case 'logs':
+                const actionLabels: Record<string, { label: string; color: string }> = {
+                    'vip_granted': { label: 'VIP Dado', color: 'amber' },
+                    'vip_removed': { label: 'VIP Removido', color: 'zinc' },
+                    'user_banned': { label: 'Usuário Banido', color: 'red' },
+                    'user_unbanned': { label: 'Usuário Desbanido', color: 'green' },
+                    'report_resolved': { label: 'Denúncia Resolvida', color: 'red' },
+                    'report_dismissed': { label: 'Denúncia Ignorada', color: 'zinc' },
+                };
+
+                return (
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <h2 className="text-lg font-semibold text-zinc-900">Logs de Auditoria</h2>
+                            <button
+                                onClick={fetchLogs}
+                                className="p-2 text-violet-500 hover:bg-violet-50 rounded-lg"
+                            >
+                                <RefreshCw className="w-4 h-4" />
+                            </button>
+                        </div>
+
+                        {adminLogs.length === 0 ? (
+                            <div className="text-center py-12">
+                                <FileText className="w-12 h-12 text-zinc-300 mx-auto mb-3" />
+                                <p className="text-zinc-500">Nenhuma ação registrada ainda</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-2">
+                                {adminLogs.map(log => {
+                                    const actionInfo = actionLabels[log.action] || { label: log.action, color: 'zinc' };
+
+                                    return (
+                                        <div key={log.id} className="bg-white rounded-lg p-3 border border-zinc-100">
+                                            <div className="flex items-center justify-between mb-1">
+                                                <span className={`text-xs font-medium px-2 py-0.5 rounded-full bg-${actionInfo.color}-100 text-${actionInfo.color}-700`}>
+                                                    {actionInfo.label}
+                                                </span>
+                                                <span className="text-xs text-zinc-400">
+                                                    {new Date(log.created_at).toLocaleString('pt-BR', {
+                                                        day: '2-digit',
+                                                        month: '2-digit',
+                                                        hour: '2-digit',
+                                                        minute: '2-digit'
+                                                    })}
+                                                </span>
+                                            </div>
+                                            {log.target_user && (
+                                                <div className="text-sm text-zinc-700">
+                                                    <span className="font-medium">{log.target_user.name}</span>
+                                                    <span className="text-zinc-400 ml-1">({log.target_user.email})</span>
+                                                </div>
+                                            )}
+                                            {log.details?.reason && (
+                                                <div className="text-xs text-zinc-500 mt-1">
+                                                    Motivo: {log.details.reason}
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
+                );
         }
     };
 
@@ -973,7 +1104,7 @@ const AdminRouter: React.FC<AdminRouterProps> = ({ onClose }) => {
                         { id: 'users', icon: Users, label: 'Users' },
                         { id: 'reports', icon: AlertTriangle, label: 'Reports' },
                         { id: 'analytics', icon: TrendingUp, label: 'Growth' },
-                        { id: 'quota', icon: Database, label: 'Quota' },
+                        { id: 'logs', icon: FileText, label: 'Logs' },
                     ].map(tab => (
                         <button
                             key={tab.id}

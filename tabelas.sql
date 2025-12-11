@@ -1152,3 +1152,38 @@ ALTER TABLE profiles ADD COLUMN IF NOT EXISTS last_vibe_activation TIMESTAMP WIT
 -- =============================================
 
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS has_seen_tutorial BOOLEAN DEFAULT FALSE;
+
+
+-- =============================================
+-- TABELA: admin_logs
+-- Data: 11/12/2025
+-- Descrição: Logs de auditoria das ações do admin
+-- =============================================
+
+CREATE TABLE IF NOT EXISTS admin_logs (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    admin_id UUID NOT NULL REFERENCES profiles(id),
+    action TEXT NOT NULL, -- 'vip_granted', 'vip_removed', 'user_banned', 'user_unbanned', 'report_resolved', 'report_dismissed'
+    target_user_id UUID REFERENCES profiles(id),
+    details JSONB,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Index para busca por data
+CREATE INDEX IF NOT EXISTS idx_admin_logs_created_at ON admin_logs(created_at DESC);
+
+-- Index para busca por admin
+CREATE INDEX IF NOT EXISTS idx_admin_logs_admin_id ON admin_logs(admin_id);
+
+-- RLS
+ALTER TABLE admin_logs ENABLE ROW LEVEL SECURITY;
+
+-- Policy: Permitir insert para usuários autenticados
+CREATE POLICY "Allow authenticated users to insert logs" ON admin_logs
+    FOR INSERT TO authenticated
+    WITH CHECK (true);
+
+-- Policy: Permitir select para usuários autenticados
+CREATE POLICY "Allow authenticated users to read logs" ON admin_logs
+    FOR SELECT TO authenticated
+    USING (true);

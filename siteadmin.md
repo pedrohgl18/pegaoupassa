@@ -189,8 +189,7 @@ src/
 | **P1** | Banir Usuário | Soft delete (is_active = false) | ✅ Concluído |
 | **P1** | Fila de Denúncias | Ver e resolver reports | ✅ Concluído |
 | **P2** | Gráficos Temporais | Curva de crescimento (7/30 dias) | ✅ Concluído |
-| **P2** | Export CSV | Baixar lista de usuários | ⏳ Pendente |
-| **P3** | Logs de Auditoria | Tabela `admin_logs` | ⏳ Pendente |
+| **P3** | Logs de Auditoria | Tabela `admin_logs` | ✅ Concluído |
 
 ---
 
@@ -215,7 +214,6 @@ src/
 
 ---
 
-**Status**: ✅ Implementação P0/P1 Concluída
+**Status**: ✅ Implementação COMPLETA (P0/P1/P2/P3)
 **Última Atualização**: 11/12/2025
 **Arquivo Principal**: `admin/AdminRouter.tsx`
-**Próximo Passo**: Implementar Fila de Denúncias e Export CSV (P2).
