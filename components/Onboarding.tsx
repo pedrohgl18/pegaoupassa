@@ -8,10 +8,9 @@ import InterestSelector from './InterestSelector';
 interface OnboardingProps {
   userId: string;
   profile: Profile | null;  // Perfil existente (pode ter progresso salvo)
-  onComplete: (photos?: string[]) => void;
 }
 
-const Onboarding: React.FC<OnboardingProps> = ({ userId, profile, onComplete }) => {
+const Onboarding: React.FC<OnboardingProps> = ({ userId, profile }) => {
   // Iniciar no step salvo + 1 (próximo a completar), ou 1 se novo
   const [step, setStep] = useState(() => {
     const savedStep = profile?.onboarding_step || 0;
@@ -135,8 +134,8 @@ const Onboarding: React.FC<OnboardingProps> = ({ userId, profile, onComplete }) 
 
     if (error) { alert('Erro ao finalizar. Tente novamente.'); return; }
 
-    // Pass photos to parent for optimistic update
-    onComplete(photoUrls);
+    // Recarrega a página para garantir que o perfil com fotos seja carregado
+    window.location.reload();
   };
 
   const handlePhotoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {

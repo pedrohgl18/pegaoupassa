@@ -51,7 +51,6 @@ const App: React.FC = () => {
     createProfile,
     updateProfile,
     refreshProfile,
-    setProfileState,
   } = useAuth();
 
   // State
@@ -773,55 +772,7 @@ const App: React.FC = () => {
     // O redirect é feito automaticamente pelo useEffect
   };
 
-  const handleOnboardingComplete = async (photos?: string[]) => {
-    console.log('Onboarding completado, fotos:', photos);
-
-    // REMOVIDO: refreshProfile causing race condition with optimistic update
-    // refreshProfile();
-
-    if (user) {
-      // Optimistic Update: Construir objeto de fotos manualmente para exibir imediatamente
-      // (Bypassing Android WebView cache ou latência de DB)
-      const photoObjects = (photos || []).map((url, index) => ({
-        id: `temp-${Date.now()}-${index}`,
-        user_id: user.id,
-        url: url,
-        is_primary: index === 0,
-        position: index,
-        created_at: new Date().toISOString()
-      }));
-
-      // Create profile object even if current profile is null
-      const baseProfile = profile || {
-        id: user.id,
-        email: user.email || '',
-        name: 'Usuário',
-        bio: '',
-        birth_date: '',
-        gender: 'other' as const,
-        looking_for: 'both' as const,
-        photos: [],
-        user_interests: [],
-      };
-
-      const updatedProfile = {
-        ...baseProfile,
-        onboarding_completed: true,
-        is_active: true,
-        photos: photoObjects
-      };
-
-      // Forçar atualização do estado local
-      setProfileState(updatedProfile as any);
-    }
-
-    // Solicitar permissão de notificação (Android Native)
-    if (user) {
-      initPushNotifications(user.id);
-    }
-
-    setCurrentScreen(ScreenState.HOME);
-  };
+  // handleOnboardingComplete removido - Onboarding agora usa window.location.reload()
 
   const handleLogout = async () => {
     await signOut();
@@ -1557,7 +1508,6 @@ const App: React.FC = () => {
             <Onboarding
               userId={user.id}
               profile={profile}
-              onComplete={handleOnboardingComplete}
             />
           )}
           {currentScreen === ScreenState.HOME && renderHome()}
