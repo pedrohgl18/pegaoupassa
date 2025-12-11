@@ -1243,3 +1243,108 @@ BEGIN
     RETURN result;
 END;
 $$;
+
+-- =============================================
+-- GEOLOCALIZAÇÃO: RPC e Extensões
+-- Data: 11/12/2025
+-- Descrição: Extensões e funções para filtro de geolocalização no servidor
+-- =============================================
+
+-- Enable required extensions
+CREATE EXTENSION IF NOT EXISTS cube;
+CREATE EXTENSION IF NOT EXISTS earthdistance;
+
+-- Create get_nearby_profiles function
+CREATE OR REPLACE FUNCTION get_nearby_profiles(
+    lat float,
+    long float,
+    radius_km int,
+    user_id uuid,
+    filter_gender text DEFAULT NULL,
+    filter_min_age int DEFAULT 18,
+    filter_max_age int DEFAULT 100,
+    filter_min_height int DEFAULT NULL,
+    filter_zodiac text DEFAULT NULL,
+    limit_count int DEFAULT 10,
+    offset_count int DEFAULT 0
+)
+RETURNS TABLE (
+    id uuid,
+    name text,
+    bio text,
+    birth_date date,
+    gender text,
+    photos json,
+    distance float,
+    age int,
+    is_verified boolean,
+    zodiac_sign text,
+    profession text,
+    education text,
+    height int,
+    vibe_status text,
+    vibe_expires_at timestamptz,
+    neighborhood text,
+    user_interests json
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    min_birth_date date;
+    max_birth_date date;
+BEGIN
+    -- Calculate birth date range from age
+    min_birth_date := (CURRENT_DATE - (filter_max_age || ' years')::interval)::date;
+    max_birth_date := (CURRENT_DATE - (filter_min_age || ' years')::interval)::date;
+
+    RETURN QUERY
+    SELECT 
+        p.id,
+        p.name,
+        p.bio,
+        p.birth_date,
+        p.gender,
+        (
+            SELECT json_agg(json_build_object('url', ph.url, 'position', ph.position) ORDER BY ph.position)
+            FROM photos ph
+            WHERE ph.user_id = p.id
+        ) as photos,
+        (earth_distance(ll_to_earth(lat, long), ll_to_earth(p.latitude, p.longitude)) / 1000)::float as distance,
+        calculate_age(p.birth_date) as age,
+        p.is_verified,
+        p.zodiac_sign,
+        p.profession,
+        p.education,
+        p.height,
+        p.vibe_status,
+        p.vibe_expires_at,
+        p.neighborhood,
+        (
+            SELECT json_agg(json_build_object('interest', json_build_object('id', i.id, 'name', i.name, 'emoji', i.emoji, 'category', i.category)))
+            FROM user_interests ui
+            JOIN interests i ON i.id = ui.interest_id
+            WHERE ui.user_id = p.id
+        ) as user_interests
+    FROM profiles p
+    WHERE 
+        p.id != user_id
+        AND p.is_active = true
+        AND (p.latitude IS NOT NULL AND p.longitude IS NOT NULL)
+        AND earth_box(ll_to_earth(lat, long), radius_km * 1000) @> ll_to_earth(p.latitude, p.longitude)
+        AND earth_distance(ll_to_earth(lat, long), ll_to_earth(p.latitude, p.longitude)) <= (radius_km * 1000)
+        -- Filters
+        AND (filter_gender IS NULL OR p.gender = filter_gender)
+        AND (p.birth_date BETWEEN min_birth_date AND max_birth_date)
+        AND (filter_min_height IS NULL OR p.height >= filter_min_height)
+        AND (filter_zodiac IS NULL OR p.zodiac_sign = filter_zodiac)
+        -- Exclude already swiped
+        AND NOT EXISTS (
+            SELECT 1 FROM swipes s 
+            WHERE s.swiper_id = user_id 
+            AND s.swiped_id = p.id
+        )
+    ORDER BY distance ASC
+    LIMIT limit_count
+    OFFSET offset_count;
+END;
+$$;

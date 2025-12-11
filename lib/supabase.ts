@@ -251,6 +251,37 @@ export const profiles = {
     userLocation?: { latitude: number, longitude: number }
     limit?: number
   }) => {
+    // Se temos localização, usamos a RPC otimizada
+    if (filters.userLocation) {
+      console.log('Using optimized RPC get_nearby_profiles');
+
+      const rpcParams = {
+        lat: filters.userLocation.latitude,
+        long: filters.userLocation.longitude,
+        radius_km: filters.maxDistance || 100,
+        user_id: userId,
+        filter_gender: (filters.gender && filters.gender !== 'both') ? filters.gender : null,
+        filter_min_age: filters.minAge || 18,
+        filter_max_age: filters.maxAge || 100,
+        filter_min_height: filters.minHeight || null,
+        filter_zodiac: filters.zodiac || null,
+        limit_count: filters.limit || 10,
+        offset_count: 0
+      };
+
+      const { data, error } = await supabase
+        .rpc('get_nearby_profiles', rpcParams);
+
+      if (error) {
+        console.error('Error fetching feed via RPC:', error);
+        return { data: null, error };
+      }
+
+      return { data, error: null };
+    }
+
+    // Fallback: Se NÃO tem localização, usa a query antiga (sem filtro de distância)
+    console.log('No location provided, using legacy query');
     let query = supabase
       .from('profiles')
       .select('*, photos(*), user_interests(*, interest:interests(*))')
@@ -267,11 +298,8 @@ export const profiles = {
     const fanIds = fans?.map(f => f.swiper_id) || [];
 
     if (fanIds.length > 0) {
-      // Mostra se (não é incognito) OU (é um fã que me curtiu)
-      // Nota: A sintaxe do .or() aqui funciona como OR entre as condições separadas por vírgula
       query = query.or(`is_incognito.eq.false,id.in.(${fanIds.join(',')})`);
     } else {
-      // Se ninguém me curtiu, mostra apenas quem não é incognito
       query = query.eq('is_incognito', false);
     }
 
@@ -280,7 +308,7 @@ export const profiles = {
       query = query.eq('gender', filters.gender)
     }
 
-    // Filtro de Idade (Calculado via data de nascimento)
+    // Filtro de Idade
     const today = new Date();
     if (filters.minAge) {
       const maxBirthDate = new Date(today.getFullYear() - filters.minAge, today.getMonth(), today.getDate()).toISOString().split('T')[0];
@@ -301,7 +329,7 @@ export const profiles = {
       query = query.eq('zodiac_sign', filters.zodiac);
     }
 
-    // Excluir perfis já vistos (swipes)
+    // Excluir perfis já vistos
     const { data: swipedIds } = await supabase
       .from('swipes')
       .select('swiped_id')
@@ -311,57 +339,12 @@ export const profiles = {
       query = query.not('id', 'in', `(${swipedIds.map(s => s.swiped_id).join(',')})`)
     }
 
-    // Buscar mais resultados para filtrar por distância no cliente
-    // Se tiver filtro de distância, buscamos mais para garantir que sobrem alguns após o filtro
-    const fetchLimit = filters.maxDistance ? (filters.limit || 10) * 5 : (filters.limit || 10);
+    const { data, error } = await query.limit(filters.limit || 10);
 
-    const { data, error } = await query.limit(fetchLimit);
+    // Adicionar distância -1 para fallback
+    const processedData = data ? data.map((p: any) => ({ ...p, distance: -1 })) : [];
 
-    if (error) return { data: null, error };
-
-    // Processamento no Cliente (Distância)
-    let processedData = data || [];
-
-    if (filters.userLocation && filters.maxDistance) {
-      // If maxDistance is very high (999+), treat as "unlimited" - don't filter by distance
-      const isUnlimited = filters.maxDistance >= 999;
-
-      processedData = processedData.map((profile: any) => {
-        // Calcular distância (Haversine simples)
-        if (profile.latitude && profile.longitude) {
-          const R = 6371; // Raio da Terra em km
-          const dLat = (profile.latitude - filters.userLocation!.latitude) * Math.PI / 180;
-          const dLon = (profile.longitude - filters.userLocation!.longitude) * Math.PI / 180;
-          const a =
-            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-            Math.cos(filters.userLocation!.latitude * Math.PI / 180) * Math.cos(profile.latitude * Math.PI / 180) *
-            Math.sin(dLon / 2) * Math.sin(dLon / 2);
-          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-          const distance = R * c;
-          return { ...profile, distance };
-        }
-        // Users without location - show them but at the end (distance = -1 means "unknown")
-        return { ...profile, distance: -1 };
-      });
-
-      // Filter by distance only if NOT unlimited, and don't filter out users without location
-      if (!isUnlimited) {
-        processedData = processedData.filter((profile: any) =>
-          profile.distance === -1 || profile.distance <= (filters.maxDistance || 100)
-        );
-      }
-    } else {
-      // Se não tem localização do usuário, assume distância desconhecida
-      processedData = processedData.map((p: any) => ({ ...p, distance: -1 }));
-    }
-
-    // Ordenar por distância (mais perto primeiro) se tiver localização
-    if (filters.userLocation) {
-      processedData.sort((a: any, b: any) => a.distance - b.distance);
-    }
-
-    // Aplicar limite final
-    return { data: processedData.slice(0, filters.limit || 10), error: null };
+    return { data: processedData, error };
   },
 
   // Atualizar última vez online

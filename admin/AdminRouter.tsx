@@ -723,8 +723,8 @@ const AdminRouter: React.FC<AdminRouterProps> = ({ onClose }) => {
                             {quotas.slice(0, 4).map(q => (
                                 <QuotaAlert
                                     key={q.tableName}
-                                    label={`${q.tableName}: ${q.rowCount.toLocaleString()} registros`}
-                                    percentage={(q.rowCount / 10000) * 100} // Estimativa baseada em 10k rows
+                                    label={`${q.tableName}: ${q.sizePretty}`}
+                                    percentage={(q.sizeBytes / (10 * 1024 * 1024)) * 100}
                                 />
                             ))}
                         </div>
@@ -875,45 +875,6 @@ const AdminRouter: React.FC<AdminRouterProps> = ({ onClose }) => {
                                 <div className="text-center py-8 text-zinc-400">Sem dados disponíveis</div>
                             )}
                         </div>
-                    </div>
-                );
-
-            case 'quota':
-                return (
-                    <div className="space-y-4">
-                        <h2 className="text-lg font-semibold text-zinc-900">Monitoramento de Quotas</h2>
-
-                        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                            <div className="flex items-start gap-3">
-                                <Database className="w-5 h-5 text-amber-600 mt-0.5" />
-                                <div>
-                                    <div className="font-medium text-amber-800">Plano Free do Supabase</div>
-                                    <div className="text-sm text-amber-700 mt-1">
-                                        Database: 500 MB | Storage: 1 GB | Edge Functions: 500K/mês
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="space-y-3">
-                            <h3 className="text-sm font-medium text-zinc-700">Registros por Tabela</h3>
-                            {quotas.map(q => (
-                                <div key={q.tableName} className="bg-white rounded-lg p-3 border border-zinc-100">
-                                    <div className="flex justify-between items-center">
-                                        <span className="font-medium text-zinc-700 capitalize">{q.tableName}</span>
-                                        <span className="text-sm text-zinc-500">{q.rowCount.toLocaleString()} registros</span>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-
-                        <button
-                            onClick={() => { fetchStats(); fetchQuotas(); }}
-                            className="w-full py-3 bg-violet-500 text-white rounded-lg font-medium flex items-center justify-center gap-2"
-                        >
-                            <RefreshCw className="w-4 h-4" />
-                            Atualizar Dados
-                        </button>
                     </div>
                 );
 
@@ -1214,14 +1175,14 @@ const AdminRouter: React.FC<AdminRouterProps> = ({ onClose }) => {
 
                         {/* Database Size */}
                         <div className={`rounded-xl p-4 border ${dbPercent > 80 ? 'bg-red-50 border-red-200' :
-                                dbPercent > 50 ? 'bg-amber-50 border-amber-200' :
-                                    'bg-green-50 border-green-200'
+                            dbPercent > 50 ? 'bg-amber-50 border-amber-200' :
+                                'bg-green-50 border-green-200'
                             }`}>
                             <div className="flex items-center justify-between mb-2">
                                 <span className="font-medium text-zinc-700">📊 Database</span>
                                 <span className={`text-sm font-bold ${dbPercent > 80 ? 'text-red-600' :
-                                        dbPercent > 50 ? 'text-amber-600' :
-                                            'text-green-600'
+                                    dbPercent > 50 ? 'text-amber-600' :
+                                        'text-green-600'
                                     }`}>
                                     {databaseSize || '...'} / 500 MB
                                 </span>
@@ -1229,8 +1190,8 @@ const AdminRouter: React.FC<AdminRouterProps> = ({ onClose }) => {
                             <div className="w-full bg-white rounded-full h-3">
                                 <div
                                     className={`h-3 rounded-full transition-all ${dbPercent > 80 ? 'bg-red-500' :
-                                            dbPercent > 50 ? 'bg-amber-500' :
-                                                'bg-green-500'
+                                        dbPercent > 50 ? 'bg-amber-500' :
+                                            'bg-green-500'
                                         }`}
                                     style={{ width: `${Math.min(dbPercent, 100)}%` }}
                                 />
@@ -1242,14 +1203,14 @@ const AdminRouter: React.FC<AdminRouterProps> = ({ onClose }) => {
 
                         {/* Storage Size */}
                         <div className={`rounded-xl p-4 border ${storagePercent > 80 ? 'bg-red-50 border-red-200' :
-                                storagePercent > 50 ? 'bg-amber-50 border-amber-200' :
-                                    'bg-green-50 border-green-200'
+                            storagePercent > 50 ? 'bg-amber-50 border-amber-200' :
+                                'bg-green-50 border-green-200'
                             }`}>
                             <div className="flex items-center justify-between mb-2">
                                 <span className="font-medium text-zinc-700">📁 Storage</span>
                                 <span className={`text-sm font-bold ${storagePercent > 80 ? 'text-red-600' :
-                                        storagePercent > 50 ? 'text-amber-600' :
-                                            'text-green-600'
+                                    storagePercent > 50 ? 'text-amber-600' :
+                                        'text-green-600'
                                     }`}>
                                     {formatBytes(totalStorageBytes)} / 1 GB
                                 </span>
@@ -1257,8 +1218,8 @@ const AdminRouter: React.FC<AdminRouterProps> = ({ onClose }) => {
                             <div className="w-full bg-white rounded-full h-3">
                                 <div
                                     className={`h-3 rounded-full transition-all ${storagePercent > 80 ? 'bg-red-500' :
-                                            storagePercent > 50 ? 'bg-amber-500' :
-                                                'bg-green-500'
+                                        storagePercent > 50 ? 'bg-amber-500' :
+                                            'bg-green-500'
                                         }`}
                                     style={{ width: `${Math.min(storagePercent, 100)}%` }}
                                 />
