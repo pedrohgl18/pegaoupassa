@@ -41,6 +41,9 @@ export function useAuth() {
           'Authorization': `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
           'Accept': 'application/json',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
         },
       })
 
@@ -423,7 +426,9 @@ export function useAuth() {
     if (!state.user || !state.session?.access_token) return
 
     const profile = await loadProfile(state.user, state.session.access_token)
-    setState(prev => ({ ...prev, profile }))
+    if (profile) {
+      setState(prev => ({ ...prev, profile }))
+    }
   }, [state.user, state.session, loadProfile])
 
   // Criar perfil (legacy)
