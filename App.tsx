@@ -51,6 +51,7 @@ const App: React.FC = () => {
     createProfile,
     updateProfile,
     refreshProfile,
+    setProfileState,
   } = useAuth();
 
   // State
@@ -772,34 +773,34 @@ const App: React.FC = () => {
     // O redirect é feito automaticamente pelo useEffect
   };
 
-  const handleOnboardingComplete = async (data: {
-    name: string;
-    bio: string;
-    birthDate: string;
-    gender: 'male' | 'female' | 'other';
-    lookingFor: 'male' | 'female' | 'both';
-    photos: string[];
-  }) => {
-    console.log('handleOnboardingComplete chamado com:', data);
+  const handleOnboardingComplete = async (photos?: string[]) => {
+    console.log('Onboarding completado, fotos:', photos);
 
-    const { error } = await createProfile({
-      name: data.name,
-      bio: data.bio,
-      birth_date: data.birthDate,
-      gender: data.gender,
-      looking_for: data.lookingFor,
-    });
+    // Refresh no background para garantir sincronia com banco
+    refreshProfile();
 
-    console.log('createProfile resultado - error:', error);
+    if (user && profile) {
+      // Optimistic Update: Construir objeto de fotos manualmente para exibir imediatamente
+      // (Bypassing Android WebView cache ou latência de DB)
+      const photoObjects = (photos || []).map((url, index) => ({
+        id: `temp-${Date.now()}-${index}`,
+        user_id: user.id,
+        url: url,
+        is_primary: index === 0,
+        position: index,
+        created_at: new Date().toISOString()
+      }));
 
-    if (error) {
-      console.error('Erro ao criar perfil:', error);
-      alert('Erro ao salvar perfil: ' + (error.message || JSON.stringify(error)));
-      return;
+      const updatedProfile = {
+        ...profile,
+        onboarding_completed: true,
+        is_active: true,
+        photos: photoObjects
+      };
+
+      // Forçar atualização do estado local
+      setProfileState(updatedProfile as any);
     }
-
-    console.log('Perfil criado com sucesso, redirecionando para HOME');
-    // Tutorial flag is now handled via profile.has_seen_tutorial (default false in DB)
 
     // Solicitar permissão de notificação (Android Native)
     if (user) {

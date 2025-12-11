@@ -455,6 +455,11 @@ export function useAuth() {
     return { data, error: null }
   }, [state.user])
 
+  // Manualmente atualizar o estado do perfil (Optimistic UI)
+  const setProfileState = useCallback((newProfile: ProfileWithAll | null) => {
+    setState(prev => ({ ...prev, profile: newProfile }))
+  }, [])
+
   return {
     // Estado
     user: state.user,
@@ -471,6 +476,7 @@ export function useAuth() {
     isVip: state.profile?.is_vip || false,
 
     // Actions
+    setProfileState,
     signInWithGoogle,
     signOut,
     createProfile,
