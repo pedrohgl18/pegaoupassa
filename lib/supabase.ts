@@ -380,6 +380,9 @@ export const profiles = {
     let processedData = data || [];
 
     if (filters.userLocation && filters.maxDistance) {
+      // If maxDistance is very high (999+), treat as "unlimited" - don't filter by distance
+      const isUnlimited = filters.maxDistance >= 999;
+
       processedData = processedData.map((profile: any) => {
         // Calcular distância (Haversine simples)
         if (profile.latitude && profile.longitude) {
@@ -394,11 +397,19 @@ export const profiles = {
           const distance = R * c;
           return { ...profile, distance };
         }
-        return { ...profile, distance: 99999 }; // Sem localização = Longe (será filtrado)
-      }).filter((profile: any) => profile.distance <= (filters.maxDistance || 100));
+        // Users without location - show them but at the end (distance = -1 means "unknown")
+        return { ...profile, distance: -1 };
+      });
+
+      // Filter by distance only if NOT unlimited, and don't filter out users without location
+      if (!isUnlimited) {
+        processedData = processedData.filter((profile: any) =>
+          profile.distance === -1 || profile.distance <= (filters.maxDistance || 100)
+        );
+      }
     } else {
-      // Se não tem localização do usuário, assume distância 0 ou desconhecida
-      processedData = processedData.map((p: any) => ({ ...p, distance: 0 }));
+      // Se não tem localização do usuário, assume distância desconhecida
+      processedData = processedData.map((p: any) => ({ ...p, distance: -1 }));
     }
 
     // Ordenar por distância (mais perto primeiro) se tiver localização

@@ -204,10 +204,22 @@ const Onboarding: React.FC<OnboardingProps> = ({ userId, profile }) => {
         <p className="text-zinc-500">Adicione pelo menos 1 foto (máximo 6)</p>
         <div className="grid grid-cols-3 gap-3">
           {[0, 1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className={`relative aspect-[3/4] rounded-xl overflow-hidden ${i === 0 ? 'col-span-2 row-span-2' : ''}`}>
+            <div key={i} className={`relative aspect-[3/4] rounded-xl overflow-hidden bg-zinc-100 ${i === 0 ? 'col-span-2 row-span-2' : ''}`}>
               {photoUrls[i] ? (
                 <>
-                  <img src={photoUrls[i]} className="w-full h-full object-cover" alt={`Foto ${i + 1}`} />
+                  <img
+                    src={photoUrls[i]}
+                    className="w-full h-full object-cover"
+                    alt={`Foto ${i + 1}`}
+                    loading="eager"
+                    onError={(e) => {
+                      // If image fails, retry after a short delay (signed URL might need time)
+                      const target = e.currentTarget;
+                      setTimeout(() => {
+                        target.src = photoUrls[i] + '&retry=1';
+                      }, 1000);
+                    }}
+                  />
                   <button onClick={() => handleRemovePhoto(i)} className="absolute top-2 right-2 w-8 h-8 bg-red-500 rounded-full flex items-center justify-center shadow-lg">
                     <X size={16} className="text-white" />
                   </button>
