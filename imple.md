@@ -3,7 +3,7 @@
 > **⚠️ ESTE ARQUIVO É A FONTE DA VERDADE DO PROJETO**
 > Sempre manter atualizado quando funcionalidades forem adicionadas, modificadas ou removidas.
 
-**Última atualização**: 10/12/2025
+**Última atualização**: 11/12/2025
 
 ---
 
@@ -253,3 +253,48 @@
 | 10/12/2025 | **Permissões Notificação** | Solicitação forçada de permissão na inicialização e após onboarding (Android Native). |
 | 10/12/2025 | **Fix Tutorial Overlay** | Migrado de localStorage para Supabase (`profile.has_seen_tutorial`). Posicionamento `fixed`. |
 | 10/12/2025 | **Remove Profile Fallbacks** | Removido todos os fallbacks de imagem (picsum.photos) para evitar inconsistências. |
+| 11/12/2025 | **Fix Avatar Desaparecendo** | Ver seção detalhada abaixo. |
+| 11/12/2025 | **Limpeza de Código** | Removido ~150 linhas de código morto (setProfileState, createProfile, updateOnboardingStep, createInitial, console.logs). |
+
+---
+
+## 12. Bugs Resolvidos - Documentação Técnica
+
+### Bug: Avatar/Foto Desaparecendo (11/12/2025)
+
+**Sintomas:**
+1. Foto do perfil não aparecia após onboarding (só após reiniciar app)
+2. Foto desaparecia ao selecionar "Modo Agora" (Vibe)
+3. Qualquer atualização de perfil fazia a foto sumir
+
+**Causa Raiz:**
+O método `profiles.update` em `lib/supabase.ts` retornava apenas os campos da tabela `profiles`, **sem incluir as relações** (`photos`, `user_interests`):
+```typescript
+.select()  // ❌ Não inclui relações
+```
+
+Quando `updateProfile` no `useAuth.ts` fazia:
+```typescript
+setState(prev => ({ ...prev, profile: data }))  // ❌ Sobrescreve tudo
+```
+O perfil inteiro era substituído pelos dados retornados (sem fotos), perdendo as relações.
+
+**Solução:**
+Modificado `updateProfile` em `hooks/useAuth.ts` para **mesclar** os dados atualizados com o perfil existente:
+```typescript
+setState(prev => ({
+  ...prev,
+  profile: prev.profile 
+    ? { ...prev.profile, ...data }  // ✅ Preserva photos/interests
+    : data,
+}))
+```
+
+**Arquivos modificados:**
+- `hooks/useAuth.ts` - Função `updateProfile`
+
+**Fluxos impactados:**
+- Onboarding → Home (foto aparece imediatamente)
+- Selecionar Vibe/Modo Agora (foto não desaparece mais)
+- Editar Perfil (foto preservada)
+
