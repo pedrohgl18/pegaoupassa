@@ -390,7 +390,7 @@ export const photos = {
     // Pegar URL assinada (bucket privado) - Validade de 10 anos
     const { data: signedData, error: signedError } = await supabase.storage
       .from('photos')
-      .createSignedUrl(fileName, 60 * 60 * 24 * 365 * 10)
+      .createSignedUrl(fileName, 60 * 60) // 1 hora de validade (Sessão)
 
     if (signedError || !signedData?.signedUrl) {
       console.error('Erro ao gerar URL assinada:', signedError)

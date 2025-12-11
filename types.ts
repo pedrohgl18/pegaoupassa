@@ -15,6 +15,10 @@ export interface Profile {
   vibeStatus?: string;
   vibeExpiresAt?: string;
   neighborhood?: string;
+  latitude?: number;
+  longitude?: number;
+  city?: string;
+  state?: string;
 }
 
 export interface Chat {

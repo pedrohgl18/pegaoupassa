@@ -87,19 +87,33 @@ export const useGeolocation = (user?: any, profile?: Profile | null, isAuthentic
                                 setNeighborhood(fetchedNeighborhood);
 
                                 if (user) {
-                                    // Only update if changed significantly or if it's been a while? 
-                                    // For now, mirroring App.tsx logic which updates every time it runs (controlled by interval)
-                                    await profiles.update(user.id, {
-                                        latitude,
-                                        longitude,
-                                        city: fetchedCity,
-                                        state: fetchedState,
-                                        neighborhood: fetchedNeighborhood
-                                    });
+                                    // Use Haversine formula to check distance moved
+                                    const R = 6371; // Radius of the earth in km
+                                    const dLat = (latitude - (profile?.latitude || 0)) * (Math.PI / 180);
+                                    const dLon = (longitude - (profile?.longitude || 0)) * (Math.PI / 180);
+                                    const a =
+                                        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                                        Math.cos((profile?.latitude || 0) * (Math.PI / 180)) * Math.cos(latitude * (Math.PI / 180)) *
+                                        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+                                    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+                                    const distanceKm = R * c;
+
+                                    if (distanceKm > 0.5) { // Only update if moved > 500m
+                                        console.log(`Moved ${distanceKm.toFixed(2)}km, updating location in DB...`);
+                                        await profiles.update(user.id, {
+                                            latitude,
+                                            longitude,
+                                            city: fetchedCity,
+                                            state: fetchedState,
+                                            neighborhood: fetchedNeighborhood
+                                        });
+                                    } else {
+                                        console.log(`Moved only ${distanceKm.toFixed(2)}km, skipping DB update.`);
+                                    }
                                 }
                             } catch (geoErr) {
                                 console.error('Error in reverse geocoding:', geoErr);
-                                // Update lat/long anyway if geocoding fails
+                                // For error fallback, we might still want to be careful, but preserving existing behavior for now
                                 await profiles.update(user.id, { latitude, longitude });
                             }
                         }
@@ -137,7 +151,7 @@ export const useGeolocation = (user?: any, profile?: Profile | null, isAuthentic
             if (intervalId) clearInterval(intervalId);
             if (appStateListener) appStateListener.remove();
         };
-    }, [isAuthenticated, user?.id, profile]);
+    }, [isAuthenticated, user?.id]); // Removed profile dependency to avoid loops, rely on ref/props if needed, but profile updates cause re-render loop if we dep on it. Ideally use a ref for last location.
 
     return { myLocation, locationDenied, city, state, neighborhood };
 };

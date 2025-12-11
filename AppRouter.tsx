@@ -19,7 +19,7 @@ import EditProfile from './components/EditProfile';
 
 // Lazy Admin
 const AdminRouter = React.lazy(() => import('./admin/AdminRouter'));
-const ADMIN_EMAIL = 'pedrohgl18@gmail.com';
+const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || 'pedrohgl18@gmail.com'; // Fallback for dev
 
 interface AppRouterProps {
     auth: {
