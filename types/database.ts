@@ -44,6 +44,7 @@ export interface Database {
           updated_at: string
           is_incognito: boolean
           read_receipts_enabled: boolean
+          has_seen_tutorial: boolean
         }
         Insert: {
           id: string
@@ -76,6 +77,7 @@ export interface Database {
           updated_at?: string
           is_incognito?: boolean
           read_receipts_enabled?: boolean
+          has_seen_tutorial?: boolean
         }
         Update: {
           id?: string
@@ -108,6 +110,7 @@ export interface Database {
           updated_at?: string
           is_incognito?: boolean
           read_receipts_enabled?: boolean
+          has_seen_tutorial?: boolean
         }
       }
       photos: {

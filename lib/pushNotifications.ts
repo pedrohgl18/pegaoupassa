@@ -34,13 +34,13 @@ export const initPushNotifications = async (userId: string) => {
     // Verificar permissões
     let permStatus = await PushNotifications.checkPermissions();
 
-    if (permStatus.receive === 'prompt') {
-      // Solicitar permissão
-      permStatus = await PushNotifications.requestPermissions();
-    }
-
     if (permStatus.receive !== 'granted') {
-      return { success: false, reason: 'permission-denied' };
+      const result = await PushNotifications.requestPermissions();
+      if (result.receive === 'granted') {
+        permStatus = result;
+      } else {
+        return { success: false, reason: 'permission-denied' };
+      }
     }
 
     // Listener: Token recebido - ADICIONAR ANTES de register()

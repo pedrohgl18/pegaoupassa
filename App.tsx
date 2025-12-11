@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { ThumbsUp, X, Crown, Rocket, Star, Ban, Search, User, ChevronUp, ChevronDown, Hand, Heart, Pencil, SlidersHorizontal, Check, Loader2, ChevronLeft, Ghost, MapPin } from 'lucide-react';
 import { ScreenState, SwipeDirection, Profile as ProfileType } from './types';
 import { DAILY_FREE_SWIPES, VIP_PRICE } from './constants';
@@ -18,13 +18,14 @@ import VibeSelector from './components/VibeSelector';
 import LoadingScreen from './components/LoadingScreen';
 import { useAuth } from './hooks/useAuth';
 import { profiles, swipes, matches, messages, supabase } from './lib/supabase';
+import { initPushNotifications } from './lib/pushNotifications';
 import { Chat } from './types';
 import { Capacitor } from '@capacitor/core';
 import { Geolocation } from '@capacitor/geolocation';
 import TutorialOverlay from './components/TutorialOverlay';
 
 // Helper to calculate age
-const calculateAge = (birthDate: string) => {
+export const calculateAge = (birthDate: string) => {
   const today = new Date();
   const birth = new Date(birthDate);
   let age = today.getFullYear() - birth.getFullYear();
@@ -104,20 +105,13 @@ const App: React.FC = () => {
   const [isTopCardFlipped, setIsTopCardFlipped] = useState(false);
   const [showVipSettingsModal, setShowVipSettingsModal] = useState(false);
   const [showVibeSelector, setShowVibeSelector] = useState(false);
+  const tutorialCheckedRef = useRef(false);
 
   // Derived State
   const currentProfile = feedProfiles[0];
   const nextProfile = feedProfiles[1];
 
-  // Check for tutorial
-  useEffect(() => {
-    if (currentScreen === ScreenState.HOME) {
-      const hasSeen = localStorage.getItem('hasSeenTutorial');
-      if (!hasSeen) {
-        setShowTutorial(true);
-      }
-    }
-  }, [currentScreen]);
+  // Tutorial check removed (duplicate)
 
   const [locationDenied, setLocationDenied] = useState(false);
 
@@ -413,11 +407,17 @@ const App: React.FC = () => {
     };
   }, [user]);
 
-  // Initialize Tutorial
+  // Initialize Tutorial - with small delay to ensure UI is ready
   useEffect(() => {
-    const hasSeenTutorial = localStorage.getItem('hasSeenTutorial');
-    if (!hasSeenTutorial && currentScreen === ScreenState.HOME) {
-      setShowTutorial(true);
+    if (currentScreen === ScreenState.HOME) {
+      const hasSeenTutorial = localStorage.getItem('hasSeenTutorial');
+      if (!hasSeenTutorial) {
+        // Small delay to ensure transitions are finished
+        const timer = setTimeout(() => {
+          setShowTutorial(true);
+        }, 1000);
+        return () => clearTimeout(timer);
+      }
     }
   }, [currentScreen]);
 
@@ -493,8 +493,8 @@ const App: React.FC = () => {
           name: p.name || 'Usuário',
           age: p.age || (p.birth_date ? calculateAge(p.birth_date) : 25),
           bio: p.bio || '',
-          imageUrl: p.photos?.[0]?.url || 'https://picsum.photos/400/600',
-          photos: p.photos?.sort((a: any, b: any) => a.position - b.position).map((ph: any) => ph.url) || ['https://picsum.photos/400/600'],
+          imageUrl: p.photos?.[0]?.url || '',
+          photos: p.photos?.sort((a: any, b: any) => a.position - b.position).map((ph: any) => ph.url) || [],
           distance: p.distance !== undefined ? p.distance : 0,
           verified: p.is_verified || false,
           zodiacSign: p.zodiac_sign,
@@ -547,9 +547,12 @@ const App: React.FC = () => {
     }
   }, [authLoading, isAuthenticated, profile?.onboarding_completed]);
 
-  const dismissTutorial = () => {
+  const dismissTutorial = async () => {
     setShowTutorial(false);
-    localStorage.setItem('hasSeenTutorial', 'true');
+    // Persist to Supabase instead of localStorage
+    if (user) {
+      await updateProfile({ has_seen_tutorial: true });
+    }
   };
 
   const fetchMatches = async () => {
@@ -571,7 +574,7 @@ const App: React.FC = () => {
           id: m.id,
           otherUserId: otherUser.id,
           name: otherUser.name,
-          imageUrl: otherUser.photos?.[0]?.url || 'https://picsum.photos/200',
+          imageUrl: otherUser.photos?.[0]?.url || '',
           lastMessage: lastMsg,
           timestamp: lastTime,
           unreadCount: 0,
@@ -688,23 +691,21 @@ const App: React.FC = () => {
           console.error('Erro no swipe:', error);
           // Reverter em caso de erro crítico (opcional)
         }
+        // Trigger Match UI
+        const profileData = targetId ? viewingProfile : currentProfile;
+        if (profileData) {
+          const myPhoto = profile?.photos?.[0]?.url || user.user_metadata.avatar_url || '';
+          setMatchModalData({
+            isOpen: true,
+            theirName: profileData.name,
+            theirPhotoUrl: profileData.imageUrl,
+            myPhotoUrl: myPhoto,
+          });
 
-        if (match) {
-          // Trigger Match UI
-          const profileData = targetId ? viewingProfile : currentProfile;
-          if (profileData) {
-            const myPhoto = user.user_metadata.avatar_url || 'https://picsum.photos/200';
-            setMatchModalData({
-              isOpen: true,
-              theirName: profileData.name,
-              theirPhotoUrl: profileData.imageUrl,
-              myPhotoUrl: myPhoto,
-            });
-
-            // Se estamos visualizando um perfil VIP, fecha o viewer
-            if (targetId) setViewingProfile(null);
-          }
+          // Se estamos visualizando um perfil VIP, fecha o viewer
+          if (targetId) setViewingProfile(null);
         }
+
 
         // Se foi um PASS no visualizador, fecha o visualizador
         if (action === 'pass' && targetId) {
@@ -743,6 +744,10 @@ const App: React.FC = () => {
 
         // Refresh matches list in background
         fetchMatches();
+        // Also refresh received likes to avoid duplication in ChatList
+        fetchReceivedLikes();
+        // Optimistic update for receivedLikes
+        setReceivedLikes(prev => prev.filter(like => like.profile.id !== swipedProfileId));
 
         // If swiping on feed, check if we need more profiles
         if (!targetId && feedProfiles.length < 5) {
@@ -793,7 +798,13 @@ const App: React.FC = () => {
     }
 
     console.log('Perfil criado com sucesso, redirecionando para HOME');
-    localStorage.removeItem('hasSeenTutorial'); // Reset tutorial for new profile
+    // Tutorial flag is now handled via profile.has_seen_tutorial (default false in DB)
+
+    // Solicitar permissão de notificação (Android Native)
+    if (user) {
+      initPushNotifications(user.id);
+    }
+
     setCurrentScreen(ScreenState.HOME);
   };
 
@@ -870,7 +881,7 @@ const App: React.FC = () => {
       name: profile.name || user.user_metadata.full_name || 'Você',
       age: calculateAge(profile.birth_date || ''),
       bio: profile.bio || '',
-      imageUrl: profile.photos?.[0]?.url || 'https://picsum.photos/200',
+      imageUrl: profile.photos?.[0]?.url || '',
       photos: profile.photos?.sort((a: any, b: any) => a.position - b.position).map((p: any) => p.url) || [],
       distance: 0,
       verified: profile.is_verified || false,
@@ -964,30 +975,7 @@ const App: React.FC = () => {
           />
         </div>
 
-        {/* Action Buttons (Like/Pass) - Properly hooked up */}
-        {!activeChat && (
-          <div className="absolute bottom-10 left-0 right-0 flex justify-center items-center gap-8 pointer-events-auto z-50">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleSwipe('up', viewingProfile.id, true);
-              }}
-              className="w-16 h-16 rounded-full bg-zinc-800/80 backdrop-blur-md flex items-center justify-center text-zinc-400 hover:text-white transition-colors border border-white/10 shadow-lg"
-            >
-              <X size={32} />
-            </button>
-
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleSwipe('down', viewingProfile.id, true);
-              }}
-              className="w-20 h-20 rounded-full bg-gradient-to-b from-brasil-green-light to-brasil-green flex items-center justify-center text-white shadow-xl shadow-brasil-green/30 hover:scale-105 active:scale-95 transition-all border-4 border-white/10"
-            >
-              <Heart size={40} className="fill-white" />
-            </button>
-          </div>
-        )}
+        {/* Action Buttons removed based on feedback - Swipe only */}
       </div>
     );
   };
@@ -1087,6 +1075,16 @@ const App: React.FC = () => {
   };
 
   const renderHome = () => {
+    // Check tutorial on first render of HOME screen
+    if (!tutorialCheckedRef.current && profile) {
+      tutorialCheckedRef.current = true;
+      // Use Supabase profile field instead of localStorage
+      if (!profile.has_seen_tutorial) {
+        // Small delay to ensure UI is ready
+        setTimeout(() => setShowTutorial(true), 500);
+      }
+    }
+
     // Loading State
     if (loadingFeed && feedProfiles.length === 0) {
       return (
@@ -1256,43 +1254,7 @@ const App: React.FC = () => {
             </button>
           </div> */}
 
-          {/* Tutorial Overlay */}
-          {showTutorial && (
-            <div
-              className="absolute inset-0 z-50 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center text-white"
-              onClick={dismissTutorial}
-            >
-              <div className="flex flex-col items-center animate-bounce mb-6">
-                <ChevronUp size={40} className="text-white/50" />
-                <span className="font-bold text-lg mb-1">PASSAR</span>
-                <span className="text-xs text-zinc-400">Deslize para cima</span>
-              </div>
-
-              <div className="w-20 h-28 border-2 border-white/30 rounded-full flex items-center justify-center relative my-3">
-                <div className="w-14 h-14 bg-white/20 rounded-full absolute animate-ping" />
-                <Hand size={36} />
-              </div>
-
-              <div className="flex flex-col items-center animate-bounce mt-6 mb-6">
-                <span className="text-xs text-zinc-400">Deslize para baixo</span>
-                <span className="font-bold text-lg mt-1 text-brasil-green">PEGAR</span>
-                <ChevronDown size={40} className="text-brasil-green/50" />
-              </div>
-
-              {/* Flip Card Instruction */}
-              <div className="flex items-center gap-3 bg-white/10 px-4 py-3 rounded-2xl border border-white/20 mt-4">
-                <div className="w-8 h-8 bg-violet-600 rounded-full flex items-center justify-center text-white text-sm font-bold">
-                  ℹ️
-                </div>
-                <div>
-                  <span className="text-sm font-bold block">Ver detalhes</span>
-                  <span className="text-xs text-zinc-400">Toque no lado direito do card</span>
-                </div>
-              </div>
-
-              <p className="absolute bottom-20 text-sm text-white/50">Toque para começar</p>
-            </div>
-          )}
+          {/* Tutorial Overlay is rendered at root level now */}
         </div>
       </div>
     );

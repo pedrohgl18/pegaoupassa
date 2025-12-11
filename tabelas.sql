@@ -1143,3 +1143,12 @@ USING (auth.uid() = user_id);
 -- =============================================
 
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS last_vibe_activation TIMESTAMP WITH TIME ZONE;
+
+
+-- =============================================
+-- MIGRAÇÃO: Adicionar has_seen_tutorial
+-- Data: 11/12/2025
+-- Descrição: Persiste estado do tutorial no banco
+-- =============================================
+
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS has_seen_tutorial BOOLEAN DEFAULT FALSE;

@@ -35,7 +35,7 @@ const Profile: React.FC<ProfileProps> = ({
 }) => {
     const [showSettings, setShowSettings] = useState(false);
     const sortedPhotos = profile?.photos?.slice().sort((a: any, b: any) => a.position - b.position) || [];
-    const avatarUrl = sortedPhotos[0]?.url || "https://picsum.photos/seed/me/400/400";
+    const avatarUrl = sortedPhotos[0]?.url || "";
     const hasCoverPhoto = sortedPhotos.length > 1;
 
     return (
@@ -73,10 +73,7 @@ const Profile: React.FC<ProfileProps> = ({
                             {profile?.age || (profile?.birth_date ? new Date().getFullYear() - new Date(profile.birth_date).getFullYear() : '')}
                         </span>
                     </h1>
-                    <div className="flex items-center justify-center gap-1 text-zinc-500 text-sm font-medium">
-                        <MapPin size={14} />
-                        {profile?.neighborhood ? `${profile.neighborhood}, ${profile.city}` : (profile?.city ? `${profile.city}, ${profile.state}` : 'Brasil')}
-                    </div>
+
                 </div>
 
                 {/* Stats Cards */}

@@ -73,8 +73,8 @@ const ChatList: React.FC<ChatListProps> = ({
                                                         name: p.name || 'Usuário',
                                                         age: p.age || 25,
                                                         bio: p.bio || '',
-                                                        imageUrl: p.photos?.[0]?.url || 'https://picsum.photos/400/600',
-                                                        photos: p.photos?.map((ph: any) => ph.url) || ['https://picsum.photos/400/600'],
+                                                        imageUrl: p.photos?.[0]?.url || '',
+                                                        photos: p.photos?.map((ph: any) => ph.url) || [],
                                                         distance: p.distance !== undefined ? Math.round(p.distance) : 0,
                                                         verified: p.is_verified || false,
                                                         zodiacSign: p.zodiac_sign,
@@ -90,7 +90,7 @@ const ChatList: React.FC<ChatListProps> = ({
                                         >
                                             <div className="relative w-[4.5rem] h-[4.5rem]">
                                                 <img
-                                                    src={like.profile.photos?.[0]?.url || 'https://picsum.photos/200'}
+                                                    src={like.profile.photos?.[0]?.url || ''}
                                                     className={`w-full h-full rounded-xl object-cover border-2 border-brasil-yellow/50 ${!isVip ? 'blur-md' : ''}`}
                                                     alt="Hidden"
                                                 />

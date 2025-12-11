@@ -824,7 +824,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({
                     <div className={`flex items-center justify-end gap-1 mt-1 ${isMe ? 'text-blue-100' : 'text-zinc-300'}`}>
                       <span className="text-[10px] font-bold">{timestamp}</span>
                       {isMe && (
-                        msg.is_read ? <div className="flex"><Check size={12} strokeWidth={3} /><Check size={12} strokeWidth={3} className="-ml-1.5" /></div> : <Check size={12} strokeWidth={3} />
+                        msg.is_read && currentUserIsVip ? <div className="flex"><Check size={12} strokeWidth={3} /><Check size={12} strokeWidth={3} className="-ml-1.5" /></div> : <Check size={12} strokeWidth={3} />
                       )}
                     </div>
                   </div>

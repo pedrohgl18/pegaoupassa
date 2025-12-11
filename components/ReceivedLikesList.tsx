@@ -99,7 +99,7 @@ const ReceivedLikesList: React.FC<ReceivedLikesListProps> = ({ userId, onBack, o
                             if (!profile) return null;
 
                             const age = profile.birth_date ? calculateAge(profile.birth_date) : 25;
-                            const photoUrl = profile.photos?.[0]?.url || 'https://picsum.photos/400/600';
+                            const photoUrl = profile.photos?.[0]?.url || '';
 
                             return (
                                 <div key={like.id} className="bg-white rounded-2xl shadow-sm border border-zinc-100 overflow-hidden flex flex-col">
