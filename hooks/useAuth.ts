@@ -388,9 +388,13 @@ export function useAuth() {
       return { error }
     }
 
+    // Mesclar dados atualizados com perfil existente para preservar relações (photos, user_interests)
+    // A API retorna apenas campos da tabela, sem relações
     setState(prev => ({
       ...prev,
-      profile: data,
+      profile: prev.profile
+        ? { ...prev.profile, ...data }  // Mantém photos/interests do estado anterior
+        : data,
     }))
 
     return { data, error: null }
