@@ -693,7 +693,8 @@ const App: React.FC = () => {
         }
         // Trigger Match UI
         const profileData = targetId ? viewingProfile : currentProfile;
-        if (profileData) {
+        // CORRECTION: Only show match modal if a match actually happened
+        if (match && profileData) {
           const myPhoto = profile?.photos?.[0]?.url || user.user_metadata.avatar_url || '';
           setMatchModalData({
             isOpen: true,
