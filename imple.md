@@ -380,4 +380,23 @@ src/
 
 1.  **App.tsx deve ser limpo**: Ele serve apenas para "colar" os hooks e passar para o roteador. Não escreva JSX complexo ou `useEffect` de lógica de negócio nele (exceto inicializações globais).
 2.  **Hooks devem ser focados**: Um hook deve fazer uma coisa bem feita (`useGeolocation` só cuida de GPS).
-3.  **Separation of Concerns**: UI fica em `screens/` ou `components/`. Lógica fica em `hooks/`.
+### 14. Auditoria e Otimizações (11/12/2025)
+
+> **Resumo**: Foi realizada uma auditoria de segurança e performance para garantir escalabilidade.
+
+#### 🛡️ Segurança
+*   **URLs Assinadas Seguras**: A validade das URLs de imagens privadas (Storage) foi reduzida de **10 anos** para **1 hora**. Isso impede que links vazados sejam usados indefinidamente.
+*   **Email Admin Protegido**: O email de admin (`pedrohgl18@...`) foi movido do cÃ³digo fonte para `import.meta.env.VITE_ADMIN_EMAIL`.
+
+#### 🚀 Performance
+*   **Otimização de GPS**: O hook `useGeolocation` agora calcula a distância percorrida (Haversine) e **só envia update para o banco se o usuário tiver se movido mais de 500m**.
+    *   *Antes*: 1 write a cada 15 min (96 writes/dia/usuário mesmo parado).
+    *   *Depois*: Writes apenas ao se mover significativamente.
+*   **RPC de Feed**: Filtragem de distância movida para o banco (`get_nearby_profiles`), evitando baixar milhares de perfis para filtrar no JS.
+
+#### 🧹 Boas Práticas (Em progresso)
+*   [x] **Otimização de Imagens**: Implementado `getPublicUrl` + Supabase Transformations (`?width=500&format=webp`) no `SwipeCard`.
+*   [x] **Acessibilidade**: Adicionado `aria-label` em botões de navegação e cards.
+*   [x] **Batch Updates**: Implementado `markBatchAsRead` para evitar N+1 queries no Chat.
+
+---

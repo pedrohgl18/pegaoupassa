@@ -33,6 +33,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ currentScreen, onNavigate }) => {
             <button
               key={item.id}
               onClick={() => onNavigate(item.id)}
+              aria-label={item.label}
               className="relative group flex flex-col items-center justify-center w-12 h-12"
             >
               {/* Active Indicator Background */}

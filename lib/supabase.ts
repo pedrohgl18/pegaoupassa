@@ -387,17 +387,12 @@ export const photos = {
       return { url: null, error: uploadError }
     }
 
-    // Pegar URL assinada (bucket privado) - Validade de 10 anos
-    const { data: signedData, error: signedError } = await supabase.storage
+    // Pegar URL Pública (Bucket 'photos' deve ser Public)
+    const { data: publicData } = supabase.storage
       .from('photos')
-      .createSignedUrl(fileName, 60 * 60) // 1 hora de validade (Sessão)
+      .getPublicUrl(fileName)
 
-    if (signedError || !signedData?.signedUrl) {
-      console.error('Erro ao gerar URL assinada:', signedError)
-      return { url: null, error: signedError }
-    }
-
-    const publicUrl = signedData.signedUrl
+    const publicUrl = publicData.publicUrl
 
     // Salvar no banco de dados
     const { error: dbError } = await supabase
@@ -710,6 +705,21 @@ export const messages = {
         read_at: new Date().toISOString(),
       })
       .eq('id', messageId)
+
+    return { error }
+  },
+
+  // Marcar várias como lidas (Batch)
+  markBatchAsRead: async (messageIds: string[]) => {
+    if (!messageIds || messageIds.length === 0) return { error: null };
+
+    const { error } = await supabase
+      .from('messages')
+      .update({
+        is_read: true,
+        read_at: new Date().toISOString(),
+      })
+      .in('id', messageIds)
 
     return { error }
   },

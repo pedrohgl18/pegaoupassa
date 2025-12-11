@@ -116,6 +116,17 @@ const SwipeCard: React.FC<SwipeCardProps> = ({
       : '0 10px 30px rgba(0,0,0,0.2)',
   };
 
+  // Image Optimization Helper
+  const getOptimizedUrl = (url: string) => {
+    if (!url) return '';
+    if (url.includes('supabase.co/storage/v1/object/public')) {
+      return `${url}?width=500&resize=cover&quality=80&format=webp`;
+    }
+    return url;
+  };
+
+  const optimizedPhotos = photos.map(p => getOptimizedUrl(p));
+
   return (
     <div className={`absolute inset-0 w-full h-full ${isActive ? 'z-10' : 'z-0 scale-95 opacity-50'}`} style={cardStyle}>
       <div
@@ -138,11 +149,15 @@ const SwipeCard: React.FC<SwipeCardProps> = ({
             boxShadow: activeVibe ? `0 0 20px ${activeVibe.color.includes('amber') || activeVibe.color.includes('orange') ? 'rgba(245, 158, 11, 0.5)' : 'rgba(139, 92, 246, 0.5)'}` : undefined // Simple glow fallback
           }}
           onClick={handleTap}
+          role="button"
+          aria-label={`Ver perfil de ${profile.name}`}
         >
           {/* Photo */}
           <div
             className="absolute inset-0 bg-cover bg-center transition-all duration-300"
-            style={{ backgroundImage: `url(${photos[currentPhotoIndex]})` }}
+            style={{ backgroundImage: `url(${optimizedPhotos[currentPhotoIndex]})` }}
+            role="img"
+            aria-label={`Foto ${currentPhotoIndex + 1} de ${profile.name}`}
           />
 
           {/* Overlays (Like/Pass) */}
@@ -222,6 +237,8 @@ const SwipeCard: React.FC<SwipeCardProps> = ({
             setIsFlipped(false);
             if (onFlip) onFlip(false);
           }}
+          role="button"
+          aria-label="Voltar para a foto"
         >
           {/* Header - CENTERED - NAME FIRST */}
           <div className="text-center mb-6 mt-2">
@@ -239,7 +256,7 @@ const SwipeCard: React.FC<SwipeCardProps> = ({
 
           {/* Photos (Small Gallery) */}
           <div className="flex gap-3 overflow-x-auto pb-4 mb-6 scrollbar-hide justify-center px-4">
-            {photos.map((photo, i) => (
+            {optimizedPhotos.map((photo, i) => (
               <div key={i} className="relative group flex-shrink-0">
                 <img src={photo} className="w-16 h-20 object-cover rounded-2xl border-2 border-white shadow-md group-hover:scale-105 transition-transform" />
               </div>

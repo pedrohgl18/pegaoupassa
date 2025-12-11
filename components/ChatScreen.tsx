@@ -193,7 +193,8 @@ const ChatScreen: React.FC<ChatScreenProps> = ({
       );
 
       if (unreadMessages.length > 0) {
-        unreadMessages.forEach((m: any) => messagesApi.markAsRead(m.id));
+        const ids = unreadMessages.map((m: any) => m.id);
+        messagesApi.markBatchAsRead(ids);
       }
     }
     setLoading(false);
