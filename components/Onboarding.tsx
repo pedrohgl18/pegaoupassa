@@ -134,7 +134,6 @@ const Onboarding: React.FC<OnboardingProps> = ({ userId, profile, onComplete }) 
     setSaving(false);
 
     if (error) { alert('Erro ao finalizar. Tente novamente.'); return; }
-    if (error) { alert('Erro ao finalizar. Tente novamente.'); return; }
 
     // Pass photos to parent for optimistic update
     onComplete(photoUrls);

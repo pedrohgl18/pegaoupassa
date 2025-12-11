@@ -779,7 +779,7 @@ const App: React.FC = () => {
     // REMOVIDO: refreshProfile causing race condition with optimistic update
     // refreshProfile();
 
-    if (user && profile) {
+    if (user) {
       // Optimistic Update: Construir objeto de fotos manualmente para exibir imediatamente
       // (Bypassing Android WebView cache ou latência de DB)
       const photoObjects = (photos || []).map((url, index) => ({
@@ -791,8 +791,21 @@ const App: React.FC = () => {
         created_at: new Date().toISOString()
       }));
 
+      // Create profile object even if current profile is null
+      const baseProfile = profile || {
+        id: user.id,
+        email: user.email || '',
+        name: 'Usuário',
+        bio: '',
+        birth_date: '',
+        gender: 'other' as const,
+        looking_for: 'both' as const,
+        photos: [],
+        user_interests: [],
+      };
+
       const updatedProfile = {
-        ...profile,
+        ...baseProfile,
         onboarding_completed: true,
         is_active: true,
         photos: photoObjects
@@ -1543,6 +1556,7 @@ const App: React.FC = () => {
           {currentScreen === ScreenState.ONBOARDING && user && (
             <Onboarding
               userId={user.id}
+              profile={profile}
               onComplete={handleOnboardingComplete}
             />
           )}
