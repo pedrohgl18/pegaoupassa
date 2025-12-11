@@ -133,6 +133,7 @@ const AdminRouter: React.FC<AdminRouterProps> = ({ onClose }) => {
     const [reportsFilter, setReportsFilter] = useState<'pending' | 'all'>('pending');
     const [growthData, setGrowthData] = useState<{ date: string; users: number; matches: number }[]>([]);
     const [growthPeriod, setGrowthPeriod] = useState<7 | 30>(7);
+    const [analyticsView, setAnalyticsView] = useState<'growth' | 'geo'>('growth');
 
     // Verificar acesso
     const isAdmin = user?.email === ADMIN_EMAIL;
@@ -782,92 +783,165 @@ const AdminRouter: React.FC<AdminRouterProps> = ({ onClose }) => {
 
                 return (
                     <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                            <h2 className="text-lg font-semibold text-zinc-900">Crescimento</h2>
-                            <div className="flex gap-1 bg-zinc-100 rounded-lg p-1">
-                                <button
-                                    onClick={() => setGrowthPeriod(7)}
-                                    className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${growthPeriod === 7 ? 'bg-white text-violet-600 shadow-sm' : 'text-zinc-500'
-                                        }`}
-                                >
-                                    7 dias
-                                </button>
-                                <button
-                                    onClick={() => setGrowthPeriod(30)}
-                                    className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${growthPeriod === 30 ? 'bg-white text-violet-600 shadow-sm' : 'text-zinc-500'
-                                        }`}
-                                >
-                                    30 dias
-                                </button>
-                            </div>
+                        {/* Sub-navegação interna */}
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => { setAnalyticsView('growth'); fetchGrowthData(); }}
+                                className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all flex items-center justify-center gap-2 ${analyticsView === 'growth'
+                                        ? 'bg-violet-500 text-white shadow-lg shadow-violet-200'
+                                        : 'bg-white text-zinc-600 border border-zinc-200'
+                                    }`}
+                            >
+                                <TrendingUp className="w-4 h-4" />
+                                Crescimento
+                            </button>
+                            <button
+                                onClick={() => { setAnalyticsView('geo'); fetchGeoData(); }}
+                                className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all flex items-center justify-center gap-2 ${analyticsView === 'geo'
+                                        ? 'bg-violet-500 text-white shadow-lg shadow-violet-200'
+                                        : 'bg-white text-zinc-600 border border-zinc-200'
+                                    }`}
+                            >
+                                <MapPin className="w-4 h-4" />
+                                Geografia
+                            </button>
                         </div>
 
-                        {/* Legenda */}
-                        <div className="flex gap-4 text-xs">
-                            <div className="flex items-center gap-1">
-                                <div className="w-3 h-3 rounded bg-violet-500" />
-                                <span className="text-zinc-600">Novos Usuários</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                                <div className="w-3 h-3 rounded bg-pink-500" />
-                                <span className="text-zinc-600">Matches</span>
-                            </div>
-                        </div>
-
-                        {/* Gráfico de Barras */}
-                        <div className="bg-white rounded-xl p-4 border border-zinc-100">
-                            {growthData.length === 0 ? (
-                                <div className="flex items-center justify-center h-48">
-                                    <RefreshCw className="w-6 h-6 text-violet-500 animate-spin" />
+                        {/* Conteúdo: Crescimento */}
+                        {analyticsView === 'growth' && (
+                            <>
+                                <div className="flex items-center justify-between">
+                                    <h3 className="text-sm font-semibold text-zinc-700">Novos por dia</h3>
+                                    <div className="flex gap-1 bg-zinc-100 rounded-lg p-1">
+                                        <button
+                                            onClick={() => setGrowthPeriod(7)}
+                                            className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${growthPeriod === 7 ? 'bg-white text-violet-600 shadow-sm' : 'text-zinc-500'
+                                                }`}
+                                        >
+                                            7d
+                                        </button>
+                                        <button
+                                            onClick={() => setGrowthPeriod(30)}
+                                            className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${growthPeriod === 30 ? 'bg-white text-violet-600 shadow-sm' : 'text-zinc-500'
+                                                }`}
+                                        >
+                                            30d
+                                        </button>
+                                    </div>
                                 </div>
-                            ) : (
-                                <div className="space-y-3">
-                                    {growthData.map((day, i) => (
-                                        <div key={day.date} className="flex items-center gap-3">
-                                            <span className="w-10 text-xs text-zinc-400 text-right">{day.date}</span>
-                                            <div className="flex-1 flex gap-1">
-                                                {/* Barra de Usuários */}
-                                                <div
-                                                    className="h-4 bg-violet-500 rounded-sm transition-all"
-                                                    style={{ width: `${(day.users / maxValue) * 50}%`, minWidth: day.users > 0 ? '4px' : '0' }}
-                                                    title={`${day.users} usuários`}
-                                                />
-                                                {/* Barra de Matches */}
-                                                <div
-                                                    className="h-4 bg-pink-500 rounded-sm transition-all"
-                                                    style={{ width: `${(day.matches / maxValue) * 50}%`, minWidth: day.matches > 0 ? '4px' : '0' }}
-                                                    title={`${day.matches} matches`}
-                                                />
-                                            </div>
-                                            <div className="flex gap-2 text-xs text-zinc-500 w-16 justify-end">
-                                                <span className="text-violet-600">{day.users}</span>
-                                                <span className="text-pink-500">{day.matches}</span>
-                                            </div>
+
+                                <div className="flex gap-4 text-xs">
+                                    <div className="flex items-center gap-1">
+                                        <div className="w-3 h-3 rounded bg-violet-500" />
+                                        <span className="text-zinc-600">Usuários</span>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                        <div className="w-3 h-3 rounded bg-pink-500" />
+                                        <span className="text-zinc-600">Matches</span>
+                                    </div>
+                                </div>
+
+                                <div className="bg-white rounded-xl p-4 border border-zinc-100">
+                                    {growthData.length === 0 ? (
+                                        <div className="flex items-center justify-center h-32">
+                                            <RefreshCw className="w-6 h-6 text-violet-500 animate-spin" />
                                         </div>
+                                    ) : (
+                                        <div className="space-y-2">
+                                            {growthData.map((day) => (
+                                                <div key={day.date} className="flex items-center gap-2">
+                                                    <span className="w-10 text-xs text-zinc-400 text-right">{day.date}</span>
+                                                    <div className="flex-1 flex gap-1">
+                                                        <div
+                                                            className="h-3 bg-violet-500 rounded-sm"
+                                                            style={{ width: `${(day.users / maxValue) * 50}%`, minWidth: day.users > 0 ? '3px' : '0' }}
+                                                        />
+                                                        <div
+                                                            className="h-3 bg-pink-500 rounded-sm"
+                                                            style={{ width: `${(day.matches / maxValue) * 50}%`, minWidth: day.matches > 0 ? '3px' : '0' }}
+                                                        />
+                                                    </div>
+                                                    <div className="flex gap-2 text-xs w-12 justify-end">
+                                                        <span className="text-violet-600">{day.users}</span>
+                                                        <span className="text-pink-500">{day.matches}</span>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="bg-violet-50 rounded-xl p-3 border border-violet-100">
+                                        <div className="text-xl font-bold text-violet-600">
+                                            {growthData.reduce((sum, d) => sum + d.users, 0)}
+                                        </div>
+                                        <div className="text-xs text-violet-500">Usuários ({growthPeriod}d)</div>
+                                    </div>
+                                    <div className="bg-pink-50 rounded-xl p-3 border border-pink-100">
+                                        <div className="text-xl font-bold text-pink-600">
+                                            {growthData.reduce((sum, d) => sum + d.matches, 0)}
+                                        </div>
+                                        <div className="text-xs text-pink-500">Matches ({growthPeriod}d)</div>
+                                    </div>
+                                </div>
+                            </>
+                        )}
+
+                        {/* Conteúdo: Geografia */}
+                        {analyticsView === 'geo' && (
+                            <>
+                                <div className="flex gap-2">
+                                    {(['state', 'city', 'neighborhood'] as const).map(type => (
+                                        <button
+                                            key={type}
+                                            onClick={() => setGeoGroupBy(type)}
+                                            className={`flex-1 py-2 rounded-lg text-xs font-medium transition-colors ${geoGroupBy === type
+                                                    ? 'bg-violet-100 text-violet-700'
+                                                    : 'bg-zinc-100 text-zinc-500'
+                                                }`}
+                                        >
+                                            {type === 'state' ? 'Estado' : type === 'city' ? 'Cidade' : 'Bairro'}
+                                        </button>
                                     ))}
                                 </div>
-                            )}
-                        </div>
 
-                        {/* Totais */}
-                        <div className="grid grid-cols-2 gap-3">
-                            <div className="bg-violet-50 rounded-xl p-4 border border-violet-100">
-                                <div className="text-2xl font-bold text-violet-600">
-                                    {growthData.reduce((sum, d) => sum + d.users, 0)}
+                                <div className="bg-white rounded-xl p-4 border border-zinc-100 space-y-2">
+                                    {geoData.length === 0 ? (
+                                        <div className="flex items-center justify-center h-32">
+                                            <RefreshCw className="w-6 h-6 text-violet-500 animate-spin" />
+                                        </div>
+                                    ) : (
+                                        geoData.map((item, i) => {
+                                            const maxCount = geoData[0]?.count || 1;
+                                            const percentage = (item.count / maxCount) * 100;
+
+                                            return (
+                                                <div key={item.name} className="flex items-center gap-2">
+                                                    <span className="w-5 text-xs text-zinc-400 text-right">{i + 1}</span>
+                                                    <div className="flex-1">
+                                                        <div className="flex justify-between text-xs mb-1">
+                                                            <span className="font-medium text-zinc-700 truncate">{item.name}</span>
+                                                            <span className="text-zinc-500">{item.count}</span>
+                                                        </div>
+                                                        <div className="w-full bg-zinc-100 rounded-full h-2">
+                                                            <div
+                                                                className="h-2 rounded-full bg-violet-500"
+                                                                style={{ width: `${percentage}%` }}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })
+                                    )}
                                 </div>
-                                <div className="text-xs text-violet-500">Novos Usuários ({growthPeriod}d)</div>
-                            </div>
-                            <div className="bg-pink-50 rounded-xl p-4 border border-pink-100">
-                                <div className="text-2xl font-bold text-pink-600">
-                                    {growthData.reduce((sum, d) => sum + d.matches, 0)}
-                                </div>
-                                <div className="text-xs text-pink-500">Matches ({growthPeriod}d)</div>
-                            </div>
-                        </div>
+                            </>
+                        )}
 
                         <button
-                            onClick={fetchGrowthData}
-                            className="w-full py-3 bg-violet-500 text-white rounded-lg font-medium flex items-center justify-center gap-2"
+                            onClick={() => analyticsView === 'growth' ? fetchGrowthData() : fetchGeoData()}
+                            className="w-full py-2.5 bg-violet-500 text-white rounded-lg font-medium flex items-center justify-center gap-2 text-sm"
                         >
                             <RefreshCw className="w-4 h-4" />
                             Atualizar
