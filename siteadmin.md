@@ -202,18 +202,27 @@ src/
 
 ---
 
-## 8. Alertas Automáticos (Futuro)
+## 8. Alertas Automáticos ✅
 
-| Alerta | Condição |
-|--------|----------|
-| Usuário Suspeito | > 100 likes em 1 hora |
-| Denúncias em Massa | Usuário com 3+ reports em 24h |
-| Quota de Storage | Uso > 80% |
-| Quota de Database | Uso > 80% |
-| App Parado (Edge Functions) | 0 invocações em 24h |
+| Alerta | Condição | Status |
+|--------|----------|--------|
+| Usuário Suspeito | > 100 likes em 1 hora | ✅ Implementado |
+| Denúncias em Massa | Usuário com 3+ reports em 24h | ✅ Implementado |
+| Quota de Database | > 400 usuários (threshold) | ✅ Implementado |
+| Denúncias Pendentes | > 5 pendentes | ✅ Implementado |
 
 ---
 
-**Status**: ✅ Implementação COMPLETA (P0/P1/P2/P3)
+## 9. Funcionalidades Extras Implementadas
+
+| Feature | Descrição |
+|---------|-----------|
+| **Resetar Likes** | Botão para zerar `daily_likes_count` de um usuário |
+| **Ver Perfil Completo** | Modal com fotos, dados e ações rápidas (VIP/Ban) |
+| **Tabs com Scroll** | 6 abas (Home, Users, Reports, Analytics, Quota, Logs) com scroll horizontal |
+
+---
+
+**Status**: ✅ Implementação COMPLETA (P0/P1/P2/P3 + Extras)
 **Última Atualização**: 11/12/2025
 **Arquivo Principal**: `admin/AdminRouter.tsx`

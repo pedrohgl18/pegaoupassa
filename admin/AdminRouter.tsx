@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
-import { ArrowLeft, LayoutDashboard, Users, MapPin, Database, Shield, Crown, Ban, Search, ChevronDown, ChevronUp, RefreshCw, AlertTriangle, CheckCircle, XCircle, TrendingUp, FileText } from 'lucide-react';
+import { ArrowLeft, LayoutDashboard, Users, MapPin, Database, Shield, Crown, Ban, Search, ChevronDown, ChevronUp, RefreshCw, AlertTriangle, CheckCircle, XCircle, TrendingUp, FileText, Eye, RotateCcw, Bell, X } from 'lucide-react';
 
 // ============================================
 // CONSTANTES DE ACESSO
@@ -67,6 +67,12 @@ interface AdminLog {
     details: any;
     created_at: string;
     target_user?: { name: string; email: string };
+}
+
+interface AdminAlert {
+    type: 'warning' | 'danger';
+    title: string;
+    description: string;
 }
 
 // ============================================
@@ -145,6 +151,8 @@ const AdminRouter: React.FC<AdminRouterProps> = ({ onClose }) => {
     const [growthPeriod, setGrowthPeriod] = useState<7 | 30>(7);
     const [analyticsView, setAnalyticsView] = useState<'growth' | 'geo'>('growth');
     const [adminLogs, setAdminLogs] = useState<AdminLog[]>([]);
+    const [alerts, setAlerts] = useState<AdminAlert[]>([]);
+    const [selectedUser, setSelectedUser] = useState<UserRow | null>(null);
 
     // Verificar acesso
     const isAdmin = user?.email === ADMIN_EMAIL;
@@ -217,11 +225,93 @@ const AdminRouter: React.FC<AdminRouterProps> = ({ onClose }) => {
                 vipUsers: vipUsers || 0,
                 matchRate,
             });
+
+            // Buscar alertas automáticos
+            await fetchAlerts();
         } catch (err) {
             console.error('Erro ao buscar stats:', err);
         } finally {
             setLoading(false);
         }
+    };
+
+    // Buscar alertas automáticos
+    const fetchAlerts = async () => {
+        const newAlerts: AdminAlert[] = [];
+
+        // 1. Usuário suspeito (>100 likes em 1 hora)
+        const hourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+        const { data: suspectUsers } = await supabase
+            .from('swipes')
+            .select('swiper_id')
+            .eq('action', 'like')
+            .gte('created_at', hourAgo);
+
+        if (suspectUsers) {
+            const counts: Record<string, number> = {};
+            suspectUsers.forEach(s => {
+                counts[s.swiper_id] = (counts[s.swiper_id] || 0) + 1;
+            });
+            const suspects = Object.entries(counts).filter(([_, c]) => c > 100);
+            if (suspects.length > 0) {
+                newAlerts.push({
+                    type: 'danger',
+                    title: 'Usuário Suspeito',
+                    description: `${suspects.length} usuário(s) com >100 likes na última hora`
+                });
+            }
+        }
+
+        // 2. Denúncias em massa (3+ reports em 24h)
+        const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+        const { data: recentReports } = await supabase
+            .from('reports')
+            .select('reported_id')
+            .gte('created_at', dayAgo);
+
+        if (recentReports) {
+            const reportCounts: Record<string, number> = {};
+            recentReports.forEach(r => {
+                reportCounts[r.reported_id] = (reportCounts[r.reported_id] || 0) + 1;
+            });
+            const massReported = Object.entries(reportCounts).filter(([_, c]) => c >= 3);
+            if (massReported.length > 0) {
+                newAlerts.push({
+                    type: 'danger',
+                    title: 'Denúncias em Massa',
+                    description: `${massReported.length} usuário(s) com 3+ denúncias em 24h`
+                });
+            }
+        }
+
+        // 3. Alerta de Quota (simulado - 400 usuários como threshold)
+        const { count: totalProfiles } = await supabase
+            .from('profiles')
+            .select('*', { count: 'exact', head: true });
+
+        if (totalProfiles && totalProfiles > 400) {
+            newAlerts.push({
+                type: 'warning',
+                title: 'Quota de Banco',
+                description: `${totalProfiles} perfis cadastrados. Considere monitorar tamanho do DB.`
+            });
+        }
+
+        // 4. Denúncias pendentes
+        const { count: pendingReports } = await supabase
+            .from('reports')
+            .select('*', { count: 'exact', head: true })
+            .eq('status', 'pending');
+
+        if (pendingReports && pendingReports > 5) {
+            newAlerts.push({
+                type: 'warning',
+                title: 'Denúncias Pendentes',
+                description: `${pendingReports} denúncias aguardando revisão`
+            });
+        }
+
+        setAlerts(newAlerts);
     };
 
     // Buscar usuários
@@ -325,6 +415,17 @@ const AdminRouter: React.FC<AdminRouterProps> = ({ onClose }) => {
             userId
         );
 
+        fetchUsers();
+    };
+
+    // Resetar likes diários
+    const resetLikes = async (userId: string) => {
+        await supabase.from('profiles').update({
+            daily_likes_count: 0,
+            daily_likes_reset_at: new Date().toISOString().split('T')[0]
+        }).eq('id', userId);
+
+        await logAdminAction('likes_reset', userId);
         fetchUsers();
     };
 
@@ -509,6 +610,28 @@ const AdminRouter: React.FC<AdminRouterProps> = ({ onClose }) => {
                     <div className="space-y-6">
                         <h2 className="text-lg font-semibold text-zinc-900">Dashboard</h2>
 
+                        {/* Alertas Automáticos */}
+                        {alerts.length > 0 && (
+                            <div className="space-y-2">
+                                {alerts.map((alert, i) => (
+                                    <div
+                                        key={i}
+                                        className={`flex items-start gap-3 p-3 rounded-lg ${alert.type === 'danger' ? 'bg-red-50 border border-red-200' : 'bg-amber-50 border border-amber-200'
+                                            }`}
+                                    >
+                                        <Bell className={`w-5 h-5 flex-shrink-0 ${alert.type === 'danger' ? 'text-red-600' : 'text-amber-600'
+                                            }`} />
+                                        <div className="flex-1 min-w-0">
+                                            <div className={`font-medium text-sm ${alert.type === 'danger' ? 'text-red-800' : 'text-amber-800'
+                                                }`}>{alert.title}</div>
+                                            <div className={`text-xs ${alert.type === 'danger' ? 'text-red-600' : 'text-amber-600'
+                                                }`}>{alert.description}</div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
                         {/* KPIs Grid */}
                         <div className="grid grid-cols-2 gap-3">
                             <StatsCard
@@ -635,6 +758,20 @@ const AdminRouter: React.FC<AdminRouterProps> = ({ onClose }) => {
                                             title={u.is_active ? 'Banir' : 'Desbanir'}
                                         >
                                             <Ban className="w-4 h-4" />
+                                        </button>
+                                        <button
+                                            onClick={() => resetLikes(u.id)}
+                                            className="p-2 rounded-lg bg-zinc-100 text-zinc-500"
+                                            title="Resetar Likes"
+                                        >
+                                            <RotateCcw className="w-4 h-4" />
+                                        </button>
+                                        <button
+                                            onClick={() => setSelectedUser(u)}
+                                            className="p-2 rounded-lg bg-violet-100 text-violet-600"
+                                            title="Ver Perfil"
+                                        >
+                                            <Eye className="w-4 h-4" />
                                         </button>
                                     </div>
                                 </div>
@@ -1097,29 +1234,107 @@ const AdminRouter: React.FC<AdminRouterProps> = ({ onClose }) => {
                     <div className="w-9" />
                 </div>
 
-                {/* Tabs */}
-                <div className="flex border-t border-zinc-100">
+                {/* Tabs com scroll horizontal */}
+                <div className="flex overflow-x-auto border-t border-zinc-100 scrollbar-hide">
                     {[
                         { id: 'dashboard', icon: LayoutDashboard, label: 'Home' },
                         { id: 'users', icon: Users, label: 'Users' },
                         { id: 'reports', icon: AlertTriangle, label: 'Reports' },
-                        { id: 'analytics', icon: TrendingUp, label: 'Growth' },
+                        { id: 'analytics', icon: TrendingUp, label: 'Analytics' },
+                        { id: 'quota', icon: Database, label: 'Quota' },
                         { id: 'logs', icon: FileText, label: 'Logs' },
                     ].map(tab => (
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id as any)}
-                            className={`flex-1 py-3 flex flex-col items-center gap-1 border-b-2 transition-colors ${activeTab === tab.id
+                            className={`flex-shrink-0 px-4 py-3 flex flex-col items-center gap-1 border-b-2 transition-colors ${activeTab === tab.id
                                 ? 'border-violet-500 text-violet-600'
                                 : 'border-transparent text-zinc-400'
                                 }`}
                         >
                             <tab.icon className="w-4 h-4" />
-                            <span className="text-xs font-medium">{tab.label}</span>
+                            <span className="text-xs font-medium whitespace-nowrap">{tab.label}</span>
                         </button>
                     ))}
                 </div>
             </div>
+
+            {/* Modal Ver Perfil */}
+            {selectedUser && (
+                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-2xl max-w-sm w-full max-h-[80vh] overflow-y-auto">
+                        <div className="p-4 border-b border-zinc-100 flex items-center justify-between sticky top-0 bg-white">
+                            <h3 className="font-semibold text-zinc-900">Perfil Completo</h3>
+                            <button onClick={() => setSelectedUser(null)} className="p-2 -mr-2">
+                                <X className="w-5 h-5 text-zinc-400" />
+                            </button>
+                        </div>
+
+                        {/* Fotos */}
+                        <div className="p-4 space-y-4">
+                            {selectedUser.photos && selectedUser.photos.length > 0 ? (
+                                <div className="grid grid-cols-3 gap-2">
+                                    {selectedUser.photos.map((photo, i) => (
+                                        <img
+                                            key={i}
+                                            src={photo.url}
+                                            alt={`Foto ${i + 1}`}
+                                            className="w-full aspect-square object-cover rounded-lg"
+                                        />
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="bg-zinc-100 rounded-lg p-8 text-center text-zinc-400">
+                                    Sem fotos
+                                </div>
+                            )}
+
+                            {/* Info */}
+                            <div className="space-y-2">
+                                <div className="flex items-center gap-2">
+                                    <span className="font-semibold text-lg">{selectedUser.name || 'Sem nome'}</span>
+                                    {selectedUser.is_vip && (
+                                        <span className="bg-amber-100 text-amber-600 text-xs px-2 py-0.5 rounded-full">VIP</span>
+                                    )}
+                                    {!selectedUser.is_active && (
+                                        <span className="bg-red-100 text-red-600 text-xs px-2 py-0.5 rounded-full">Banido</span>
+                                    )}
+                                </div>
+                                <div className="text-sm text-zinc-500">{selectedUser.email}</div>
+                                {selectedUser.city && selectedUser.state && (
+                                    <div className="text-sm text-zinc-500">📍 {selectedUser.city}, {selectedUser.state}</div>
+                                )}
+                                <div className="text-xs text-zinc-400">
+                                    Criado em: {new Date(selectedUser.created_at).toLocaleDateString('pt-BR')}
+                                </div>
+                                {selectedUser.vip_expires_at && (
+                                    <div className="text-xs text-amber-600">
+                                        VIP até: {new Date(selectedUser.vip_expires_at).toLocaleDateString('pt-BR')}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Ações Rápidas */}
+                            <div className="flex gap-2 pt-2">
+                                <button
+                                    onClick={() => { toggleVip(selectedUser.id, selectedUser.is_vip); setSelectedUser(null); }}
+                                    className={`flex-1 py-2 rounded-lg text-sm font-medium ${selectedUser.is_vip ? 'bg-zinc-100 text-zinc-600' : 'bg-amber-500 text-white'
+                                        }`}
+                                >
+                                    {selectedUser.is_vip ? 'Remover VIP' : 'Dar VIP'}
+                                </button>
+                                <button
+                                    onClick={() => { toggleBan(selectedUser.id, selectedUser.is_active); setSelectedUser(null); }}
+                                    className={`flex-1 py-2 rounded-lg text-sm font-medium ${selectedUser.is_active ? 'bg-red-500 text-white' : 'bg-green-500 text-white'
+                                        }`}
+                                >
+                                    {selectedUser.is_active ? 'Banir' : 'Desbanir'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Content */}
             <div className="p-4">
