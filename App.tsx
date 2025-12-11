@@ -1364,14 +1364,18 @@ const App: React.FC = () => {
           <div className="space-y-3">
             <div className="flex justify-between text-sm font-bold">
               <span className="text-zinc-500">Distância Máxima</span>
-              <span className="text-brasil-blue">{maxDistance >= 100 ? '100km+' : `${maxDistance}km`}</span>
+              <span className="text-brasil-blue">{maxDistance >= 999 ? '100km+' : `${maxDistance}km`}</span>
             </div>
             <input
               type="range"
               min="1"
-              max="100"
-              value={maxDistance}
-              onChange={(e) => setMaxDistance(parseInt(e.target.value))}
+              max="101"
+              value={maxDistance >= 999 ? 101 : maxDistance}
+              onChange={(e) => {
+                const val = parseInt(e.target.value);
+                // When slider is at max (101), save as 999 to indicate "unlimited"
+                setMaxDistance(val >= 101 ? 999 : val);
+              }}
               className="w-full h-2 bg-zinc-200 rounded-lg appearance-none cursor-pointer accent-brasil-green"
             />
           </div>
