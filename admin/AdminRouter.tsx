@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
-import { ArrowLeft, LayoutDashboard, Users, MapPin, Database, Shield, Crown, Ban, Search, ChevronDown, ChevronUp, RefreshCw } from 'lucide-react';
+import { ArrowLeft, LayoutDashboard, Users, MapPin, Database, Shield, Crown, Ban, Search, ChevronDown, ChevronUp, RefreshCw, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
 
 // ============================================
 // CONSTANTES DE ACESSO
@@ -45,6 +45,18 @@ interface QuotaInfo {
     tableName: string;
     rowCount: number;
     sizeEstimate?: string;
+}
+
+interface ReportRow {
+    id: string;
+    reporter_id: string;
+    reported_id: string;
+    reason: string;
+    description: string | null;
+    status: 'pending' | 'resolved' | 'dismissed';
+    created_at: string;
+    reporter: { name: string; email: string; photos: { url: string }[] };
+    reported: { name: string; email: string; photos: { url: string }[]; is_active: boolean };
 }
 
 // ============================================
@@ -107,7 +119,7 @@ interface AdminRouterProps {
 
 const AdminRouter: React.FC<AdminRouterProps> = ({ onClose }) => {
     const { user } = useAuth();
-    const [activeTab, setActiveTab] = useState<'dashboard' | 'users' | 'geography' | 'quota'>('dashboard');
+    const [activeTab, setActiveTab] = useState<'dashboard' | 'users' | 'geography' | 'quota' | 'reports'>('dashboard');
     const [stats, setStats] = useState<AdminStats | null>(null);
     const [users, setUsers] = useState<UserRow[]>([]);
     const [geoData, setGeoData] = useState<GeoData[]>([]);
@@ -117,6 +129,8 @@ const AdminRouter: React.FC<AdminRouterProps> = ({ onClose }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [filterState, setFilterState] = useState('');
     const [filterVip, setFilterVip] = useState<'all' | 'vip' | 'free'>('all');
+    const [reports, setReports] = useState<ReportRow[]>([]);
+    const [reportsFilter, setReportsFilter] = useState<'pending' | 'all'>('pending');
 
     // Verificar acesso
     const isAdmin = user?.email === ADMIN_EMAIL;
@@ -285,6 +299,44 @@ const AdminRouter: React.FC<AdminRouterProps> = ({ onClose }) => {
         fetchUsers();
     };
 
+    // Buscar denúncias
+    const fetchReports = async () => {
+        let query = supabase
+            .from('reports')
+            .select(`
+                *,
+                reporter:profiles!reports_reporter_id_fkey(name, email, photos(url)),
+                reported:profiles!reports_reported_id_fkey(name, email, photos(url), is_active)
+            `)
+            .order('created_at', { ascending: false });
+
+        if (reportsFilter === 'pending') {
+            query = query.eq('status', 'pending');
+        }
+
+        const { data } = await query.limit(50);
+        setReports(data || []);
+    };
+
+    // Resolver denúncia
+    const resolveReport = async (reportId: string, action: 'ban' | 'dismiss') => {
+        const report = reports.find(r => r.id === reportId);
+        if (!report) return;
+
+        if (action === 'ban') {
+            if (!confirm(`Banir ${report.reported?.name || 'usuário'}? Isso irá desativar a conta.`)) return;
+            // Banir usuário
+            await supabase.from('profiles').update({ is_active: false }).eq('id', report.reported_id);
+        }
+
+        // Atualizar status da denúncia
+        await supabase.from('reports').update({
+            status: action === 'ban' ? 'resolved' : 'dismissed'
+        }).eq('id', reportId);
+
+        fetchReports();
+    };
+
     // Effects
     useEffect(() => {
         if (isAdmin) {
@@ -304,6 +356,12 @@ const AdminRouter: React.FC<AdminRouterProps> = ({ onClose }) => {
             fetchGeoData();
         }
     }, [activeTab, geoGroupBy]);
+
+    useEffect(() => {
+        if (isAdmin && activeTab === 'reports') {
+            fetchReports();
+        }
+    }, [activeTab, reportsFilter]);
 
     // Se não é admin, bloqueia
     if (!isAdmin) {
@@ -489,8 +547,8 @@ const AdminRouter: React.FC<AdminRouterProps> = ({ onClose }) => {
                                     key={type}
                                     onClick={() => setGeoGroupBy(type)}
                                     className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${geoGroupBy === type
-                                            ? 'bg-violet-500 text-white'
-                                            : 'bg-zinc-100 text-zinc-600'
+                                        ? 'bg-violet-500 text-white'
+                                        : 'bg-zinc-100 text-zinc-600'
                                         }`}
                                 >
                                     {type === 'state' ? 'Estado' : type === 'city' ? 'Cidade' : 'Bairro'}
@@ -567,6 +625,109 @@ const AdminRouter: React.FC<AdminRouterProps> = ({ onClose }) => {
                         </button>
                     </div>
                 );
+
+            case 'reports':
+                return (
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <h2 className="text-lg font-semibold text-zinc-900">Fila de Denúncias</h2>
+                            <select
+                                value={reportsFilter}
+                                onChange={(e) => setReportsFilter(e.target.value as any)}
+                                className="px-3 py-1.5 border border-zinc-200 rounded-lg text-sm"
+                            >
+                                <option value="pending">Pendentes</option>
+                                <option value="all">Todas</option>
+                            </select>
+                        </div>
+
+                        {reports.length === 0 ? (
+                            <div className="text-center py-12">
+                                <CheckCircle className="w-12 h-12 text-green-400 mx-auto mb-3" />
+                                <p className="text-zinc-500">Nenhuma denúncia pendente!</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-3">
+                                {reports.map(r => (
+                                    <div key={r.id} className="bg-white rounded-xl p-4 border border-zinc-100 shadow-sm">
+                                        {/* Header */}
+                                        <div className="flex items-start justify-between mb-3">
+                                            <div className="flex items-center gap-2">
+                                                <AlertTriangle className={`w-4 h-4 ${r.status === 'pending' ? 'text-amber-500' :
+                                                        r.status === 'resolved' ? 'text-red-500' : 'text-zinc-400'
+                                                    }`} />
+                                                <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${r.status === 'pending' ? 'bg-amber-100 text-amber-700' :
+                                                        r.status === 'resolved' ? 'bg-red-100 text-red-700' :
+                                                            'bg-zinc-100 text-zinc-600'
+                                                    }`}>
+                                                    {r.status === 'pending' ? 'Pendente' :
+                                                        r.status === 'resolved' ? 'Banido' : 'Ignorado'}
+                                                </span>
+                                            </div>
+                                            <span className="text-xs text-zinc-400">
+                                                {new Date(r.created_at).toLocaleDateString('pt-BR')}
+                                            </span>
+                                        </div>
+
+                                        {/* Reported User */}
+                                        <div className="flex items-center gap-3 mb-3 p-2 bg-red-50 rounded-lg">
+                                            <img
+                                                src={r.reported?.photos?.[0]?.url || `https://ui-avatars.com/api/?name=${r.reported?.name}`}
+                                                className="w-10 h-10 rounded-full object-cover"
+                                                alt=""
+                                            />
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="font-medium text-zinc-900 truncate">
+                                                        {r.reported?.name || 'Usuário'}
+                                                    </span>
+                                                    {!r.reported?.is_active && (
+                                                        <span className="text-xs text-red-500">BANIDO</span>
+                                                    )}
+                                                </div>
+                                                <div className="text-xs text-zinc-500">Denunciado</div>
+                                            </div>
+                                        </div>
+
+                                        {/* Reason */}
+                                        <div className="mb-3">
+                                            <div className="text-xs font-medium text-zinc-500 mb-1">Motivo</div>
+                                            <div className="text-sm text-zinc-800 font-medium">{r.reason}</div>
+                                            {r.description && (
+                                                <div className="text-sm text-zinc-600 mt-1">{r.description}</div>
+                                            )}
+                                        </div>
+
+                                        {/* Reporter */}
+                                        <div className="text-xs text-zinc-400 mb-3">
+                                            Reportado por: {r.reporter?.name || 'Anônimo'}
+                                        </div>
+
+                                        {/* Actions */}
+                                        {r.status === 'pending' && (
+                                            <div className="flex gap-2">
+                                                <button
+                                                    onClick={() => resolveReport(r.id, 'ban')}
+                                                    className="flex-1 py-2 bg-red-500 text-white rounded-lg text-sm font-medium flex items-center justify-center gap-1"
+                                                >
+                                                    <Ban className="w-4 h-4" />
+                                                    Banir Usuário
+                                                </button>
+                                                <button
+                                                    onClick={() => resolveReport(r.id, 'dismiss')}
+                                                    className="flex-1 py-2 bg-zinc-100 text-zinc-600 rounded-lg text-sm font-medium flex items-center justify-center gap-1"
+                                                >
+                                                    <XCircle className="w-4 h-4" />
+                                                    Ignorar
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                );
         }
     };
 
@@ -590,6 +751,7 @@ const AdminRouter: React.FC<AdminRouterProps> = ({ onClose }) => {
                     {[
                         { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard' },
                         { id: 'users', icon: Users, label: 'Usuários' },
+                        { id: 'reports', icon: AlertTriangle, label: 'Reports' },
                         { id: 'geography', icon: MapPin, label: 'Geo' },
                         { id: 'quota', icon: Database, label: 'Quotas' },
                     ].map(tab => (
@@ -597,8 +759,8 @@ const AdminRouter: React.FC<AdminRouterProps> = ({ onClose }) => {
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id as any)}
                             className={`flex-1 py-3 flex flex-col items-center gap-1 border-b-2 transition-colors ${activeTab === tab.id
-                                    ? 'border-violet-500 text-violet-600'
-                                    : 'border-transparent text-zinc-400'
+                                ? 'border-violet-500 text-violet-600'
+                                : 'border-transparent text-zinc-400'
                                 }`}
                         >
                             <tab.icon className="w-4 h-4" />

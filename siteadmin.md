@@ -179,27 +179,27 @@ src/
 
 ## 6. Roadmap de Implementação
 
-| Prioridade | Feature | Descrição |
-|------------|---------|-----------|
-| **P0** | Dashboard KPIs | Cards com números principais |
-| **P0** | Lista de Usuários | Tabela com busca e ações básicas |
-| **P0** | Dar/Remover VIP | Edge Function `admin-set-vip` |
-| **P0** | Monitoramento de Quota | Alertas de limites do Supabase |
-| **P1** | Distribuição Geográfica | Gráfico por estado/cidade |
-| **P1** | Fila de Denúncias | Ver e resolver reports |
-| **P1** | Banir Usuário | Soft delete (is_active = false) |
-| **P2** | Gráficos Temporais | Curva de crescimento com `recharts` |
-| **P2** | Export CSV | Baixar lista de usuários |
-| **P3** | Logs de Auditoria | Tabela `admin_logs` |
+| Prioridade | Feature | Descrição | Status |
+|------------|---------|-----------|--------|
+| **P0** | Dashboard KPIs | Cards com números principais | ✅ Concluído |
+| **P0** | Lista de Usuários | Tabela com busca e ações básicas | ✅ Concluído |
+| **P0** | Dar/Remover VIP | Botão inline na tabela | ✅ Concluído |
+| **P0** | Monitoramento de Quota | Alertas de limites do Supabase | ✅ Concluído |
+| **P1** | Distribuição Geográfica | Gráfico por estado/cidade | ✅ Concluído |
+| **P1** | Banir Usuário | Soft delete (is_active = false) | ✅ Concluído |
+| **P1** | Fila de Denúncias | Ver e resolver reports | ✅ Concluído |
+| **P2** | Gráficos Temporais | Curva de crescimento com `recharts` | ⏳ Pendente |
+| **P2** | Export CSV | Baixar lista de usuários | ⏳ Pendente |
+| **P3** | Logs de Auditoria | Tabela `admin_logs` | ⏳ Pendente |
 
 ---
 
 ## 7. Tech Stack do Admin
 
--   **UI**: Tailwind CSS + shadcn/ui (Tables, Cards, Modals).
--   **Gráficos**: `recharts` (simples e leve).
--   **Data Fetching**: React Query ou SWR (cache e refetch automático).
--   **Backend**: Edge Functions para ações protegidas (service_role).
+-   **UI**: Tailwind CSS (componentes customizados).
+-   **Gráficos**: Barras CSS simples (sem dependências externas).
+-   **Data Fetching**: Supabase Client direto (sem cache adicional por enquanto).
+-   **Backend**: Supabase Client com RLS (ações inline, sem Edge Functions por enquanto).
 
 ---
 
@@ -215,6 +215,7 @@ src/
 
 ---
 
-**Status**: 📝 Planejamento Completo
+**Status**: ✅ Implementação P0/P1 Concluída
 **Última Atualização**: 11/12/2025
-**Próximo Passo**: Criar pasta `src/admin/` e rota `/admin` com verificação de email.
+**Arquivo Principal**: `admin/AdminRouter.tsx`
+**Próximo Passo**: Implementar Fila de Denúncias e Export CSV (P2).
