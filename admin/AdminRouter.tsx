@@ -1,0 +1,619 @@
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../hooks/useAuth';
+import { supabase } from '../lib/supabase';
+import { ArrowLeft, LayoutDashboard, Users, MapPin, Database, Shield, Crown, Ban, Search, ChevronDown, ChevronUp, RefreshCw } from 'lucide-react';
+
+// ============================================
+// CONSTANTES DE ACESSO
+// ============================================
+const ADMIN_EMAIL = 'pedrohgl18@gmail.com';
+
+// ============================================
+// TIPOS
+// ============================================
+interface AdminStats {
+    totalUsers: number;
+    newToday: number;
+    newWeek: number;
+    totalMatches: number;
+    totalSwipes: number;
+    likesCount: number;
+    passesCount: number;
+    vipUsers: number;
+    matchRate: number;
+}
+
+interface UserRow {
+    id: string;
+    name: string;
+    email: string;
+    city: string | null;
+    state: string | null;
+    is_vip: boolean;
+    vip_expires_at: string | null;
+    is_active: boolean;
+    created_at: string;
+    photos: { url: string }[];
+}
+
+interface GeoData {
+    name: string;
+    count: number;
+}
+
+interface QuotaInfo {
+    tableName: string;
+    rowCount: number;
+    sizeEstimate?: string;
+}
+
+// ============================================
+// COMPONENTES
+// ============================================
+
+// Stats Card
+const StatsCard: React.FC<{
+    title: string;
+    value: string | number;
+    icon: React.ReactNode;
+    color?: string;
+    subtitle?: string;
+}> = ({ title, value, icon, color = 'violet', subtitle }) => (
+    <div className="bg-white rounded-xl p-4 shadow-sm border border-zinc-100">
+        <div className="flex items-center justify-between mb-2">
+            <span className="text-zinc-500 text-sm font-medium">{title}</span>
+            <div className={`w-8 h-8 rounded-lg bg-${color}-100 flex items-center justify-center`}>
+                {icon}
+            </div>
+        </div>
+        <div className="text-2xl font-bold text-zinc-900">{value}</div>
+        {subtitle && <div className="text-xs text-zinc-400 mt-1">{subtitle}</div>}
+    </div>
+);
+
+// Quota Alert
+const QuotaAlert: React.FC<{ percentage: number; label: string }> = ({ percentage, label }) => {
+    const getColor = () => {
+        if (percentage >= 90) return 'red';
+        if (percentage >= 70) return 'yellow';
+        return 'green';
+    };
+
+    const color = getColor();
+
+    return (
+        <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-zinc-100">
+            <div className={`w-3 h-3 rounded-full bg-${color}-500`} />
+            <div className="flex-1">
+                <div className="text-sm font-medium text-zinc-700">{label}</div>
+                <div className="w-full bg-zinc-100 rounded-full h-2 mt-1">
+                    <div
+                        className={`h-2 rounded-full bg-${color}-500`}
+                        style={{ width: `${Math.min(percentage, 100)}%` }}
+                    />
+                </div>
+            </div>
+            <span className={`text-sm font-medium text-${color}-600`}>{percentage.toFixed(1)}%</span>
+        </div>
+    );
+};
+
+// ============================================
+// ADMIN ROUTER PRINCIPAL
+// ============================================
+interface AdminRouterProps {
+    onClose: () => void;
+}
+
+const AdminRouter: React.FC<AdminRouterProps> = ({ onClose }) => {
+    const { user } = useAuth();
+    const [activeTab, setActiveTab] = useState<'dashboard' | 'users' | 'geography' | 'quota'>('dashboard');
+    const [stats, setStats] = useState<AdminStats | null>(null);
+    const [users, setUsers] = useState<UserRow[]>([]);
+    const [geoData, setGeoData] = useState<GeoData[]>([]);
+    const [geoGroupBy, setGeoGroupBy] = useState<'state' | 'city' | 'neighborhood'>('state');
+    const [quotas, setQuotas] = useState<QuotaInfo[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [filterState, setFilterState] = useState('');
+    const [filterVip, setFilterVip] = useState<'all' | 'vip' | 'free'>('all');
+
+    // Verificar acesso
+    const isAdmin = user?.email === ADMIN_EMAIL;
+
+    // Buscar estatísticas
+    const fetchStats = async () => {
+        setLoading(true);
+        try {
+            // Total de usuários ativos
+            const { count: totalUsers } = await supabase
+                .from('profiles')
+                .select('*', { count: 'exact', head: true })
+                .eq('is_active', true);
+
+            // Novos hoje
+            const today = new Date().toISOString().split('T')[0];
+            const { count: newToday } = await supabase
+                .from('profiles')
+                .select('*', { count: 'exact', head: true })
+                .gte('created_at', today);
+
+            // Novos na semana
+            const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+            const { count: newWeek } = await supabase
+                .from('profiles')
+                .select('*', { count: 'exact', head: true })
+                .gte('created_at', weekAgo);
+
+            // Total de matches
+            const { count: totalMatches } = await supabase
+                .from('matches')
+                .select('*', { count: 'exact', head: true });
+
+            // Swipes
+            const { count: totalSwipes } = await supabase
+                .from('swipes')
+                .select('*', { count: 'exact', head: true });
+
+            const { count: likesCount } = await supabase
+                .from('swipes')
+                .select('*', { count: 'exact', head: true })
+                .eq('action', 'like');
+
+            const { count: passesCount } = await supabase
+                .from('swipes')
+                .select('*', { count: 'exact', head: true })
+                .eq('action', 'pass');
+
+            // VIPs ativos
+            const now = new Date().toISOString();
+            const { count: vipUsers } = await supabase
+                .from('profiles')
+                .select('*', { count: 'exact', head: true })
+                .eq('is_vip', true)
+                .gt('vip_expires_at', now);
+
+            // Taxa de match
+            const matchRate = likesCount && likesCount > 0
+                ? ((totalMatches || 0) * 2 / likesCount * 100)
+                : 0;
+
+            setStats({
+                totalUsers: totalUsers || 0,
+                newToday: newToday || 0,
+                newWeek: newWeek || 0,
+                totalMatches: totalMatches || 0,
+                totalSwipes: totalSwipes || 0,
+                likesCount: likesCount || 0,
+                passesCount: passesCount || 0,
+                vipUsers: vipUsers || 0,
+                matchRate,
+            });
+        } catch (err) {
+            console.error('Erro ao buscar stats:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Buscar usuários
+    const fetchUsers = async () => {
+        let query = supabase
+            .from('profiles')
+            .select('id, name, email, city, state, is_vip, vip_expires_at, is_active, created_at, photos(url)')
+            .order('created_at', { ascending: false })
+            .limit(100);
+
+        if (searchTerm) {
+            query = query.or(`name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`);
+        }
+        if (filterState) {
+            query = query.eq('state', filterState);
+        }
+        if (filterVip === 'vip') {
+            query = query.eq('is_vip', true);
+        } else if (filterVip === 'free') {
+            query = query.eq('is_vip', false);
+        }
+
+        const { data } = await query;
+        setUsers(data || []);
+    };
+
+    // Buscar dados geográficos
+    const fetchGeoData = async () => {
+        const column = geoGroupBy;
+        const { data } = await supabase
+            .from('profiles')
+            .select(column)
+            .not(column, 'is', null)
+            .eq('is_active', true);
+
+        if (data) {
+            const counts: Record<string, number> = {};
+            data.forEach((row: any) => {
+                const value = row[column];
+                if (value) {
+                    counts[value] = (counts[value] || 0) + 1;
+                }
+            });
+
+            const sorted = Object.entries(counts)
+                .map(([name, count]) => ({ name, count }))
+                .sort((a, b) => b.count - a.count)
+                .slice(0, 15);
+
+            setGeoData(sorted);
+        }
+    };
+
+    // Buscar quotas
+    const fetchQuotas = async () => {
+        const tables = ['profiles', 'swipes', 'matches', 'messages', 'photos', 'notifications'];
+        const results: QuotaInfo[] = [];
+
+        for (const table of tables) {
+            const { count } = await supabase
+                .from(table)
+                .select('*', { count: 'exact', head: true });
+
+            results.push({ tableName: table, rowCount: count || 0 });
+        }
+
+        setQuotas(results);
+    };
+
+    // Ações de admin
+    const toggleVip = async (userId: string, currentVip: boolean) => {
+        const updates: any = { is_vip: !currentVip };
+
+        if (!currentVip) {
+            // Dar VIP por 30 dias
+            updates.vip_expires_at = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+        } else {
+            updates.vip_expires_at = null;
+        }
+
+        await supabase.from('profiles').update(updates).eq('id', userId);
+        fetchUsers();
+    };
+
+    const toggleBan = async (userId: string, currentActive: boolean) => {
+        if (currentActive && !confirm('Tem certeza que deseja banir este usuário?')) return;
+
+        await supabase.from('profiles').update({ is_active: !currentActive }).eq('id', userId);
+        fetchUsers();
+    };
+
+    // Effects
+    useEffect(() => {
+        if (isAdmin) {
+            fetchStats();
+            fetchQuotas();
+        }
+    }, [isAdmin]);
+
+    useEffect(() => {
+        if (isAdmin && activeTab === 'users') {
+            fetchUsers();
+        }
+    }, [activeTab, searchTerm, filterState, filterVip]);
+
+    useEffect(() => {
+        if (isAdmin && activeTab === 'geography') {
+            fetchGeoData();
+        }
+    }, [activeTab, geoGroupBy]);
+
+    // Se não é admin, bloqueia
+    if (!isAdmin) {
+        return (
+            <div className="min-h-screen bg-zinc-50 flex items-center justify-center p-4">
+                <div className="bg-white rounded-xl p-6 shadow-lg text-center">
+                    <Shield className="w-16 h-16 text-red-500 mx-auto mb-4" />
+                    <h2 className="text-xl font-bold text-zinc-900 mb-2">Acesso Negado</h2>
+                    <p className="text-zinc-500 mb-4">Você não tem permissão para acessar o painel administrativo.</p>
+                    <button
+                        onClick={onClose}
+                        className="px-4 py-2 bg-violet-500 text-white rounded-lg font-medium"
+                    >
+                        Voltar
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    // Render tabs
+    const renderContent = () => {
+        if (loading && activeTab === 'dashboard') {
+            return (
+                <div className="flex items-center justify-center h-64">
+                    <RefreshCw className="w-8 h-8 text-violet-500 animate-spin" />
+                </div>
+            );
+        }
+
+        switch (activeTab) {
+            case 'dashboard':
+                return (
+                    <div className="space-y-6">
+                        <h2 className="text-lg font-semibold text-zinc-900">Dashboard</h2>
+
+                        {/* KPIs Grid */}
+                        <div className="grid grid-cols-2 gap-3">
+                            <StatsCard
+                                title="Usuários Ativos"
+                                value={stats?.totalUsers || 0}
+                                icon={<Users className="w-4 h-4 text-violet-600" />}
+                                color="violet"
+                            />
+                            <StatsCard
+                                title="Novos Hoje"
+                                value={stats?.newToday || 0}
+                                icon={<Users className="w-4 h-4 text-green-600" />}
+                                color="green"
+                                subtitle={`${stats?.newWeek || 0} na semana`}
+                            />
+                            <StatsCard
+                                title="Total Matches"
+                                value={stats?.totalMatches || 0}
+                                icon={<span className="text-pink-600">💕</span>}
+                                color="pink"
+                            />
+                            <StatsCard
+                                title="Taxa de Match"
+                                value={`${stats?.matchRate.toFixed(1) || 0}%`}
+                                icon={<span className="text-orange-600">📊</span>}
+                                color="orange"
+                            />
+                            <StatsCard
+                                title="Total Swipes"
+                                value={stats?.totalSwipes || 0}
+                                icon={<span className="text-blue-600">👆</span>}
+                                color="blue"
+                                subtitle={`${stats?.likesCount || 0} likes / ${stats?.passesCount || 0} passes`}
+                            />
+                            <StatsCard
+                                title="VIPs Ativos"
+                                value={stats?.vipUsers || 0}
+                                icon={<Crown className="w-4 h-4 text-amber-600" />}
+                                color="amber"
+                            />
+                        </div>
+
+                        {/* Quota Alerts */}
+                        <div className="space-y-3">
+                            <h3 className="text-sm font-medium text-zinc-700">Status do Banco</h3>
+                            {quotas.slice(0, 4).map(q => (
+                                <QuotaAlert
+                                    key={q.tableName}
+                                    label={`${q.tableName}: ${q.rowCount.toLocaleString()} registros`}
+                                    percentage={(q.rowCount / 10000) * 100} // Estimativa baseada em 10k rows
+                                />
+                            ))}
+                        </div>
+                    </div>
+                );
+
+            case 'users':
+                return (
+                    <div className="space-y-4">
+                        <h2 className="text-lg font-semibold text-zinc-900">Usuários</h2>
+
+                        {/* Search & Filters */}
+                        <div className="space-y-3">
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                                <input
+                                    type="text"
+                                    placeholder="Buscar por nome ou email..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="w-full pl-10 pr-4 py-2 border border-zinc-200 rounded-lg text-sm"
+                                />
+                            </div>
+
+                            <div className="flex gap-2">
+                                <select
+                                    value={filterVip}
+                                    onChange={(e) => setFilterVip(e.target.value as any)}
+                                    className="flex-1 px-3 py-2 border border-zinc-200 rounded-lg text-sm"
+                                >
+                                    <option value="all">Todos</option>
+                                    <option value="vip">VIP</option>
+                                    <option value="free">Free</option>
+                                </select>
+                                <input
+                                    type="text"
+                                    placeholder="Estado..."
+                                    value={filterState}
+                                    onChange={(e) => setFilterState(e.target.value)}
+                                    className="flex-1 px-3 py-2 border border-zinc-200 rounded-lg text-sm"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Users List */}
+                        <div className="space-y-2 max-h-96 overflow-y-auto">
+                            {users.map(u => (
+                                <div key={u.id} className="bg-white rounded-lg p-3 border border-zinc-100 flex items-center gap-3">
+                                    <img
+                                        src={u.photos?.[0]?.url || `https://ui-avatars.com/api/?name=${u.name}`}
+                                        className="w-10 h-10 rounded-full object-cover"
+                                        alt=""
+                                    />
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2">
+                                            <span className="font-medium text-zinc-900 truncate">{u.name || 'Sem nome'}</span>
+                                            {u.is_vip && <Crown className="w-3 h-3 text-amber-500" />}
+                                            {!u.is_active && <span className="text-xs text-red-500">BANIDO</span>}
+                                        </div>
+                                        <div className="text-xs text-zinc-500 truncate">{u.email}</div>
+                                        {u.city && <div className="text-xs text-zinc-400">{u.city}, {u.state}</div>}
+                                    </div>
+                                    <div className="flex gap-1">
+                                        <button
+                                            onClick={() => toggleVip(u.id, u.is_vip)}
+                                            className={`p-2 rounded-lg ${u.is_vip ? 'bg-amber-100 text-amber-600' : 'bg-zinc-100 text-zinc-500'}`}
+                                            title={u.is_vip ? 'Remover VIP' : 'Dar VIP'}
+                                        >
+                                            <Crown className="w-4 h-4" />
+                                        </button>
+                                        <button
+                                            onClick={() => toggleBan(u.id, u.is_active)}
+                                            className={`p-2 rounded-lg ${!u.is_active ? 'bg-green-100 text-green-600' : 'bg-zinc-100 text-zinc-500'}`}
+                                            title={u.is_active ? 'Banir' : 'Desbanir'}
+                                        >
+                                            <Ban className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                            {users.length === 0 && (
+                                <div className="text-center py-8 text-zinc-400">Nenhum usuário encontrado</div>
+                            )}
+                        </div>
+                    </div>
+                );
+
+            case 'geography':
+                return (
+                    <div className="space-y-4">
+                        <h2 className="text-lg font-semibold text-zinc-900">Distribuição Geográfica</h2>
+
+                        {/* Toggle */}
+                        <div className="flex gap-2">
+                            {(['state', 'city', 'neighborhood'] as const).map(type => (
+                                <button
+                                    key={type}
+                                    onClick={() => setGeoGroupBy(type)}
+                                    className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${geoGroupBy === type
+                                            ? 'bg-violet-500 text-white'
+                                            : 'bg-zinc-100 text-zinc-600'
+                                        }`}
+                                >
+                                    {type === 'state' ? 'Estado' : type === 'city' ? 'Cidade' : 'Bairro'}
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* Bar Chart */}
+                        <div className="space-y-2">
+                            {geoData.map((item, i) => {
+                                const maxCount = geoData[0]?.count || 1;
+                                const percentage = (item.count / maxCount) * 100;
+
+                                return (
+                                    <div key={item.name} className="flex items-center gap-3">
+                                        <span className="w-6 text-xs text-zinc-400 text-right">{i + 1}</span>
+                                        <div className="flex-1">
+                                            <div className="flex justify-between text-sm mb-1">
+                                                <span className="font-medium text-zinc-700 truncate">{item.name}</span>
+                                                <span className="text-zinc-500">{item.count}</span>
+                                            </div>
+                                            <div className="w-full bg-zinc-100 rounded-full h-2">
+                                                <div
+                                                    className="h-2 rounded-full bg-violet-500 transition-all"
+                                                    style={{ width: `${percentage}%` }}
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                            {geoData.length === 0 && (
+                                <div className="text-center py-8 text-zinc-400">Sem dados disponíveis</div>
+                            )}
+                        </div>
+                    </div>
+                );
+
+            case 'quota':
+                return (
+                    <div className="space-y-4">
+                        <h2 className="text-lg font-semibold text-zinc-900">Monitoramento de Quotas</h2>
+
+                        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                            <div className="flex items-start gap-3">
+                                <Database className="w-5 h-5 text-amber-600 mt-0.5" />
+                                <div>
+                                    <div className="font-medium text-amber-800">Plano Free do Supabase</div>
+                                    <div className="text-sm text-amber-700 mt-1">
+                                        Database: 500 MB | Storage: 1 GB | Edge Functions: 500K/mês
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="space-y-3">
+                            <h3 className="text-sm font-medium text-zinc-700">Registros por Tabela</h3>
+                            {quotas.map(q => (
+                                <div key={q.tableName} className="bg-white rounded-lg p-3 border border-zinc-100">
+                                    <div className="flex justify-between items-center">
+                                        <span className="font-medium text-zinc-700 capitalize">{q.tableName}</span>
+                                        <span className="text-sm text-zinc-500">{q.rowCount.toLocaleString()} registros</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        <button
+                            onClick={() => { fetchStats(); fetchQuotas(); }}
+                            className="w-full py-3 bg-violet-500 text-white rounded-lg font-medium flex items-center justify-center gap-2"
+                        >
+                            <RefreshCw className="w-4 h-4" />
+                            Atualizar Dados
+                        </button>
+                    </div>
+                );
+        }
+    };
+
+    return (
+        <div className="min-h-screen bg-zinc-50">
+            {/* Header */}
+            <div className="bg-white border-b border-zinc-200 sticky top-0 z-10">
+                <div className="flex items-center justify-between px-4 py-3">
+                    <button onClick={onClose} className="p-2 -ml-2">
+                        <ArrowLeft className="w-5 h-5 text-zinc-600" />
+                    </button>
+                    <h1 className="font-bold text-zinc-900 flex items-center gap-2">
+                        <Shield className="w-5 h-5 text-violet-500" />
+                        Admin Panel
+                    </h1>
+                    <div className="w-9" />
+                </div>
+
+                {/* Tabs */}
+                <div className="flex border-t border-zinc-100">
+                    {[
+                        { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+                        { id: 'users', icon: Users, label: 'Usuários' },
+                        { id: 'geography', icon: MapPin, label: 'Geo' },
+                        { id: 'quota', icon: Database, label: 'Quotas' },
+                    ].map(tab => (
+                        <button
+                            key={tab.id}
+                            onClick={() => setActiveTab(tab.id as any)}
+                            className={`flex-1 py-3 flex flex-col items-center gap-1 border-b-2 transition-colors ${activeTab === tab.id
+                                    ? 'border-violet-500 text-violet-600'
+                                    : 'border-transparent text-zinc-400'
+                                }`}
+                        >
+                            <tab.icon className="w-4 h-4" />
+                            <span className="text-xs font-medium">{tab.label}</span>
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            {/* Content */}
+            <div className="p-4">
+                {renderContent()}
+            </div>
+        </div>
+    );
+};
+
+export default AdminRouter;

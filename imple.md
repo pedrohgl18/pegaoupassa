@@ -158,7 +158,7 @@
 | Filtro de distância | ✅ | Funcional com slider (100km+ fixado) |
 | Filtro de idade | ✅ | Funcional com sliders duplos |
 | Filtro de gênero | ✅ | Funcional |
-| Geolocalização real | ✅ | API de GPS + BigDataCloud (Bairro/Cidade) |
+| Geolocalização real | ✅ | API BigDataCloud (Strict Mode: Cidade L8, Bairro L10) |
 | Filtros avançados | ✅ | Altura e Signo implementados |
 | Aplicar filtros na busca | ✅ | Query no banco com Haversine |
 
@@ -169,7 +169,7 @@
 | Funcionalidade | Status | Observações |
 |----------------|--------|-------------|
 | Tela VIP | ✅ | Visual implementado (Legendário) |
-| Limite de likes (free) | ✅ | 30/dia implementado |
+| Limite de likes (free) | ✅ | 30/dia persistido no banco (App.tsx) |
 | Likes ilimitados (VIP) | ✅ | Lógica implementada |
 | Ver quem curtiu você | ✅ | Lista com blur (free) e visível (VIP) |
 | Visualizar perfil de quem curtiu (VIP) | ✅ | Swipável sem botões (10/12/2025) |
@@ -255,6 +255,7 @@
 | 10/12/2025 | **Remove Profile Fallbacks** | Removido todos os fallbacks de imagem (picsum.photos) para evitar inconsistências. |
 | 11/12/2025 | **Fix Avatar Desaparecendo** | Ver seção detalhada abaixo. |
 | 11/12/2025 | **Limpeza de Código** | Removido ~150 linhas de código morto (setProfileState, createProfile, updateOnboardingStep, createInitial, console.logs). |
+| 11/12/2025 | **Admin Panel (God Mode)** | Painel administrativo localhost-only com Dashboard (KPIs), Gestão de Usuários (VIP/Ban), Geografia e Quotas. Lazy loading + bloqueio no APK. |
 
 ---
 
@@ -297,4 +298,14 @@ setState(prev => ({
 - Onboarding → Home (foto aparece imediatamente)
 - Selecionar Vibe/Modo Agora (foto não desaparece mais)
 - Editar Perfil (foto preservada)
+
+
+### Bug: Persistência do Limite de Likes (11/12/2025)
+
+**Problema:**
+O contador de likes resetava ao recarregar a página, permitindo likes infinitos na prática. Swipe Up também não afetava o contador (correto), mas a falta de persistência quebrava a lógica de limite diário.
+
+**Solução:**
+- Adicionado `useEffect` em `App.tsx` para carregar `daily_likes_count` do perfil ao iniciar.
+- Chamada explícita para `swipes.incrementLikeCount` ao dar Swipe Down (Like) em `App.tsx`.
 

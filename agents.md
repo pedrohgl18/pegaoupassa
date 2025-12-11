@@ -126,4 +126,4 @@ pega-ou-passa/
 
 ---
 
-**Última atualização**: 10/12/2025
+**Última atualização**: 11/12/2025

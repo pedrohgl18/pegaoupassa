@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, Suspense, lazy } from 'react';
 import { ThumbsUp, X, Crown, Rocket, Star, Ban, Search, User, ChevronUp, ChevronDown, Hand, Heart, Pencil, SlidersHorizontal, Check, Loader2, ChevronLeft, Ghost, MapPin } from 'lucide-react';
 import { ScreenState, SwipeDirection, Profile as ProfileType } from './types';
 import { DAILY_FREE_SWIPES, VIP_PRICE } from './constants';
@@ -23,6 +23,11 @@ import { Chat } from './types';
 import { Capacitor } from '@capacitor/core';
 import { Geolocation } from '@capacitor/geolocation';
 import TutorialOverlay from './components/TutorialOverlay';
+
+// Admin Panel - Lazy loaded only on localhost (not in APK)
+const AdminRouter = lazy(() => import('./admin/AdminRouter'));
+const ADMIN_EMAIL = 'pedrohgl18@gmail.com';
+const isNativePlatform = Capacitor.isNativePlatform();
 
 // Helper to calculate age
 export const calculateAge = (birthDate: string) => {
@@ -164,28 +169,22 @@ const App: React.FC = () => {
                 // Log para debug dos dados retornados pela API
                 console.log('Reverse Geocode Response:', data);
 
-                // Parsing Refinado (City & State)
-                const city = data.city || data.localityName || data.locality || '';
-                const state = data.principalSubdivision || '';
+                // Parsing Estrito (Sem fallbacks)
+                const administrative = data.localityInfo?.administrative || [];
 
-                // Parsing Refinado (Neighborhood)
-                let neighborhood = '';
+                // Admin Level 8 = Município/Cidade (Ex: Rio de Janeiro)
+                const cityObj = administrative.find((x: any) => x.adminLevel === 8);
+                const city = cityObj ? cityObj.name : '';
 
-                // 1. Tentar pegar por adminLevel 10 (Padrão BDC para Bairro)
-                if (data.localityInfo?.administrative) {
-                  const adminNeighborhood = data.localityInfo.administrative.find((x: any) =>
-                    x.adminLevel === 10 || // Padrão exato para bairro
-                    (x.description && x.description.includes('neighborhood')) // Fallback por descrição
-                  );
-                  if (adminNeighborhood) {
-                    neighborhood = adminNeighborhood.name;
-                  }
-                }
+                // Admin Level 4 = Estado (Ex: Rio de Janeiro)
+                const stateObj = administrative.find((x: any) => x.adminLevel === 4);
+                const state = stateObj ? stateObj.name : '';
 
-                // 2. Fallback: Tentar locality se for diferente da cidade
-                if (!neighborhood && data.locality && data.locality !== city) {
-                  neighborhood = data.locality;
-                }
+                // Admin Level 10 = Bairro (Ex: Tijuca)
+                const neighborhoodObj = administrative.find((x: any) => x.adminLevel === 10);
+                const neighborhood = neighborhoodObj ? neighborhoodObj.name : '';
+
+                console.log('Location parsed (Strict):', { city, state, neighborhood });
 
                 if (user) {
                   console.log('Updating location detailed:', { latitude, longitude, city, state, neighborhood });
@@ -425,7 +424,12 @@ const App: React.FC = () => {
     if (userIsVip) {
       setIsVip(true);
     }
-  }, [userIsVip]);
+    // Initialize daily like count from profile
+    if (profile?.daily_likes_count !== undefined) {
+      setSwipeCount(profile.daily_likes_count);
+      console.log('Initial swipe count loaded:', profile.daily_likes_count);
+    }
+  }, [userIsVip, profile?.daily_likes_count]);
 
   // Load saved filters from profile
   useEffect(() => {
@@ -665,7 +669,13 @@ const App: React.FC = () => {
         setCurrentScreen(ScreenState.VIP);
         return;
       }
-      if (!forceMatch) setSwipeCount(prev => prev + 1);
+      if (!forceMatch) {
+        setSwipeCount(prev => prev + 1);
+        // Persist increment to database
+        swipes.incrementLikeCount(user.id).catch(err => {
+          console.error('Failed to increment like count:', err);
+        });
+      }
     }
 
     setLastDirection(direction);
@@ -1612,10 +1622,11 @@ const App: React.FC = () => {
                 setPreviousScreen(ScreenState.PROFILE);
                 setShowVipSettingsModal(true);
               }}
-              onVibeCheck={() => setShowVibeSelector(true)} // Added prop
+              onVibeCheck={() => setShowVibeSelector(true)}
               onPreview={handlePreviewProfile}
               matchesCount={matchesList.length}
               receivedLikesCount={receivedLikes.length}
+              isAdmin={user?.email === ADMIN_EMAIL}
             />
           )}
           {currentScreen === ScreenState.EDIT_PROFILE && user && (
@@ -1627,6 +1638,11 @@ const App: React.FC = () => {
                 setCurrentScreen(ScreenState.PROFILE);
               }}
             />
+          )}
+          {currentScreen === ScreenState.ADMIN && !isNativePlatform && (
+            <Suspense fallback={<LoadingScreen />}>
+              <AdminRouter onClose={() => setCurrentScreen(ScreenState.PROFILE)} />
+            </Suspense>
           )}
         </div>
 
