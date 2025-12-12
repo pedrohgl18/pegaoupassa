@@ -15,6 +15,7 @@ export interface Profile {
   vibeStatus?: string;
   vibeExpiresAt?: string;
   neighborhood?: string;
+  tags?: string[];
   latitude?: number;
   longitude?: number;
   city?: string;

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Send, MoreVertical, Image as ImageIcon, Mic, Trash2, AlertTriangle, Crown, Loader2, StopCircle, X, ZoomIn, Flag, Reply, Smile, Check, Ban } from 'lucide-react';
 import { messages as messagesApi, matches as matchesApi, supabase, pushNotifications, reports, messageReactions, safety } from '../lib/supabase';
+import { r2Storage } from '../lib/r2';
 
 interface Message {
   id: string;
@@ -365,7 +366,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({
       return;
     }
 
-    const { error } = await reports.create(currentUserId, otherUserId, reportReason);
+    const { error } = await reports.create(currentUserId, otherUserId, reportReason, undefined, messages);
     if (error) {
       showToast('Erro ao enviar denúncia', 'error');
     } else {
@@ -465,43 +466,23 @@ const ChatScreen: React.FC<ChatScreenProps> = ({
     try {
       const fileExt = file.name.split('.').pop()?.toLowerCase() || 'jpg';
       const fileName = `${currentUserId}/${Date.now()}.${fileExt}`;
+      const bucketName = import.meta.env.VITE_R2_BUCKET_CHAT || 'chat-media';
 
-      console.log('Iniciando upload:', fileName, 'Tipo:', file.type, 'Tamanho:', file.size);
+      console.log('Iniciando upload R2:', fileName);
 
-      const { error: uploadError, data: uploadData } = await supabase.storage
-        .from('chat-media')
-        .upload(fileName, file, {
-          cacheControl: '3600',
-          upsert: false,
-          contentType: file.type
-        });
+      const { url, error: uploadError } = await r2Storage.uploadFile(bucketName, fileName, file);
 
       if (uploadError) {
-        console.error('Erro no upload storage:', uploadError);
+        console.error('Erro no upload R2:', uploadError);
         throw uploadError;
       }
 
-      console.log('Upload concluído:', uploadData);
+      console.log('Upload R2 concluído - URL:', url);
 
-      // Verificar se o upload foi bem-sucedido
-      if (!uploadData?.path) {
-        throw new Error('Upload falhou - caminho não retornado');
+      if (url) {
+        // Enviar com texto "📷 Foto" para aparecer na lista de conversas
+        await handleSend('📷 Foto', url, 'image');
       }
-
-      // Usar URL assinada (bucket com RLS, não público)
-      const { data: signedUrlData, error: signedUrlError } = await supabase.storage
-        .from('chat-media')
-        .createSignedUrl(uploadData.path, 60 * 60 * 24 * 365); // 1 ano
-
-      if (signedUrlError || !signedUrlData?.signedUrl) {
-        console.error('Erro ao gerar URL assinada:', signedUrlError);
-        throw new Error('Não foi possível obter a URL da imagem');
-      }
-
-      console.log('Foto enviada - URL assinada:', signedUrlData.signedUrl);
-
-      // Enviar com texto "📷 Foto" para aparecer na lista de conversas
-      await handleSend('📷 Foto', signedUrlData.signedUrl, 'image');
     } catch (error) {
       console.error('Erro no upload:', error);
       alert('Erro ao enviar foto.');
@@ -562,33 +543,18 @@ const ChatScreen: React.FC<ChatScreenProps> = ({
     setUploadingMedia(true);
     try {
       const fileName = `${currentUserId}/${Date.now()}.webm`;
+      // Convert blob to File for R2
+      const file = new File([blob], fileName, { type: 'audio/webm' });
+      const bucketName = import.meta.env.VITE_R2_BUCKET_CHAT || 'chat-media';
 
-      const { error: uploadError, data: uploadData } = await supabase.storage
-        .from('chat-media')
-        .upload(fileName, blob, {
-          cacheControl: '3600',
-          upsert: false,
-          contentType: 'audio/webm'
-        });
+      const { url, error: uploadError } = await r2Storage.uploadFile(bucketName, fileName, file);
 
       if (uploadError) throw uploadError;
 
-      if (!uploadData?.path) {
-        throw new Error('Upload falhou - caminho não retornado');
+      console.log('Áudio enviado - URL:', url);
+      if (url) {
+        await handleSend('🎤 Áudio', url, 'audio');
       }
-
-      // Usar URL assinada (bucket com RLS, não público)
-      const { data: signedUrlData, error: signedUrlError } = await supabase.storage
-        .from('chat-media')
-        .createSignedUrl(uploadData.path, 60 * 60 * 24 * 365); // 1 ano
-
-      if (signedUrlError || !signedUrlData?.signedUrl) {
-        console.error('Erro ao gerar URL assinada:', signedUrlError);
-        throw new Error('Não foi possível obter a URL do áudio');
-      }
-
-      console.log('Áudio enviado - URL assinada:', signedUrlData.signedUrl);
-      await handleSend('🎤 Áudio', signedUrlData.signedUrl, 'audio');
     } catch (error) {
       console.error('Erro no upload de áudio:', error);
       alert('Erro ao enviar áudio.');
@@ -1008,22 +974,22 @@ const ChatScreen: React.FC<ChatScreenProps> = ({
 
             <div className="space-y-2 mb-6">
               {[
-                'Perfil falso',
-                'Comportamento inadequado',
-                'Spam ou golpe',
-                'Conteúdo ofensivo',
-                'Menor de idade',
-                'Outro'
-              ].map((reason) => (
+                { label: 'Perfil falso', value: 'fake_profile' },
+                { label: 'Comportamento inadequado', value: 'harassment' },
+                { label: 'Spam ou golpe', value: 'spam' },
+                { label: 'Conteúdo ofensivo', value: 'inappropriate_photos' },
+                { label: 'Menor de idade', value: 'underage' },
+                { label: 'Outro', value: 'other' }
+              ].map((item) => (
                 <button
-                  key={reason}
-                  onClick={() => setReportReason(reason)}
-                  className={`w-full py-3 px-4 rounded-xl text-left text-sm font-medium transition-colors ${reportReason === reason
+                  key={item.value}
+                  onClick={() => setReportReason(item.value)}
+                  className={`w-full py-3 px-4 rounded-xl text-left text-sm font-medium transition-colors ${reportReason === item.value
                     ? 'bg-amber-100 text-amber-700 border-2 border-amber-400'
                     : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200'
                     }`}
                 >
-                  {reason}
+                  {item.label}
                 </button>
               ))}
             </div>

@@ -120,8 +120,10 @@
 | Detectar match mútuo | ✅ | Retornado pela API de swipe |
 | Tela "It's a Match!" | ✅ | Modal implementado - Foto correta do usuário (10/12/2025) |
 | Notificação de match | ✅ | Push notification via Edge Function |
-| Lista de matches | ✅ | Visual implementado no chat |
+| Lista de matches | ✅ | Visual implementado |
 | Desfazer Match (Unmatch) | ✅ | Remove match e recicla perfil |
+| Denunciar Usuário | ✅ | Implementado e corrigido (Snapshot da conversa incluído) |
+| Tutorial Interativo | ⏳ | Pendente |
 
 ---
 
@@ -313,6 +315,40 @@ O contador de likes resetava ao recarregar a página, permitindo likes infinitos
 
 ---
 
+### Bug: Erro RPC increment_like_count (11/12/2025)
+
+**Problema:**
+O RPC `increment_like_count` retornava erro 400 (Bad Request) ou 500 no navegador.
+**Causa:**
+Assinatura da função esperava parâmetro `user_id` e permissionamento podia falhar se `auth.uid()` não estivesse alinhado.
+
+**Solução:**
+- Alterado RPC para NÃO receber parâmetros. Usa `auth.uid()` diretamente dentro da função (Mais seguro).
+- Atualizado `lib/supabase.ts` para chamar sem argumentos.
+
+### Bug: Botão Voltar Android (11/12/2025)
+
+**Problema:**
+Botão físico de voltar no Android não fazia nada.
+
+**Solução:**
+- Implementado listener `App.addListener('backButton')` no `App.tsx`.
+- Lógica de navegação:
+    1. Fecha Modais (Filtro, VIP, Tutorial, Match).
+    2. Sai de chats para lista.
+    3. Sai de telas secundárias (Perfil, Edit) para Home.
+    4. Se na Home, minimiza o app (`App.exitApp()`).
+
+### Bug: Self-Like no Perfil Público (11/12/2025)
+
+**Problema:**
+Usuario conseguia dar like em si mesmo ao visualizar "Como público".
+
+**Solução:**
+- Adicionado bloqueio no `ProfileViewer.tsx`: `if (viewingProfile.id === user.id) return`.
+
+---
+
 ## 13. Arquitetura e Guia de Desenvolvimento (Pós-Refatoração)
 
 > **Adicionado em 11/12/2025**
@@ -398,5 +434,44 @@ src/
 *   [x] **Otimização de Imagens**: Implementado `getPublicUrl` + Supabase Transformations (`?width=500&format=webp`) no `SwipeCard`.
 *   [x] **Acessibilidade**: Adicionado `aria-label` em botões de navegação e cards.
 *   [x] **Batch Updates**: Implementado `markBatchAsRead` para evitar N+1 queries no Chat.
+
+### Chat Snapshot no Report (11/12/2025)
+
+**Problema:**
+Admins não conseguiam ver o contexto da denúncia se o usuário desfizesse o match (unmatch deleta conversa).
+
+**Solução:**
+- Adicionado coluna JSONB `chat_snapshot` na tabela `reports`.
+- Frontend envia histórico completo de mensagens no momento da denúncia.
+- Dados persistem mesmo após Unmatch/Block.
+
+### 16. Migração Storage (Supabase -> Cloudflare R2) (12/12/2025)
+- **Status**: ✅ Concluído
+- **Descrição**: Migração do armazenamento de fotos e mídia de chat para o Cloudflare R2 para redução de custos (Zero Egress).
+- **Mudanças Técnicas**:
+    - Criado adapter `lib/r2.ts`.
+    - Implementada Edge Function `upload-r2` para gerar URLs assinadas (Server-Side).
+    - Removidas chaves secretas do `.env` (Client-Side).
+    - `EditProfile.tsx` e `ChatScreen.tsx` atualizados para usar o novo fluxo seguro.
+- **Segurança**: Agora o App solicita permissão ao servidor para cada upload. As chaves `SECRET_KEY` do R2 ficam guardadas apenas no Supabase (Secrets), não no APK.
+
+### Bugs Resolvidos (12/12/2025) - Pós Migração R2
+1.  **Crash de Navegação (`setPreviousScreen`)**:
+    *   **Erro**: `Uncaught TypeError: setPreviousScreen is not a function`.
+    *   **Causa**: O hook `useAppNavigation` não exportava a função `setPreviousScreen`, mas o `AppRouter` tentava usá-la.
+    *   **Correção**: Exportada a função no hook.
+2.  **Erro de Upload R2 (401 Unauthorized)**:
+    *   **Erro**: Edge Function retornava 401.
+    *   **Causa**: O token de sessão não estava sendo passado corretamente no cabeçalho `Authorization` da chamada `supabase.functions.invoke`.
+    *   **Correção**: Adicionado cabeçalho explícito `Authorization: Bearer ${token}` em `lib/r2.ts`.
+3.  **URLs Públicas R2 Distintas**:
+    *   **Problema**: O R2 usa subdomínios diferentes para cada bucket (`photos` vs `chat-media`).
+    *   **Correção**: Atualizado `.env` e `lib/r2.ts` para suportar `VITE_R2_PUBLIC_URL_PHOTOS` e `VITE_R2_PUBLIC_URL_CHAT`.
+4.  **Erro "Seja VIP" e Likes (400 Bad Request)**:
+    *   **Problema**: Trigger `protect_profile_fields` bloqueava atualizações de `is_vip` e `daily_likes_count` mesmo vindas de funções `SECURITY DEFINER`.
+    *   **Correção**: Atualizada trigger para permitir bypass se o usuário do banco for `postgres` ou `supabase_admin`.
+5.  **Menu Inferior Sumindo**:
+    *   **Problema**: Ao usar "Seja VIP" dentro do Chat, a variável `activeChat` não era limpa ao navegar para Home, mantendo o menu oculto (zombie state).
+    *   **Correção**: Atualizado `handleVipPurchase` em `App.tsx` para executar `setActiveChat(null)`.
 
 ---

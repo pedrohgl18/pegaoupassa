@@ -860,6 +860,14 @@ USING (auth.uid() = reporter_id);
 
 
 -- =============================================
+-- MIGRAÇÃO: Adicionar chat_snapshot em reports
+-- Data: 11/12/2025
+-- Descrição: Salvar histórico do chat na denúncia (pois unmatch apaga a conversa)
+-- =============================================
+
+ALTER TABLE reports ADD COLUMN IF NOT EXISTS chat_snapshot JSONB;
+
+-- =============================================
 -- MIGRAÇÃO: Adicionar coluna boost_expires_at em profiles
 -- Data: 28/11/2025
 -- Descrição: Campo para controlar boost ativo no perfil
@@ -1038,19 +1046,32 @@ ALTER TABLE boosts ENABLE ROW LEVEL SECURITY;
 -- Descrição: Incrementa o contador de likes diários do usuário (Faltava no arquivo)
 -- =============================================
 
-CREATE OR REPLACE FUNCTION increment_like_count(user_id UUID)
-RETURNS VOID AS c:\Users\Administrator\Downloads\pega-ou-passa
+-- =============================================
+-- Like Count Increment (Secure)
+-- Data: 11/12/2025
+-- Descrição: Incrementa contador usando auth.uid() para segurança
+-- =============================================
+DROP FUNCTION IF EXISTS increment_like_count(UUID);
+CREATE OR REPLACE FUNCTION increment_like_count()
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+    current_user_id UUID;
 BEGIN
-    -- Verificação de segurança: usuário só pode incrementar seu próprio contador
-    IF auth.uid() != user_id THEN
-        RAISE EXCEPTION 'Permissão negada';
+    current_user_id := auth.uid();
+    
+    IF current_user_id IS NULL THEN
+        RAISE EXCEPTION 'Usuário não autenticado';
     END IF;
 
     UPDATE profiles
     SET daily_likes_count = daily_likes_count + 1
-    WHERE id = user_id;
+    WHERE id = current_user_id;
 END;
-c:\Users\Administrator\Downloads\pega-ou-passa LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+$$;
 
 
 -- =============================================
@@ -1285,7 +1306,8 @@ RETURNS TABLE (
     vibe_status text,
     vibe_expires_at timestamptz,
     neighborhood text,
-    user_interests json
+    user_interests json,
+    tags text[]
 )
 LANGUAGE plpgsql
 AS $$
@@ -1324,7 +1346,8 @@ BEGIN
             FROM user_interests ui
             JOIN interests i ON i.id = ui.interest_id
             WHERE ui.user_id = p.id
-        ) as user_interests
+        ) as user_interests,
+        p.tags
     FROM profiles p
     WHERE 
         p.id != user_id

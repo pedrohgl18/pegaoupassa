@@ -2,8 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Loader2, Plus, X, Briefcase, GraduationCap, Ruler, Sparkles, Settings as SettingsIcon, Tag, ChevronRight } from 'lucide-react';
 import Button from './Button';
 import { profiles, photos as photosApi, interests } from '../lib/supabase';
+import { r2Storage } from '../lib/r2';
 
 import InterestSelector from './InterestSelector';
+import { TagSelector } from './TagSelector';
 
 const ZODIAC_SIGNS = [
   'Áries', 'Touro', 'Gêmeos', 'Câncer', 'Leão', 'Virgem',
@@ -43,6 +45,8 @@ const EditProfile: React.FC<EditProfileProps> = ({ userId, onBack, onSave, onLog
   const [height, setHeight] = useState('');
   const [zodiacSign, setZodiacSign] = useState('');
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]); // New
+  const [showTagsModal, setShowTagsModal] = useState(false); // New
 
   const [photoUrls, setPhotoUrls] = useState<{ id: string, url: string, position: number }[]>([]);
 
@@ -63,6 +67,7 @@ const EditProfile: React.FC<EditProfileProps> = ({ userId, onBack, onSave, onLog
       setEducation(data.education || '');
       setHeight(data.height ? data.height.toString() : '');
       setZodiacSign(data.zodiac_sign || '');
+      setSelectedTags(data.tags || []); // Fetch tags
 
       if (data.photos) {
         setPhotoUrls(data.photos.sort((a: any, b: any) => a.position - b.position));
@@ -90,12 +95,32 @@ const EditProfile: React.FC<EditProfileProps> = ({ userId, onBack, onSave, onLog
       // But photos.upload returns { url, error }
       // We actually need the ID to delete later. 
       // Let's just re-fetch photos after upload for now to be safe and simple
-      const { url, error } = await photosApi.upload(userId, file, photoUrls.length);
+      // R2 Upload
+      const timestamp = new Date().getTime();
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${timestamp}_${photoUrls.length}.${fileExt}`;
+      const filePath = `${userId}/${fileName}`;
+      const bucketName = import.meta.env.VITE_R2_BUCKET_PHOTOS || 'photos';
+
+      const { url, error } = await r2Storage.uploadFile(bucketName, filePath, file);
 
       if (error) {
-        alert('Erro no upload.');
-      } else {
-        // Refresh profile to get new photo with ID
+        alert('Erro no upload R2.');
+        console.error(error);
+      } else if (url) {
+        // Now save metadata to Supabase
+        // We need to create the photo object in DB
+        const { error: dbError } = await photosApi.create({
+          user_id: userId,
+          url: url, // R2 Public URL
+          position: photoUrls.length
+        });
+
+        if (dbError) {
+          console.error('DB Error:', dbError);
+        }
+
+        // Refresh profile
         const { data } = await profiles.getByIdWithRelations(userId);
         if (data && data.photos) {
           setPhotoUrls(data.photos.sort((a: any, b: any) => a.position - b.position));
@@ -143,6 +168,7 @@ const EditProfile: React.FC<EditProfileProps> = ({ userId, onBack, onSave, onLog
         education: education.trim(),
         height: height ? parseInt(height) : null,
         zodiac_sign: zodiacSign,
+        tags: selectedTags // Save tags
       });
 
       if (error) {
@@ -354,6 +380,33 @@ const EditProfile: React.FC<EditProfileProps> = ({ userId, onBack, onSave, onLog
           </button>
         </section>
 
+        {/* Tags Section */}
+        <section className="space-y-4">
+          <h2 className="text-sm font-bold text-zinc-500 uppercase tracking-wider flex items-center gap-2">
+            🏷️ Minhas Tags
+          </h2>
+          <button
+            onClick={() => setShowTagsModal(true)}
+            className="w-full p-4 bg-white rounded-xl border-2 border-zinc-200 flex items-center justify-between group hover:border-brasil-blue transition-all"
+          >
+            <div className="flex flex-col items-start gap-2">
+              <span className="font-bold text-zinc-900">Selecionar Identidade</span>
+              {selectedTags.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {selectedTags.map(tag => (
+                    <span key={tag} className="px-2 py-1 bg-rose-50 text-rose-600 text-xs font-bold rounded-lg border border-rose-100">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <span className="text-xs text-zinc-500">Adicione signos, tribos ou bandeiras</span>
+              )}
+            </div>
+            <ChevronRight size={20} className="text-zinc-400 group-hover:text-brasil-blue" />
+          </button>
+        </section>
+
         <div className="pt-4 pb-10">
           <Button fullWidth onClick={handleSave} disabled={saving}>
             {saving ? 'Salvando...' : 'Salvar Alterações'}
@@ -382,7 +435,7 @@ const EditProfile: React.FC<EditProfileProps> = ({ userId, onBack, onSave, onLog
               <InterestSelector
                 selectedIds={selectedInterests}
                 onChange={setSelectedInterests}
-                maxSelection={3}
+                maxSelection={5}
               />
             </div>
 
@@ -394,6 +447,23 @@ const EditProfile: React.FC<EditProfileProps> = ({ userId, onBack, onSave, onLog
           </div>
         </div>
       )}
+
+      {/* Tag Selector Modal */}
+      <TagSelector
+        isOpen={showTagsModal}
+        onClose={() => setShowTagsModal(false)}
+        selectedTags={selectedTags}
+        onToggleTag={(tag) => {
+          setSelectedTags(prev => {
+            if (prev.includes(tag)) return prev.filter(t => t !== tag);
+            if (prev.length >= 5) {
+              alert('Máximo de 5 tags.');
+              return prev;
+            }
+            return [...prev, tag];
+          });
+        }}
+      />
     </div>
   );
 };

@@ -82,6 +82,7 @@ export const useFeed = ({ user, profile, myLocation }: UseFeedProps) => {
                     vibeStatus: p.vibe_status,
                     vibeExpiresAt: p.vibe_expires_at,
                     neighborhood: p.neighborhood,
+                    tags: p.tags, // Added tags mapping
                 }));
 
                 // Filter out duplicates if any (merging strategy can be improved)

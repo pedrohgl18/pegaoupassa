@@ -20,5 +20,6 @@ export const useAppNavigation = () => {
         navigateTo,
         goBack,
         setCurrentScreen, // Expose setter for flexibility
+        setPreviousScreen,
     };
 };

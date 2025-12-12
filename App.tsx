@@ -3,6 +3,7 @@ import { ScreenState, Chat, Profile as ProfileType } from './types';
 import { calculateAge } from './utils';
 
 // Hooks
+import { supabase } from './lib/supabase';
 import { useAuth } from './hooks/useAuth';
 import { useAppNavigation } from './hooks/useAppNavigation';
 import { useGeolocation } from './hooks/useGeolocation';
@@ -70,6 +71,70 @@ const App: React.FC = () => {
     }
   }, [auth.profile?.daily_likes_count]);
 
+  // Hardware Back Button Handler
+  useEffect(() => {
+    import('@capacitor/app').then(({ App: CapApp }) => {
+      CapApp.addListener('backButton', ({ canGoBack }) => {
+        // 1. Close Modals if open
+        if (showFilterModal) {
+          setShowFilterModal(false);
+          return;
+        }
+        if (showVipSettingsModal) {
+          setShowVipSettingsModal(false);
+          return;
+        }
+        if (showVibeSelector) {
+          setShowVibeSelector(false);
+          return;
+        }
+        if (matchModalData.isOpen) {
+          setMatchModalData(prev => ({ ...prev, isOpen: false }));
+          return;
+        }
+        if (viewingProfile) {
+          setViewingProfile(null);
+          return;
+        }
+        if (showTutorial) {
+          setShowTutorial(false);
+          return;
+        }
+
+        // 2. Navigation Logic
+        // If in Chat -> Back to List
+        if (nav.currentScreen === ScreenState.CHAT && activeChat) {
+          setActiveChat(null);
+          nav.setCurrentScreen(ScreenState.CHAT); // Refresh list
+          return;
+        }
+
+        // If in Sub-screens -> Back to Main Tabs
+        if ([ScreenState.VIP, ScreenState.EDIT_PROFILE, ScreenState.ADMIN].includes(nav.currentScreen)) {
+          nav.goBack();
+          return;
+        }
+
+        // If in Main Tabs (Chat List, Profile) -> Back to Home
+        if (nav.currentScreen !== ScreenState.HOME && nav.currentScreen !== ScreenState.LOGIN) {
+          nav.setCurrentScreen(ScreenState.HOME);
+          return;
+        }
+
+        // If in Home, Minimize App (Default Android behavior usually handled by system if we don't trap it, but here we can exit)
+        if (nav.currentScreen === ScreenState.HOME) {
+          CapApp.exitApp();
+        }
+      });
+    });
+
+    return () => {
+      import('@capacitor/app').then(({ App: CapApp }) => {
+        CapApp.removeAllListeners();
+      });
+    }
+  }, [showFilterModal, showVipSettingsModal, showVibeSelector, matchModalData.isOpen, viewingProfile, showTutorial, nav.currentScreen, activeChat]);
+
   // Auth Navigation Logic
   useEffect(() => {
     if (!auth.loading) {
@@ -109,11 +174,26 @@ const App: React.FC = () => {
 
 
   // 6. Helper Functions (Handlers passed to Router)
-  const handleVipPurchase = () => {
-    // Optimistic update - in real app would verify payment
-    // But updateProfile is async.
-    auth.updateProfile({ is_vip: true }); // Assume success
-    nav.setCurrentScreen(ScreenState.HOME);
+  const handleVipPurchase = async () => {
+    try {
+      // Use RPC call instead of direct update (which is blocked)
+      const { error } = await supabase.rpc('purchase_vip');
+
+      if (error) {
+        console.error('Erro ao virar VIP:', error);
+        alert('Erro ao processar VIP. Tente novamente.');
+        return;
+      }
+
+      // Refresh profile to reflect changes
+      await auth.refreshProfile();
+
+      // Fix Navigation Bug: Clear active chat so BottomNav reappears
+      setActiveChat(null);
+      nav.setCurrentScreen(ScreenState.HOME);
+    } catch (err) {
+      console.error('Exception VIP:', err);
+    }
   };
 
   const handleSelectVibe = async (vibeId: string) => {
@@ -154,7 +234,8 @@ const App: React.FC = () => {
       interests: p.user_interests?.map((ui: any) => ui.interest) || [],
       vibeStatus: p.vibe_status,
       vibeExpiresAt: p.vibe_expires_at,
-      neighborhood: p.neighborhood
+      neighborhood: p.neighborhood,
+      tags: p.tags // Added tags mapping
     };
     setViewingProfile(preview);
   };

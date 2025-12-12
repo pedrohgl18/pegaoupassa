@@ -230,6 +230,7 @@ export const profiles = {
     vibe_expires_at: string
     last_vibe_activation: string
     neighborhood: string
+    tags: string[] // New: Identity tags
   }>) => {
     const { data, error } = await supabase
       .from('profiles')
@@ -440,6 +441,14 @@ export const photos = {
 
     return { error }
   },
+
+  // Manual create (used with R2 or generic URL)
+  create: async (data: { user_id: string, url: string, position: number }) => {
+    const { error } = await supabase
+      .from('photos')
+      .insert(data);
+    return { error };
+  },
 }
 
 // ============================================
@@ -554,7 +563,9 @@ export const swipes = {
 
   // Incrementar contador de likes
   incrementLikeCount: async (userId: string) => {
-    const { error } = await supabase.rpc('increment_like_count', { user_id: userId })
+    // Note: userId is ignored by the new RPC which uses auth.uid()
+    // Keeping the arg for compatibility but not passing it to RPC
+    const { error } = await supabase.rpc('increment_like_count')
     return { error }
   },
 
@@ -869,7 +880,7 @@ export const pushNotifications = {
 
 export const reports = {
   // Criar denúncia
-  create: async (reporterId: string, reportedId: string, reason: string, description?: string) => {
+  create: async (reporterId: string, reportedId: string, reason: string, description?: string, chatSnapshot?: any[]) => {
     const { error } = await supabase
       .from('reports')
       .insert({
@@ -877,6 +888,7 @@ export const reports = {
         reported_id: reportedId,
         reason,
         description,
+        chat_snapshot: chatSnapshot
       })
 
     return { error }

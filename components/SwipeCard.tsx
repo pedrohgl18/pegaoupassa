@@ -206,6 +206,13 @@ const SwipeCard: React.FC<SwipeCardProps> = ({
                   <span className="text-[10px] font-bold text-white/90 drop-shadow-md">{compatibility}%</span>
                 </div>
               )}
+
+              {/* Profile Tags */}
+              {profile.tags && profile.tags.map(tag => (
+                <div key={tag} className="px-2 py-0.5 bg-black/30 backdrop-blur-md rounded-md flex items-center border border-white/10 shadow-sm">
+                  <span className="text-[10px] font-bold text-white/90 drop-shadow-md">{tag}</span>
+                </div>
+              ))}
             </div>
 
             {/* Layer 2: Name + Age (Middle) - Large & Shadowed */}
@@ -317,6 +324,20 @@ const SwipeCard: React.FC<SwipeCardProps> = ({
               </span>
             </div>
           </div>
+
+          {/* Tags / Identity */}
+          {profile.tags && profile.tags.length > 0 && (
+            <div className="mb-6">
+              <h3 className="text-zinc-400 text-xs font-bold uppercase tracking-wider mb-3">Identidade</h3>
+              <div className="flex flex-wrap gap-2">
+                {profile.tags.map(tag => (
+                  <span key={tag} className="px-3 py-1.5 bg-rose-50 text-rose-600 text-sm font-bold rounded-xl border border-rose-100">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Interests */}
           {profile.interests && profile.interests.length > 0 && (

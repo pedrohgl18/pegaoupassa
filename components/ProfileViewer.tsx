@@ -45,6 +45,12 @@ export const ProfileViewer: React.FC<ProfileViewerProps> = ({
     });
 
     const triggerAction = async (direction: 'up' | 'down') => {
+        // Prevent swiping on self (View Public Profile mode)
+        if (viewingProfile.id === user?.id) {
+            console.log("Cannot swipe on yourself");
+            return;
+        }
+
         // 1. Close viewer immediately for responsiveness
         onClose();
 
