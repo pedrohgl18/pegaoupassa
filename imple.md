@@ -475,3 +475,23 @@ Admins não conseguiam ver o contexto da denúncia se o usuário desfizesse o ma
     *   **Correção**: Atualizado `handleVipPurchase` em `App.tsx` para executar `setActiveChat(null)`.
 
 ---
+### 17. Redesign do Swipe Card e Vibe (12/12/2025)
+- **Status**: ✅ Concluído
+- **Mudanças Visuais**:
+    - **Layout Dividido**: Card agora ocupa 75% da altura com a foto e 25% com informações ( fundo branco), criando um visual mais limpo e moderno.
+    - **Paleta de Core**: Adotado Violeta (Primary) e Branco como cores principais no card.
+    - **Contagem de Likes**: Movido para pílula flutuante no topo direito (HomeScreen), evitando sobreposição.
+    - **Compatibilidade Astral**: Movido para o canto inferior direito da foto para não brigar com outros elementos.
+    - **Borda Colorida**: O card da frente agora tem uma borda colorida que reflete a Vibe ativa (ex: Roxo para Rolê, Vermelho para Encontro).
+- **Correções de Layout**:
+    - **Safe Area (Galaxy S9)**: Aumentado padding inferior do card (Front e Back) para evitar que o menu flutuante cubra as informações ou tags em telas menores.
+    - **Vibe Badge**: Ajustado posicionamento vertical (`top-14`) para não colidir com elementos do topo.
+    - **Correção de Cores**: Removido overlay degradê que tinturava a foto inteira. Agora a cor da vibe aparece apenas na borda e nos detalhes.
+    - **Contraste**: Emoji de "Encontro" alterado de Rosa (🌹) para Taças (🥂) para melhor visibilidade no fundo vermelho.
+    - **Flip Logic**: Corrigido bug onde o botão de informações não virava o card visualmente se houvesse callback.
+
+### Como Verificar
+1. **Swipe Card**: Abra o app e veja o novo layout dividido (Foto/Info).
+2. **Vibe**: Selecione uma vibe (ex: Encontro) e veja a borda do card ficar vermelha e o ícone de taças aparecer.
+3. **Info Button**: Toque no botão "i" para virar o card e ver detalhes.
+4. **Telas Pequenas**: Verifique que as tags e botão de info não estão cobertos pelo menu inferior.
