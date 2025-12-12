@@ -80,7 +80,7 @@ export const TagSelector: React.FC<TagSelectorProps> = ({ isOpen, onClose, selec
                     <div className="h-4" /> {/* Spacer */}
                 </div>
 
-                <div className="p-4 border-t border-zinc-100 bg-white sm:rounded-b-2xl pb-safe">
+                <div className="p-4 border-t border-zinc-100 bg-white sm:rounded-b-2xl pb-safe mb-4">
                     <button
                         onClick={onClose}
                         className="w-full py-3.5 bg-rose-500 text-white font-bold rounded-xl active:scale-[0.98] transition-transform shadow-lg shadow-rose-500/20"

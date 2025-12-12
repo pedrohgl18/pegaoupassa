@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Profile } from '../types';
-import { BadgeCheck, MapPin, Sparkles, GraduationCap, Ruler, X, Heart, Briefcase } from 'lucide-react';
+import { BadgeCheck, MapPin, Sparkles, GraduationCap, Ruler, X, Heart, Briefcase, Info } from 'lucide-react';
 import { zodiac } from '../lib/supabase';
 import { VIBES } from './VibeSelector';
 import clsx from 'clsx';
@@ -127,6 +127,11 @@ const SwipeCard: React.FC<SwipeCardProps> = ({
 
   const optimizedPhotos = photos.map(p => getOptimizedUrl(p));
 
+  // Determine border color based on Vibe
+  const borderColor = activeVibe
+    ? activeVibe.color.replace('from-', 'border-').split(' ')[0].replace('500', '500')
+    : 'border-white/10';
+
   return (
     <div className={`absolute inset-0 w-full h-full ${isActive ? 'z-10' : 'z-0 scale-95 opacity-50'}`} style={cardStyle}>
       <div
@@ -137,105 +142,134 @@ const SwipeCard: React.FC<SwipeCardProps> = ({
         style={{ transformStyle: 'preserve-3d' }}
       >
 
-        {/* ================= FRONT SIDE ================= */}
+        {/* ================= FRONT SIDE (SPLIT LAYOUT) ================= */}
         <div
-          className={clsx(
-            "absolute inset-0 w-full h-full bg-black backface-hidden rounded-[32px] overflow-hidden shadow-2xl",
-            activeVibe ? `border-4 ${activeVibe.color.replace('from-', 'border-').split(' ')[0].replace('500', '500')}` : ""
-          )}
+          className="absolute inset-0 w-full h-full bg-white rounded-[32px] overflow-hidden shadow-2xl backface-hidden flex flex-col"
           style={{
             backfaceVisibility: 'hidden',
             WebkitBackfaceVisibility: 'hidden',
-            boxShadow: activeVibe ? `0 0 20px ${activeVibe.color.includes('amber') || activeVibe.color.includes('orange') ? 'rgba(245, 158, 11, 0.5)' : 'rgba(139, 92, 246, 0.5)'}` : undefined // Simple glow fallback
           }}
           onClick={handleTap}
           role="button"
           aria-label={`Ver perfil de ${profile.name}`}
         >
-          {/* Photo */}
-          <div
-            className="absolute inset-0 bg-cover bg-center transition-all duration-300"
-            style={{ backgroundImage: `url(${optimizedPhotos[currentPhotoIndex]})` }}
-            role="img"
-            aria-label={`Foto ${currentPhotoIndex + 1} de ${profile.name}`}
-          />
+          {/* --- TOP SECTION: PHOTO (75%) --- */}
+          <div className="relative flex-grow h-[75%] w-full overflow-hidden bg-zinc-100">
+            {/* Photo */}
+            <div
+              className="absolute inset-0 bg-cover bg-center transition-all duration-300"
+              style={{ backgroundImage: `url(${optimizedPhotos[currentPhotoIndex]})` }}
+              role="img"
+              aria-label={`Foto ${currentPhotoIndex + 1} de ${profile.name}`}
+            />
 
-          {/* Overlays (Like/Pass) */}
-          <div className="absolute inset-0 bg-primary/30 flex items-center justify-center z-20 pointer-events-none transition-opacity duration-200" style={{ opacity: likeOpacity }}>
-            <div className="glass p-8 rounded-full border-4 border-white shadow-2xl transform rotate-12">
-              <Heart size={80} className="text-white" fill="white" />
+            {/* Vibe Gradient Overlay (Subtle) */}
+            {activeVibe && (
+              <div className={`absolute inset-0 bg-gradient-to-t ${activeVibe.color.replace('from-', 'from-').replace('to-', 'to-transparent')} opacity-20 pointer-events-none`} />
+            )}
+
+            {/* Standard Gradient for text readability if we needed it (but text is now below) 
+                Keeping a small bottom gradient for photo indicators transition */}
+            <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
+
+            {/* Overlays (Like/Pass) */}
+            <div className="absolute inset-0 bg-violet-500/30 flex items-center justify-center z-20 pointer-events-none transition-opacity duration-200" style={{ opacity: likeOpacity }}>
+              <div className="glass-strong p-6 rounded-full border-4 border-white shadow-2xl transform rotate-12">
+                <Heart size={64} className="text-white" fill="white" />
+              </div>
             </div>
-          </div>
-          <div className="absolute inset-0 bg-red-500/30 flex items-center justify-center z-20 pointer-events-none transition-opacity duration-200" style={{ opacity: passOpacity }}>
-            <div className="glass p-8 rounded-full border-4 border-white shadow-2xl transform -rotate-12">
-              <X size={80} className="text-white" />
+            <div className="absolute inset-0 bg-zinc-900/40 flex items-center justify-center z-20 pointer-events-none transition-opacity duration-200" style={{ opacity: passOpacity }}>
+              <div className="glass-strong p-6 rounded-full border-4 border-white shadow-2xl transform -rotate-12">
+                <X size={64} className="text-white" />
+              </div>
             </div>
-          </div>
 
+            {/* Photo Indicators */}
+            {photos.length > 1 && (
+              <div className="absolute top-3 left-0 right-0 z-30 px-3 flex gap-1.5" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+                {photos.map((_, index) => (
+                  <div key={index} className={`h-1.5 rounded-full flex-1 transition-all duration-300 ${index === currentPhotoIndex ? 'bg-white shadow-md' : 'bg-white/40'}`} />
+                ))}
+              </div>
+            )}
 
-
-          {/* Photo Indicators */}
-          {photos.length > 1 && (
-            <div className="absolute top-3 left-0 right-0 z-30 px-4 flex gap-1.5" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
-              {photos.map((_, index) => (
-                <div key={index} className={`h-1 rounded-full flex-1 transition-all duration-300 ${index === currentPhotoIndex ? 'bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)]' : 'bg-white/40'}`} />
-              ))}
-            </div>
-          )}
-
-          {/* Info Section - Stacked Layout with Safety Margin */}
-          <div className="absolute bottom-0 left-0 right-0 pb-[calc(90px+env(safe-area-inset-bottom))] px-5 z-30 pointer-events-none flex flex-col items-start gap-1">
-
-            {/* Layer 3: Tags (Top) - Subtler visually */}
-            <div className="flex flex-wrap gap-2 mb-1 w-full items-center justify-start">
-              {/* Vibe Badge - Compact & Glassy */}
-              {activeVibe && (
+            {/* Vibe Badge (Floating Top Left) */}
+            {activeVibe && (
+              <div className="absolute top-6 left-4 z-30 mt-safe">
                 <div className={`
-                  px-2.5 py-1 rounded-full flex items-center gap-1.5 shadow-sm backdrop-blur-md border border-white/20 
-                  bg-gradient-to-r ${activeVibe.color.replace('from-', 'from-').replace('to-', 'to-')}
+                  px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg backdrop-blur-md border border-white/20 
+                  bg-gradient-to-r ${activeVibe.color}
                 `}>
-                  <span className="text-sm leading-none drop-shadow-md filter">{activeVibe.emoji}</span>
-                  <span className="text-[10px] font-bold text-white tracking-wide uppercase drop-shadow-md">{activeVibe.label}</span>
+                  <span className="text-sm shadow-black drop-shadow-sm">{activeVibe.emoji}</span>
+                  <span className="text-[10px] font-bold text-white tracking-wide uppercase shadow-black drop-shadow-sm">{activeVibe.label}</span>
                 </div>
-              )}
+              </div>
+            )}
 
-              {/* Compatibility Badge - Subtle Outline/Glass */}
-              {compatibility > 0 && (
-                <div className="bg-black/30 backdrop-blur-md px-2.5 py-1 rounded-full flex items-center gap-1 border border-white/10 shadow-sm">
-                  <Sparkles size={10} className="text-yellow-400" fill="#FACC15" />
-                  <span className="text-[10px] font-bold text-white/90 drop-shadow-md">{compatibility}%</span>
+            {/* Compatibility Badge (Moved to Bottom Right to avoid overlap with Likes Counter) */}
+            {compatibility > 0 && (
+              <div className="absolute bottom-4 right-4 z-30">
+                <div className="bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-full flex items-center gap-1.5 border border-white/10 shadow-lg">
+                  <Sparkles size={12} className="text-violet-300" fill="#C4B5FD" />
+                  <span className="text-xs font-bold text-white shadow-black drop-shadow-sm">{compatibility}%</span>
                 </div>
-              )}
+              </div>
+            )}
+          </div>
 
+          {/* --- BOTTOM SECTION: INFO (25% / Auto) --- */}
+          <div className="relative h-auto min-h-[25%] bg-white px-5 pt-4 pb-safe flex flex-col justify-start z-30">
+            {/* Info Button (Absolute Floating or Inline?) -> Inline feels cleaner for this layout */}
+
+            <div className="flex justify-between items-start mb-1">
+              <div className="flex flex-col">
+                {/* Name & Age */}
+                <div className="flex items-baseline gap-2">
+                  <h1 className="text-2xl font-black text-zinc-900 tracking-tight">{profile.name}</h1>
+                  <span className="text-xl font-medium text-zinc-400">{profile.age}</span>
+                  {profile.verified && <BadgeCheck className="text-violet-500 w-5 h-5 self-center ml-0.5" fill="white" />}
+                </div>
+
+                {/* Location */}
+                <div className="flex items-center gap-1.5 text-zinc-500 font-medium text-xs mt-0.5">
+                  <MapPin size={12} className="text-zinc-400" />
+                  <span>
+                    {profile.distance !== undefined && profile.distance < 1
+                      ? `${Math.round(profile.distance * 1000)}m de distância`
+                      : `${Math.round(profile.distance || 0)} km de distância`
+                    }
+                  </span>
+                </div>
+              </div>
+
+              {/* Info/Flip Button - Subtle, circular */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsFlipped(true);
+                  if (onFlip) onFlip(true);
+                }}
+                className="p-2.5 bg-zinc-50 hover:bg-zinc-100 rounded-full text-zinc-400 hover:text-violet-600 transition-colors border border-zinc-100 shadow-sm"
+              >
+                <Info size={20} className="rotate-0" /> {/* Using generic info icon or similar */}
+              </button>
+            </div>
+
+            {/* Tags (Scrollable horizontal if many) */}
+            <div className="flex flex-wrap gap-2 mt-3 w-full items-center justify-start overflow-hidden h-[36px]">
               {/* Profile Tags */}
               {profile.tags && profile.tags.map(tag => (
-                <div key={tag} className="px-2 py-0.5 bg-black/30 backdrop-blur-md rounded-md flex items-center border border-white/10 shadow-sm">
-                  <span className="text-[10px] font-bold text-white/90 drop-shadow-md">{tag}</span>
+                <div key={tag} className="px-2.5 py-1 bg-zinc-50 rounded-lg flex items-center border border-zinc-100">
+                  <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-wide">{tag}</span>
                 </div>
               ))}
+
             </div>
 
-            {/* Layer 2: Name + Age (Middle) - Large & Shadowed */}
-            <div className="flex items-baseline gap-2 drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)]">
-              <h1 className="text-4xl font-black text-white tracking-tight leading-none">{profile.name}</h1>
-              <span className="text-2xl font-medium text-white/95">{profile.age}</span>
-              {profile.verified && <BadgeCheck className="text-blue-400 w-6 h-6 self-center ml-0.5" fill="white" />}
-            </div>
-
-            {/* Layer 1: Location (Bottom) - Shadowed */}
-            <div className="flex items-center gap-1.5 text-white/90 font-medium text-sm drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
-              <MapPin size={14} className="text-white/80" />
-              <span>
-                {profile.distance !== undefined && profile.distance < 1
-                  ? `${Math.round(profile.distance * 1000)}m de distância`
-                  : `${Math.round(profile.distance || 0)} km de distância`
-                }
-              </span>
-            </div>
           </div>
         </div>
 
-        {/* ================= BACK SIDE (DETAILS - LIGHT MODE) ================= */}
+        {/* ================= BACK SIDE (DETAILS) ================= */}
         <div
           className="absolute inset-0 w-full h-full bg-white rounded-[32px] overflow-y-auto overflow-x-hidden [transform:rotateY(180deg)] backface-hidden px-6 py-8"
           style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}
@@ -325,7 +359,8 @@ const SwipeCard: React.FC<SwipeCardProps> = ({
             </div>
           </div>
 
-          {/* Tags / Identity */}
+          {/* Tags / Identity - REMOVED AS PER REQUEST */}
+          {/* 
           {profile.tags && profile.tags.length > 0 && (
             <div className="mb-6">
               <h3 className="text-zinc-400 text-xs font-bold uppercase tracking-wider mb-3">Identidade</h3>
@@ -337,7 +372,8 @@ const SwipeCard: React.FC<SwipeCardProps> = ({
                 ))}
               </div>
             </div>
-          )}
+          )} 
+*/}
 
           {/* Interests */}
           {profile.interests && profile.interests.length > 0 && (

@@ -216,7 +216,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                 {currentProfile && (
                     <div
                         className={`absolute inset-0 transition-transform duration-500 ease-in-out ${lastDirection === 'up' ? '-translate-y-full opacity-0' :
-                                lastDirection === 'down' ? 'translate-y-full opacity-0' : 'translate-y-0'
+                            lastDirection === 'down' ? 'translate-y-full opacity-0' : 'translate-y-0'
                             }`}
                         onTouchStart={handleTouchStart}
                         onTouchMove={handleTouchMove}
@@ -251,35 +251,35 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                     </div>
                 )}
 
-                {/* Top Bar - Status VIP/Free */}
-                <div className="absolute top-0 left-0 right-0 z-20 pointer-events-none">
-                    <div className="flex justify-center pt-16 pb-4 bg-gradient-to-b from-black/80 via-black/40 to-transparent">
-                        {!isVip && !isTopCardFlipped && (
-                            <div className="flex items-center gap-3 pointer-events-auto">
-                                <div className="flex flex-col gap-1 w-28">
-                                    <div className="flex justify-between items-end px-1">
-                                        <span className="text-[10px] font-bold text-white/80 uppercase tracking-wider">Likes</span>
-                                        <span className="text-[10px] font-bold text-white/80">{swipeCount}/{DAILY_FREE_SWIPES}</span>
-                                    </div>
-                                    <div className="w-full h-1.5 bg-white/20 rounded-full overflow-hidden backdrop-blur-sm">
-                                        <div
-                                            className="h-full bg-brasil-green shadow-[0_0_8px_rgba(34,197,94,0.8)]"
-                                            style={{ width: `${Math.min((swipeCount / DAILY_FREE_SWIPES) * 100, 100)}%` }}
-                                        />
-                                    </div>
+                {/* Top Bar - Status VIP/Free - NEW FLOATING STYLE */}
+                {!isVip && !isTopCardFlipped && (
+                    <div className="absolute top-6 right-5 z-40 animate-fade-in pointer-events-auto">
+                        <div
+                            className="flex items-center gap-2 bg-white/20 backdrop-blur-xl px-4 py-2 rounded-full border border-white/20 shadow-lg"
+                        >
+                            <div className="flex flex-col gap-0.5 w-20">
+                                <div className="flex justify-between items-center px-0.5">
+                                    <span className="text-[9px] font-bold text-white uppercase tracking-wider opacity-80">Likes</span>
+                                    <span className="text-[10px] font-bold text-white">{swipeCount}/{DAILY_FREE_SWIPES}</span>
                                 </div>
-
-                                <button
-                                    onClick={onVipGate}
-                                    className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 transition-all active:scale-95"
-                                >
-                                    <Crown size={14} className="text-brasil-yellow" fill="#FFDF00" />
-                                    <span className="text-[10px] font-bold text-white uppercase tracking-wide">Sem Limites</span>
-                                </button>
+                                <div className="w-full h-1.5 bg-black/20 rounded-full overflow-hidden">
+                                    <div
+                                        className="h-full bg-violet-400 shadow-[0_0_8px_rgba(167,139,250,0.8)] transition-all duration-300"
+                                        style={{ width: `${Math.min((swipeCount / DAILY_FREE_SWIPES) * 100, 100)}%` }}
+                                    />
+                                </div>
                             </div>
-                        )}
+
+                            <button
+                                onClick={onVipGate}
+                                className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg active:scale-95 transition-transform"
+                                aria-label="Virar VIP"
+                            >
+                                <Crown size={14} className="text-white" fill="white" />
+                            </button>
+                        </div>
                     </div>
-                </div>
+                )}
             </div>
         </div>
     );

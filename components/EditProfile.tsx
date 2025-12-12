@@ -439,7 +439,7 @@ const EditProfile: React.FC<EditProfileProps> = ({ userId, onBack, onSave, onLog
               />
             </div>
 
-            <div className="pt-4 mt-4 border-t border-zinc-100">
+            <div className="pt-4 mt-4 border-t border-zinc-100 pb-safe mb-4">
               <Button fullWidth onClick={() => setShowInterestsModal(false)}>
                 Concluir
               </Button>
@@ -456,8 +456,8 @@ const EditProfile: React.FC<EditProfileProps> = ({ userId, onBack, onSave, onLog
         onToggleTag={(tag) => {
           setSelectedTags(prev => {
             if (prev.includes(tag)) return prev.filter(t => t !== tag);
-            if (prev.length >= 5) {
-              alert('Máximo de 5 tags.');
+            if (prev.length >= 4) {
+              alert('Máximo de 4 tags.');
               return prev;
             }
             return [...prev, tag];
