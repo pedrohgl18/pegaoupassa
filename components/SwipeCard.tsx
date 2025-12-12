@@ -144,7 +144,7 @@ const SwipeCard: React.FC<SwipeCardProps> = ({
 
         {/* ================= FRONT SIDE (SPLIT LAYOUT) ================= */}
         <div
-          className="absolute inset-0 w-full h-full bg-white rounded-[32px] overflow-hidden shadow-2xl backface-hidden flex flex-col"
+          className={`absolute inset-0 w-full h-full bg-white rounded-[32px] overflow-hidden shadow-2xl backface-hidden flex flex-col border-[3px] ${borderColor}`}
           style={{
             backfaceVisibility: 'hidden',
             WebkitBackfaceVisibility: 'hidden',
@@ -164,9 +164,7 @@ const SwipeCard: React.FC<SwipeCardProps> = ({
             />
 
             {/* Vibe Gradient Overlay (Subtle) */}
-            {activeVibe && (
-              <div className={`absolute inset-0 bg-gradient-to-t ${activeVibe.color.replace('from-', 'from-').replace('to-', 'to-transparent')} opacity-20 pointer-events-none`} />
-            )}
+
 
             {/* Standard Gradient for text readability if we needed it (but text is now below) 
                 Keeping a small bottom gradient for photo indicators transition */}
@@ -195,7 +193,7 @@ const SwipeCard: React.FC<SwipeCardProps> = ({
 
             {/* Vibe Badge (Floating Top Left) */}
             {activeVibe && (
-              <div className="absolute top-6 left-4 z-30 mt-safe">
+              <div className="absolute top-8 left-4 z-30 mt-safe">
                 <div className={`
                   px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg backdrop-blur-md border border-white/20 
                   bg-gradient-to-r ${activeVibe.color}
@@ -218,7 +216,7 @@ const SwipeCard: React.FC<SwipeCardProps> = ({
           </div>
 
           {/* --- BOTTOM SECTION: INFO (25% / Auto) --- */}
-          <div className="relative h-auto min-h-[25%] bg-white px-5 pt-4 pb-safe flex flex-col justify-start z-30">
+          <div className="relative h-auto min-h-[25%] bg-white px-5 pt-4 pb-[calc(env(safe-area-inset-bottom)+5rem)] flex flex-col justify-start z-30">
             {/* Info Button (Absolute Floating or Inline?) -> Inline feels cleaner for this layout */}
 
             <div className="flex justify-between items-start mb-1">
@@ -271,7 +269,7 @@ const SwipeCard: React.FC<SwipeCardProps> = ({
 
         {/* ================= BACK SIDE (DETAILS) ================= */}
         <div
-          className="absolute inset-0 w-full h-full bg-white rounded-[32px] overflow-y-auto overflow-x-hidden [transform:rotateY(180deg)] backface-hidden px-6 py-8"
+          className={`absolute inset-0 w-full h-full bg-white rounded-[32px] overflow-y-auto overflow-x-hidden [transform:rotateY(180deg)] backface-hidden px-6 py-8 pb-32 border-[3px] ${borderColor}`}
           style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}
           onClick={(e) => {
             e.stopPropagation();

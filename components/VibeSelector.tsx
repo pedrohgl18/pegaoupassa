@@ -15,7 +15,7 @@ const VIBES: VibeOption[] = [
     { id: 'party', label: 'Rolê', emoji: '🎉', color: 'from-purple-500 to-pink-600', icon: Music },
     { id: 'game', label: 'Jogar', emoji: '🎮', color: 'from-indigo-500 to-blue-600', icon: Gamepad2 },
     { id: 'call', label: 'Resenha', emoji: '💬', color: 'from-green-500 to-emerald-600', icon: Phone },
-    { id: 'date', label: 'Encontro', emoji: '🌹', color: 'from-red-500 to-rose-600', icon: Flame },
+    { id: 'date', label: 'Encontro', emoji: '🥂', color: 'from-red-500 to-rose-600', icon: Flame },
 ];
 
 interface VibeSelectorProps {
