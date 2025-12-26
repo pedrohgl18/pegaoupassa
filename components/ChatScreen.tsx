@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Send, MoreVertical, Image as ImageIcon, Mic, Trash2, AlertTriangle, Crown, Loader2, StopCircle, X, ZoomIn, Flag, Reply, Smile, Check, Ban } from 'lucide-react';
+import { Virtuoso, type VirtuosoHandle } from 'react-virtuoso';
 import { messages as messagesApi, matches as matchesApi, supabase, pushNotifications, reports, messageReactions, safety } from '../lib/supabase';
 import { r2Storage } from '../lib/r2';
 
@@ -56,6 +57,178 @@ const ImageLightbox: React.FC<{ imageUrl: string; onClose: () => void }> = ({ im
   );
 };
 
+// Componente de Mensagem Memoizado para evitar re-renders desnecessários
+const MessageBubble = React.memo(({
+  msg,
+  prevMsg,
+  currentUserId,
+  currentUserIsVip,
+  otherUserName,
+  isSelected,
+  showReactionPicker,
+  onLongPress,
+  onImageClick,
+  onAddReaction,
+  onRemoveReaction,
+  onReply,
+  onDelete
+}: {
+  msg: Message;
+  prevMsg?: Message;
+  currentUserId: string;
+  currentUserIsVip: boolean;
+  otherUserName: string;
+  isSelected: boolean;
+  showReactionPicker: boolean;
+  onLongPress: (msg: Message) => void;
+  onImageClick: (url: string) => void;
+  onAddReaction: (msgId: string, reaction: string) => void;
+  onRemoveReaction: (msgId: string) => void;
+  onReply: (msg: Message) => void;
+  onDelete: (msgId: string) => void;
+}) => {
+  const isMe = msg.sender_id === currentUserId;
+  const hasMedia = msg.media_url && msg.media_type;
+  const isImageMessage = msg.media_type === 'image';
+  const isAudioMessage = msg.media_type === 'audio';
+  const timestamp = new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const messageReactionsList = msg.reactions || [];
+
+  // Grouping logic visual
+  const isSequence = prevMsg && prevMsg.sender_id === msg.sender_id;
+
+  const REACTIONS = ['❤️', '😂', '😮', '😢', '👍'];
+
+  return (
+    <div className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} ${isSequence ? 'mt-1' : 'mt-4'} px-4`}>
+      {/* Reply Quote */}
+      {msg.reply_to && (
+        <div className={`text-xs mb-1 px-3 py-2 rounded-xl max-w-[85%] flex items-center gap-2 border-l-4 ${isMe ? 'bg-blue-50 text-blue-600 border-blue-400 mr-1' : 'bg-white text-zinc-600 border-zinc-300 ml-1 shadow-sm'
+          }`}>
+          <Reply size={12} className="opacity-50" />
+          <div>
+            <span className="font-bold block text-[10px] opacity-70 mb-0.5">
+              {msg.reply_to.sender_id === currentUserId ? 'Você' : otherUserName}
+            </span>
+            <span className="line-clamp-1 font-medium">{msg.reply_to.content || (msg.reply_to.media_type ? '📷 Mídia' : 'Mensagem')}</span>
+          </div>
+        </div>
+      )}
+
+      <div
+        className={`relative max-w-[85%] shadow-sm overflow-hidden group transition-all duration-200 ${isMe
+          ? 'bg-brasil-blue text-white rounded-2xl rounded-tr-sm'
+          : 'bg-white text-zinc-800 border border-zinc-100 rounded-2xl rounded-tl-sm'
+          } ${isSelected ? 'ring-2 ring-brasil-yellow scale-[1.02] shadow-md z-10' : ''}`}
+        onContextMenu={(e) => {
+          e.preventDefault();
+          onLongPress(msg);
+        }}
+        onTouchStart={() => {
+          const timeout = setTimeout(() => onLongPress(msg), 500);
+          const clear = () => clearTimeout(timeout);
+          document.addEventListener('touchend', clear, { once: true });
+          document.addEventListener('touchmove', clear, { once: true });
+        }}
+      >
+        {/* Image Content */}
+        {isImageMessage && msg.media_url && (
+          <div
+            className="relative cursor-pointer group/img"
+            onClick={() => onImageClick(msg.media_url!)}
+          >
+            <img
+              src={msg.media_url}
+              alt="Foto enviada"
+              className="w-full max-h-[280px] object-cover bg-zinc-100"
+              loading="lazy"
+            />
+            <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/10 transition-colors flex items-center justify-center">
+              <ZoomIn size={24} className="text-white opacity-0 group-hover/img:opacity-100 transition-opacity drop-shadow-md" />
+            </div>
+          </div>
+        )}
+
+        {/* Audio Content */}
+        {isAudioMessage && msg.media_url && (
+          <div className="p-3 flex items-center gap-2 min-w-[200px]">
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isMe ? 'bg-white/20' : 'bg-zinc-100'}`}>
+              <Mic size={16} className={isMe ? 'text-white' : 'text-zinc-500'} />
+            </div>
+            <audio controls src={msg.media_url} className="h-8 w-full max-w-[180px]" />
+          </div>
+        )}
+
+        {/* Text Content */}
+        <div className={`px-4 py-2.5 ${isImageMessage ? 'pt-2' : ''}`}>
+          {msg.content && !hasMedia && (
+            <p className="text-[15px] leading-relaxed font-medium whitespace-pre-wrap">{msg.content}</p>
+          )}
+
+          {/* Timestamp & Checks */}
+          <div className={`flex items-center justify-end gap-1 mt-1 ${isMe ? 'text-blue-100' : 'text-zinc-300'}`}>
+            <span className="text-[10px] font-bold">{timestamp}</span>
+            {isMe && (
+              msg.is_read && currentUserIsVip ? <div className="flex"><Check size={12} strokeWidth={3} /><Check size={12} strokeWidth={3} className="-ml-1.5" /></div> : <Check size={12} strokeWidth={3} />
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Reactions Display */}
+      {messageReactionsList.length > 0 && (
+        <div className={`flex gap-0.5 -mt-2 z-10 ${isMe ? 'mr-2' : 'ml-2'}`}>
+          {messageReactionsList.map((r, idx) => (
+            <button
+              key={idx}
+              onClick={() => r.user_id === currentUserId ? onRemoveReaction(msg.id) : null}
+              className={`text-xs px-1.5 py-0.5 rounded-full bg-white shadow-md border border-zinc-100 flex items-center justify-center min-w-[24px] h-[24px] ${r.user_id === currentUserId ? 'cursor-pointer hover:bg-zinc-50 ring-1 ring-brasil-blue/20' : 'cursor-default'
+                }`}
+            >
+              {r.reaction}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Reaction Picker */}
+      {isSelected && showReactionPicker && (
+        <div
+          className={`flex items-center gap-1 mt-2 p-1.5 bg-white rounded-full shadow-xl border border-zinc-100 animate-in zoom-in-95 duration-200 ${isMe ? 'mr-0 origin-top-right' : 'ml-0 origin-top-left'}`}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {REACTIONS.map((emoji) => (
+            <button
+              key={emoji}
+              onClick={() => onAddReaction(msg.id, emoji)}
+              className="text-xl w-9 h-9 flex items-center justify-center hover:bg-zinc-100 rounded-full transition-transform hover:scale-110 active:scale-90"
+            >
+              {emoji}
+            </button>
+          ))}
+          <div className="w-px h-6 bg-zinc-200 mx-1" />
+          <button
+            onClick={() => onReply(msg)}
+            className="w-9 h-9 flex items-center justify-center hover:bg-zinc-100 rounded-full transition-colors text-zinc-600"
+            title="Responder"
+          >
+            <Reply size={18} />
+          </button>
+          {isMe && (
+            <button
+              onClick={() => onDelete(msg.id)}
+              className="w-9 h-9 flex items-center justify-center hover:bg-red-50 rounded-full transition-colors text-red-500"
+              title="Apagar"
+            >
+              <Trash2 size={18} />
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+});
+
 const ChatScreen: React.FC<ChatScreenProps> = ({
   conversationId,
   matchId,
@@ -100,7 +273,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({
   const [reportReason, setReportReason] = useState('');
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const virtuosoRef = useRef<VirtuosoHandle>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const channelRef = useRef<any>(null);
 
@@ -112,7 +285,8 @@ const ChatScreen: React.FC<ChatScreenProps> = ({
   };
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    // Virtuoso handles auto-scroll with followOutput, but manual scroll is sometimes needed
+    virtuosoRef.current?.scrollToIndex({ index: messages.length - 1, align: 'end', behavior: 'smooth' });
   };
 
   const handleInputFocus = () => {
@@ -689,8 +863,9 @@ const ChatScreen: React.FC<ChatScreenProps> = ({
       </div>
 
       {/* Messages Area */}
+      {/* Messages Area - Virtualized */}
       <div
-        className="flex-1 overflow-y-auto p-4 space-y-6 bg-zinc-50"
+        className="flex-1 bg-zinc-50 relative"
         onClick={() => { setShowMenu(false); setSelectedMessage(null); setShowReactionPicker(false); }}
       >
         {loading ? (
@@ -708,159 +883,57 @@ const ChatScreen: React.FC<ChatScreenProps> = ({
             </p>
           </div>
         ) : (
-          messages.map((msg, index) => {
-            const isMe = msg.sender_id === currentUserId;
-            const hasMedia = msg.media_url && msg.media_type;
-            const isImageMessage = msg.media_type === 'image';
-            const isAudioMessage = msg.media_type === 'audio';
-            const timestamp = new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            const isSelected = selectedMessage?.id === msg.id;
-            const messageReactionsList = msg.reactions || [];
+          <Virtuoso
+            ref={virtuosoRef}
+            data={messages}
+            initialTopMostItemIndex={messages.length - 1} // Start at bottom
+            followOutput={'smooth'} // Auto-stick to bottom on new messages
+            alignToBottom={true} // Align list to bottom
+            totalListHeightChanged={(height) => {
+              // Optional: handle height adjustments if needed
+            }}
+            itemContent={(index, msg) => {
+              const prevMsg = messages[index - 1];
+              const isSelected = selectedMessage?.id === msg.id;
 
-            // Grouping logic visual (se a msg anterior for do mesmo user)
-            const prevMsg = messages[index - 1];
-            const isSequence = prevMsg && prevMsg.sender_id === msg.sender_id;
-
-            return (
-              <div key={msg.id} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} ${isSequence ? 'mt-1' : 'mt-4'}`}>
-                {/* Reply Quote */}
-                {msg.reply_to && (
-                  <div className={`text-xs mb-1 px-3 py-2 rounded-xl max-w-[85%] flex items-center gap-2 border-l-4 ${isMe ? 'bg-blue-50 text-blue-600 border-blue-400 mr-1' : 'bg-white text-zinc-600 border-zinc-300 ml-1 shadow-sm'
-                    }`}>
-                    <Reply size={12} className="opacity-50" />
-                    <div>
-                      <span className="font-bold block text-[10px] opacity-70 mb-0.5">
-                        {msg.reply_to.sender_id === currentUserId ? 'Você' : otherUserName}
-                      </span>
-                      <span className="line-clamp-1 font-medium">{msg.reply_to.content || (msg.reply_to.media_type ? '📷 Mídia' : 'Mensagem')}</span>
-                    </div>
-                  </div>
-                )}
-
-                <div
-                  className={`relative max-w-[80%] shadow-sm overflow-hidden group transition-all duration-200 ${isMe
-                    ? 'bg-brasil-blue text-white rounded-2xl rounded-tr-sm'
-                    : 'bg-white text-zinc-800 border border-zinc-100 rounded-2xl rounded-tl-sm'
-                    } ${isSelected ? 'ring-2 ring-brasil-yellow scale-[1.02] shadow-md z-10' : ''}`}
-                  onContextMenu={(e) => {
-                    e.preventDefault();
-                    handleMessageLongPress(msg);
-                  }}
-                  onTouchStart={() => {
-                    const timeout = setTimeout(() => handleMessageLongPress(msg), 500);
-                    const clear = () => clearTimeout(timeout);
-                    document.addEventListener('touchend', clear, { once: true });
-                    document.addEventListener('touchmove', clear, { once: true });
-                  }}
-                >
-                  {/* Image Content */}
-                  {isImageMessage && msg.media_url && (
-                    <div
-                      className="relative cursor-pointer group/img"
-                      onClick={() => setLightboxImage(msg.media_url!)}
-                    >
-                      <img
-                        src={msg.media_url}
-                        alt="Foto enviada"
-                        className="w-full max-h-[280px] object-cover bg-zinc-100"
-                        loading="lazy"
-                      />
-                      <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/10 transition-colors flex items-center justify-center">
-                        <ZoomIn size={24} className="text-white opacity-0 group-hover/img:opacity-100 transition-opacity drop-shadow-md" />
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Audio Content */}
-                  {isAudioMessage && msg.media_url && (
-                    <div className="p-3 flex items-center gap-2 min-w-[200px]">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isMe ? 'bg-white/20' : 'bg-zinc-100'}`}>
-                        <Mic size={16} className={isMe ? 'text-white' : 'text-zinc-500'} />
-                      </div>
-                      <audio controls src={msg.media_url} className="h-8 w-full max-w-[180px]" />
-                    </div>
-                  )}
-
-                  {/* Text Content */}
-                  <div className={`px-4 py-2.5 ${isImageMessage ? 'pt-2' : ''}`}>
-                    {msg.content && !hasMedia && (
-                      <p className="text-[15px] leading-relaxed font-medium whitespace-pre-wrap">{msg.content}</p>
-                    )}
-
-                    {/* Timestamp & Checks */}
-                    <div className={`flex items-center justify-end gap-1 mt-1 ${isMe ? 'text-blue-100' : 'text-zinc-300'}`}>
-                      <span className="text-[10px] font-bold">{timestamp}</span>
-                      {isMe && (
-                        msg.is_read && currentUserIsVip ? <div className="flex"><Check size={12} strokeWidth={3} /><Check size={12} strokeWidth={3} className="-ml-1.5" /></div> : <Check size={12} strokeWidth={3} />
-                      )}
-                    </div>
-                  </div>
+              return (
+                <div className="pb-1">
+                  <MessageBubble
+                    msg={msg}
+                    prevMsg={prevMsg}
+                    currentUserId={currentUserId}
+                    currentUserIsVip={currentUserIsVip}
+                    otherUserName={otherUserName}
+                    isSelected={isSelected}
+                    showReactionPicker={showReactionPicker}
+                    onLongPress={handleMessageLongPress}
+                    onImageClick={(url) => setLightboxImage(url)}
+                    onAddReaction={handleAddReaction}
+                    onRemoveReaction={handleRemoveReaction}
+                    onReply={handleReply}
+                    onDelete={handleDeleteMessage}
+                  />
                 </div>
-
-                {/* Reactions Display */}
-                {messageReactionsList.length > 0 && (
-                  <div className={`flex gap-0.5 -mt-2 z-10 ${isMe ? 'mr-2' : 'ml-2'}`}>
-                    {messageReactionsList.map((r, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => r.user_id === currentUserId ? handleRemoveReaction(msg.id) : null}
-                        className={`text-xs px-1.5 py-0.5 rounded-full bg-white shadow-md border border-zinc-100 flex items-center justify-center min-w-[24px] h-[24px] ${r.user_id === currentUserId ? 'cursor-pointer hover:bg-zinc-50 ring-1 ring-brasil-blue/20' : 'cursor-default'
-                          }`}
-                      >
-                        {r.reaction}
-                      </button>
-                    ))}
-                  </div>
-                )}
-
-                {/* Reaction Picker */}
-                {isSelected && showReactionPicker && (
-                  <div
-                    className={`flex items-center gap-1 mt-2 p-1.5 bg-white rounded-full shadow-xl border border-zinc-100 animate-in zoom-in-95 duration-200 ${isMe ? 'mr-0 origin-top-right' : 'ml-0 origin-top-left'}`}
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    {REACTIONS.map((emoji) => (
-                      <button
-                        key={emoji}
-                        onClick={() => handleAddReaction(msg.id, emoji)}
-                        className="text-xl w-9 h-9 flex items-center justify-center hover:bg-zinc-100 rounded-full transition-transform hover:scale-110 active:scale-90"
-                      >
-                        {emoji}
-                      </button>
-                    ))}
-                    <div className="w-px h-6 bg-zinc-200 mx-1" />
-                    <button
-                      onClick={() => handleReply(msg)}
-                      className="w-9 h-9 flex items-center justify-center hover:bg-zinc-100 rounded-full transition-colors text-zinc-600"
-                      title="Responder"
-                    >
-                      <Reply size={18} />
-                    </button>
-                    {isMe && (
-                      <button
-                        onClick={() => handleDeleteMessage(msg.id)}
-                        className="w-9 h-9 flex items-center justify-center hover:bg-red-50 rounded-full transition-colors text-red-500"
-                        title="Apagar"
-                      >
-                        <Trash2 size={18} />
-                      </button>
-                    )}
-                  </div>
-                )}
-              </div>
-            );
-          })
+              );
+            }}
+            style={{ height: '100%' }}
+            className="no-scrollbar"
+          />
         )}
+
+        {/* Typing Indicator Overlay */}
         {otherUserTyping && (
-          <div className="flex justify-start">
-            <div className="bg-white border border-zinc-200 px-4 py-3 rounded-2xl shadow-sm flex items-center gap-1.5">
-              <div className="w-2 h-2 bg-zinc-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-              <div className="w-2 h-2 bg-zinc-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-              <div className="w-2 h-2 bg-zinc-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+          <div className="absolute bottom-4 left-4 z-20 animate-in slide-in-from-bottom-5 duration-300">
+            <div className="bg-white/90 backdrop-blur-sm border border-zinc-200 px-4 py-2.5 rounded-full shadow-lg flex items-center gap-2">
+              <span className="text-xs font-bold text-zinc-600">{otherUserName} está digitando</span>
+              <div className="flex gap-1">
+                <div className="w-1.5 h-1.5 bg-zinc-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                <div className="w-1.5 h-1.5 bg-zinc-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                <div className="w-1.5 h-1.5 bg-zinc-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+              </div>
             </div>
           </div>
         )}
-        <div ref={messagesEndRef} />
       </div>
 
       {/* Reply Bar */}
