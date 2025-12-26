@@ -68,4 +68,13 @@ export interface AdminAlert {
     description: string;
 }
 
-export type AdminTab = 'dashboard' | 'users' | 'geography' | 'quota' | 'reports' | 'analytics' | 'logs';
+export interface AdminMessage {
+    id: string;
+    sender_id: string;
+    content: string;
+    media_url: string | null;
+    media_type: string | null;
+    created_at: string;
+}
+
+export type AdminTab = 'dashboard' | 'users' | 'geography' | 'quota' | 'reports' | 'analytics' | 'logs' | 'broadcast';

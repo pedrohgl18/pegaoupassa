@@ -1,15 +1,48 @@
 import React from 'react';
-import { Shield, CheckCircle, XCircle, AlertTriangle, User, ExternalLink } from 'lucide-react';
-import { ReportRow } from '../types';
+import { Shield, CheckCircle, XCircle, AlertTriangle, User, ExternalLink, Eye } from 'lucide-react';
+import { ReportRow, AdminMessage } from '../types';
+import EvidenceModal from '../components/EvidenceModal';
 
 interface ReportsPageProps {
     reports: ReportRow[];
     filter: 'pending' | 'all';
     setFilter: (val: 'pending' | 'all') => void;
     onResolve: (reportId: string, reportedId: string, action: 'ban' | 'dismiss', reportedName: string) => void;
+    onFetchEvidence: (reporterId: string, reportedId: string) => Promise<AdminMessage[]>;
 }
 
-const ReportsPage: React.FC<ReportsPageProps> = ({ reports, filter, setFilter, onResolve }) => {
+const ReportsPage: React.FC<ReportsPageProps> = ({ reports, filter, setFilter, onResolve, onFetchEvidence }) => {
+    const [evidenceModal, setEvidenceModal] = React.useState<{
+        isOpen: boolean;
+        reporterName: string;
+        reportedName: string;
+        messages: AdminMessage[];
+        loading: boolean;
+    }>({
+        isOpen: false,
+        reporterName: '',
+        reportedName: '',
+        messages: [],
+        loading: false
+    });
+
+    const handleOpenEvidence = async (report: ReportRow) => {
+        setEvidenceModal({
+            isOpen: true,
+            reporterName: report.reporter?.name || 'Repórter',
+            reportedName: report.reported?.name || 'Denunciado',
+            messages: [],
+            loading: true
+        });
+
+        const messages = await onFetchEvidence(report.reporter_id, report.reported_id);
+
+        setEvidenceModal(prev => ({
+            ...prev,
+            messages,
+            loading: false
+        }));
+    };
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center bg-white p-6 rounded-3xl border border-zinc-100 shadow-sm">
@@ -65,7 +98,7 @@ const ReportsPage: React.FC<ReportsPageProps> = ({ reports, filter, setFilter, o
                                     </div>
 
                                     <div className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest ${r.status === 'pending' ? 'bg-amber-100 text-amber-600' :
-                                            r.status === 'resolved' ? 'bg-emerald-100 text-emerald-600' : 'bg-zinc-100 text-zinc-500'
+                                        r.status === 'resolved' ? 'bg-emerald-100 text-emerald-600' : 'bg-zinc-100 text-zinc-500'
                                         }`}>
                                         {r.status === 'pending' ? 'Pendente' : r.status === 'resolved' ? 'Resolvido' : 'Ignorado'}
                                     </div>
@@ -105,6 +138,12 @@ const ReportsPage: React.FC<ReportsPageProps> = ({ reports, filter, setFilter, o
                                 {r.status === 'pending' && (
                                     <div className="space-y-2">
                                         <button
+                                            onClick={() => handleOpenEvidence(r)}
+                                            className="w-full py-4 bg-violet-50 hover:bg-violet-100 text-violet-600 rounded-2xl font-black text-sm transition-all flex items-center justify-center gap-2 mb-2"
+                                        >
+                                            <Eye size={18} /> Ver Evidências (Chat)
+                                        </button>
+                                        <button
                                             onClick={() => onResolve(r.id, r.reported_id, 'ban', r.reported?.name)}
                                             className="w-full py-4 bg-red-600 hover:bg-red-700 text-white rounded-2xl font-black text-sm transition-all shadow-lg shadow-red-100 flex items-center justify-center gap-2"
                                         >
@@ -133,6 +172,15 @@ const ReportsPage: React.FC<ReportsPageProps> = ({ reports, filter, setFilter, o
                     </div>
                 )}
             </div>
+
+            <EvidenceModal
+                isOpen={evidenceModal.isOpen}
+                onClose={() => setEvidenceModal(prev => ({ ...prev, isOpen: false }))}
+                reporterName={evidenceModal.reporterName}
+                reportedName={evidenceModal.reportedName}
+                messages={evidenceModal.messages}
+                loading={evidenceModal.loading}
+            />
         </div>
     );
 };

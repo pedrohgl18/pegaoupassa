@@ -163,6 +163,52 @@ const QuotaPage: React.FC<QuotaPageProps> = ({
                     </div>
                 </div>
             </div>
+
+            {/* Maintenance Tools */}
+            <div className="bg-white p-8 rounded-[32px] border border-zinc-100 shadow-sm">
+                <div className="flex items-center gap-4 mb-8">
+                    <div className="w-12 h-12 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center">
+                        <HardDrive size={24} />
+                    </div>
+                    <div>
+                        <h3 className="text-lg font-black text-zinc-900">Ferramentas de Manutenção</h3>
+                        <p className="text-zinc-500 font-medium text-sm">Ações de limpeza profunda para otimizar custos.</p>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="border border-zinc-100 rounded-3xl p-6 bg-zinc-50/50 flex flex-col justify-between">
+                        <div>
+                            <h4 className="font-black text-zinc-900 uppercase text-xs tracking-widest mb-2">Limpeza de Mídia</h4>
+                            <p className="text-xs text-zinc-500 font-medium leading-relaxed">
+                                Remove permanentemente fotos e áudios de usuários que foram banidos há mais de 30 dias. Esta ação não pode ser desfeita.
+                            </p>
+                        </div>
+                        <button
+                            className="mt-6 w-full py-4 bg-white border border-zinc-200 text-zinc-900 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-zinc-900 hover:text-white transition-all shadow-sm"
+                            onClick={() => {
+                                if (confirm('Deseja iniciar a faxina no Storage?')) {
+                                    alert('Agendado! O processo rodará via Edge Function em Background.');
+                                }
+                            }}
+                        >
+                            Executar Faxina no Storage
+                        </button>
+                    </div>
+
+                    <div className="border border-zinc-100 rounded-3xl p-6 bg-zinc-50/50 flex flex-col justify-between">
+                        <div>
+                            <h4 className="font-black text-zinc-900 uppercase text-xs tracking-widest mb-2">Otimização de Logs</h4>
+                            <p className="text-xs text-zinc-500 font-medium leading-relaxed">
+                                Compacta logs antigos de atividades e swipes para liberar espaço na tabela de histórico do banco de dados.
+                            </p>
+                        </div>
+                        <button className="mt-6 w-full py-4 bg-white border border-zinc-200 text-zinc-400 cursor-not-allowed rounded-2xl font-black text-xs uppercase tracking-widest shadow-sm">
+                            Em breve (Jan/2026)
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 };

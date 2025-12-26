@@ -255,7 +255,7 @@ export function Settings({ onClose, onLogout }: SettingsProps) {
                         <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
                             <button
                                 onClick={loadBlockedUsers}
-                                className="w-full p-4 flex items-center justify-between hover:bg-zinc-50 transition-colors"
+                                className="w-full p-4 flex items-center justify-between hover:bg-zinc-50 transition-colors border-b"
                             >
                                 <div className="flex items-center gap-3">
                                     <div className="p-2 bg-zinc-100 rounded-lg text-zinc-600">
@@ -264,6 +264,60 @@ export function Settings({ onClose, onLogout }: SettingsProps) {
                                     <div className="text-left">
                                         <p className="font-medium text-zinc-800">Usuários Bloqueados</p>
                                         <p className="text-xs text-zinc-500">Gerenciar lista de bloqueio</p>
+                                    </div>
+                                </div>
+                                <ChevronRight className="w-5 h-5 text-zinc-400" />
+                            </button>
+
+                            <button
+                                onClick={async () => {
+                                    const { Browser } = await import('@capacitor/browser');
+                                    await Browser.open({ url: 'https://pedrohgl18.github.io/politicas-app/privacy-policy.md' });
+                                }}
+                                className="w-full p-4 flex items-center justify-between hover:bg-zinc-50 transition-colors border-b"
+                            >
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 bg-zinc-100 rounded-lg text-zinc-600">
+                                        <Shield className="w-5 h-5 font-normal" />
+                                    </div>
+                                    <div className="text-left">
+                                        <p className="font-medium text-zinc-800">Política de Privacidade</p>
+                                    </div>
+                                </div>
+                                <ChevronRight className="w-5 h-5 text-zinc-400" />
+                            </button>
+
+                            <button
+                                onClick={async () => {
+                                    const { Browser } = await import('@capacitor/browser');
+                                    await Browser.open({ url: 'https://pedrohgl18.github.io/politicas-app/terms-of-use.md' });
+                                }}
+                                className="w-full p-4 flex items-center justify-between hover:bg-zinc-50 transition-colors border-b"
+                            >
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 bg-zinc-100 rounded-lg text-zinc-600">
+                                        <Shield className="w-5 h-5 font-normal" />
+                                    </div>
+                                    <div className="text-left">
+                                        <p className="font-medium text-zinc-800">Termos de Uso</p>
+                                    </div>
+                                </div>
+                                <ChevronRight className="w-5 h-5 text-zinc-400" />
+                            </button>
+
+                            <button
+                                onClick={async () => {
+                                    const { Browser } = await import('@capacitor/browser');
+                                    await Browser.open({ url: 'https://pedrohgl18.github.io/politicas-app/data-deletion.md' });
+                                }}
+                                className="w-full p-4 flex items-center justify-between hover:bg-zinc-50 transition-colors"
+                            >
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 bg-zinc-100 rounded-lg text-zinc-600">
+                                        <Shield className="w-5 h-5 font-normal" />
+                                    </div>
+                                    <div className="text-left">
+                                        <p className="font-medium text-zinc-800">Exclusão de Dados</p>
                                     </div>
                                 </div>
                                 <ChevronRight className="w-5 h-5 text-zinc-400" />

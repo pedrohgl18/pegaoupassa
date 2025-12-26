@@ -11,6 +11,8 @@ interface AuthState {
   session: Session | null
   loading: boolean
   error: string | null
+  isImpersonating: boolean
+  realAdmin: User | null
 }
 
 // Detectar plataforma
@@ -23,6 +25,8 @@ export function useAuth() {
     session: null,
     loading: true,
     error: null,
+    isImpersonating: false,
+    realAdmin: null,
   })
 
   const isMountedRef = useRef(true)
@@ -207,6 +211,28 @@ export function useAuth() {
     }
   }, [loadProfile])
 
+  // Iniciar personificação
+  const startImpersonation = useCallback(async (targetUserId: string, adminUser: User, token: string) => {
+    setState(prev => ({ ...prev, loading: true }))
+    try {
+      const profile = await loadProfile({ id: targetUserId, email: '' } as User, token)
+      if (profile) {
+        setState(prev => ({
+          ...prev,
+          user: { id: targetUserId, email: profile.email } as User,
+          profile,
+          isImpersonating: true,
+          realAdmin: adminUser,
+          loading: false,
+        }))
+      } else {
+        setState(prev => ({ ...prev, loading: false, error: 'Usuário para personificação não encontrado' }))
+      }
+    } catch (err) {
+      setState(prev => ({ ...prev, loading: false, error: 'Erro ao iniciar personificação' }))
+    }
+  }, [loadProfile])
+
   // Setup inicial
   useEffect(() => {
     isMountedRef.current = true
@@ -252,6 +278,17 @@ export function useAuth() {
 
         if (session?.user && session.access_token) {
           const profile = await loadProfile(session.user, session.access_token)
+
+          // Verificar se há pedido de personificação (apenas se for Admin)
+          const adminEmail = import.meta.env.VITE_ADMIN_EMAIL
+          const isAdmin = session.user.email === adminEmail
+          const urlParams = new URLSearchParams(window.location.search)
+          const impersonateId = urlParams.get('impersonate')
+
+          if (isAdmin && impersonateId) {
+            await startImpersonation(impersonateId, session.user, session.access_token)
+            return
+          }
 
           if (profile?.onboarding_completed) {
             initPushNotifications(session.user.id).catch(() => { })
@@ -420,12 +457,17 @@ export function useAuth() {
     hasCompletedOnboarding: state.profile?.onboarding_completed || false,
     onboardingStep: state.profile?.onboarding_step || 0,
     isVip: state.profile?.is_vip || false,
+    isImpersonating: state.isImpersonating,
+    realAdmin: state.realAdmin,
 
     // Actions
     signInWithGoogle,
     signOut,
     updateProfile,
     refreshProfile,
+    stopImpersonation: () => {
+      window.location.href = window.location.origin + '/admin.html'
+    },
     loadProfile: async () => {
       if (state.user && state.session?.access_token) {
         const profile = await loadProfile(state.user, state.session.access_token)

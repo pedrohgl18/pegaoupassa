@@ -1398,3 +1398,50 @@ DROP INDEX IF EXISTS idx_reports_reported; -- Duplicado de idx_reports_reported_
 ALTER FUNCTION get_database_metrics() SET search_path = public;
 ALTER FUNCTION protect_profile_fields() SET search_path = public;
 ALTER FUNCTION get_nearby_profiles(numeric, numeric, numeric, int4, int4, int4, text, int4, int4) SET search_path = public;
+
+-- =============================================
+-- TABELA: promo_codes
+-- Data: 27/11/2025
+-- Descrição: Cupons de desconto e acesso VIP
+-- =============================================
+
+CREATE TABLE IF NOT EXISTS promo_codes (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    code TEXT UNIQUE NOT NULL,
+    type TEXT NOT NULL CHECK (type IN ('vip_1d', 'vip_7d', 'vip_30d')),
+    usage_limit INTEGER DEFAULT 100,
+    usage_count INTEGER DEFAULT 0,
+    status TEXT DEFAULT 'active' CHECK (status IN ('active', 'expired')),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- RLS para promo_codes
+ALTER TABLE promo_codes ENABLE ROW LEVEL SECURITY;
+
+-- Admins podem fazer tudo
+CREATE POLICY "Admins podem gerenciar promo_codes"
+ON promo_codes FOR ALL
+USING (auth.jwt() ->> 'email' = 'pedrohgl18@gmail.com');
+
+-- Usuários podem apenas ler para validar
+CREATE POLICY "Usuários podem ler promo_codes"
+ON promo_codes FOR SELECT
+USING (true);
+
+-- =============================================
+-- FUNÇÃO: get_user_coordinates
+-- Data: 27/11/2025
+-- Descrição: Retorna coordenadas reais para o heatmap
+-- =============================================
+
+CREATE OR REPLACE FUNCTION get_user_coordinates()
+RETURNS TABLE (lat DECIMAL, lng DECIMAL) AS \$\$
+BEGIN
+    RETURN QUERY
+    SELECT latitude, longitude
+    FROM profiles
+    WHERE is_active = true 
+    AND latitude IS NOT NULL 
+    AND longitude IS NOT NULL;
+END;
+\$\$ LANGUAGE plpgsql STABLE SECURITY DEFINER;

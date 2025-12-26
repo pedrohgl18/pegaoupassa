@@ -6,7 +6,7 @@ import MatchModal from './components/MatchModal';
 import TutorialOverlay from './components/TutorialOverlay';
 import VibeSelector from './components/VibeSelector';
 import BottomNav from './components/BottomNav';
-import { X } from 'lucide-react';
+import { X, UserCheck, ShieldAlert } from 'lucide-react';
 
 // Screens
 import { LoginScreen } from './screens/LoginScreen';
@@ -29,6 +29,8 @@ interface AppRouterProps {
         isAuthenticated: boolean;
         signOut: () => Promise<void>;
         refreshProfile: () => Promise<void>;
+        isImpersonating?: boolean;
+        stopImpersonation?: () => void;
     };
     navigation: {
         currentScreen: ScreenState;
@@ -122,6 +124,22 @@ export const AppRouter: React.FC<AppRouterProps> = ({
     return (
         <div className="w-full h-[100dvh] bg-zinc-50 text-zinc-900 overflow-hidden flex flex-col items-center justify-center font-sans">
             <div className="w-full max-w-[480px] h-full relative bg-white shadow-2xl overflow-hidden flex flex-col">
+
+                {/* Impersonation Banner */}
+                {auth.isImpersonating && (
+                    <div className="bg-emerald-600 text-white px-4 py-2 flex items-center justify-between z-[60] shadow-lg animate-in slide-in-from-top duration-300">
+                        <div className="flex items-center gap-2">
+                            <UserCheck size={16} className="animate-pulse" />
+                            <span className="text-[10px] font-black uppercase tracking-widest">Modo Personificação</span>
+                        </div>
+                        <button
+                            onClick={auth.stopImpersonation}
+                            className="bg-white/20 hover:bg-white/30 px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider transition-colors flex items-center gap-1"
+                        >
+                            Sair <ShieldAlert size={12} />
+                        </button>
+                    </div>
+                )}
 
                 {/* Main Content */}
                 <div className="flex-1 relative w-full overflow-hidden">

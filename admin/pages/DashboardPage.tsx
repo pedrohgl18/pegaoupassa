@@ -1,13 +1,15 @@
 import React from 'react';
 import { Users, TrendingUp, Activity, Smartphone } from 'lucide-react';
 import { AdminStats, AdminAlert } from '../types';
+import ActivityFeed from '../components/ActivityFeed';
 
 interface DashboardPageProps {
     stats: AdminStats | null;
     alerts: AdminAlert[];
+    userCoords: { lat: number, lng: number }[];
 }
 
-const DashboardPage: React.FC<DashboardPageProps> = ({ stats, alerts }) => {
+const DashboardPage: React.FC<DashboardPageProps> = ({ stats, alerts, userCoords }) => {
     return (
         <div className="space-y-8 pb-10">
             {/* Alertas */}
@@ -15,8 +17,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ stats, alerts }) => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {alerts.map((alert, i) => (
                         <div key={i} className={`flex items-start gap-4 p-4 rounded-2xl border ${alert.type === 'danger'
-                                ? 'bg-red-50 border-red-100 text-red-900'
-                                : 'bg-amber-50 border-amber-100 text-amber-900'
+                            ? 'bg-red-50 border-red-100 text-red-900'
+                            : 'bg-amber-50 border-amber-100 text-amber-900'
                             }`}>
                             <div className={`mt-0.5 w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${alert.type === 'danger' ? 'bg-red-100 text-red-600' : 'bg-amber-100 text-amber-600'
                                 }`}>
@@ -65,49 +67,84 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ stats, alerts }) => {
 
             {/* Main Stats Area */}
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-                {/* Secondary Stats */}
-                <div className="xl:col-span-2 bg-white rounded-3xl p-8 border border-zinc-100 shadow-sm min-h-[400px]">
-                    <h3 className="text-lg font-bold text-zinc-900 mb-6 flex items-center gap-2">
-                        <TrendingUp size={20} className="text-violet-500" />
-                        Visão Geral de Swipes
-                    </h3>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
-                        <MetricBox label="Likes" value={stats?.likesCount || 0} color="green" />
-                        <MetricBox label="Passes" value={stats?.passesCount || 0} color="red" />
-                        <MetricBox label="Matches" value={stats?.totalMatches || 0} color="pink" />
-                        <MetricBox label="Novos Hoje" value={stats?.newToday || 0} color="blue" />
+                {/* Visual Analytics */}
+                <div className="xl:col-span-2 space-y-8">
+                    {/* Activity Overview */}
+                    <div className="bg-white rounded-[32px] p-8 border border-zinc-100 shadow-sm">
+                        <h3 className="text-lg font-bold text-zinc-900 mb-6 flex items-center gap-2">
+                            <TrendingUp size={20} className="text-violet-500" />
+                            Visão Geral de Swipes
+                        </h3>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
+                            <MetricBox label="Likes" value={stats?.likesCount || 0} color="green" />
+                            <MetricBox label="Passes" value={stats?.passesCount || 0} color="red" />
+                            <MetricBox label="Matches" value={stats?.totalMatches || 0} color="pink" />
+                            <MetricBox label="Novos Hoje" value={stats?.newToday || 0} color="blue" />
+                        </div>
                     </div>
 
-                    {/* Placeholder for a Chart */}
-                    <div className="mt-10 h-48 bg-zinc-50 rounded-2xl border-2 border-dashed border-zinc-200 flex flex-col items-center justify-center text-zinc-400">
-                        <div className="text-sm font-bold">Gráfico de Atividade Real-time</div>
-                        <div className="text-xs uppercase tracking-widest mt-1">Implementação Pendente (PostGIS Analytics)</div>
+                    {/* Live Heatmap Visualization */}
+                    <div className="bg-white rounded-[32px] p-8 border border-zinc-100 shadow-sm overflow-hidden relative min-h-[400px]">
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-lg font-bold text-zinc-900 flex items-center gap-2">
+                                <TrendingUp size={20} className="text-pink-500" />
+                                Distribuição Geográfica Real
+                            </h3>
+                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400">Live Heatmap</span>
+                        </div>
+
+                        <div className="h-64 bg-zinc-50 rounded-2xl border border-zinc-100 relative overflow-hidden">
+                            {/* Grid Lines */}
+                            <div className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:32px_32px] opacity-40"></div>
+
+                            {/* Render Coords as Heat Spots */}
+                            {userCoords && userCoords.length > 0 ? (
+                                userCoords.slice(0, 100).map((coord: any, idx: number) => {
+                                    // Normalize for Brazil roughly: Lat -34 to 5, Lng -74 to -34
+                                    const x = ((coord.lng + 74) / 40) * 100;
+                                    const y = (1 - (coord.lat + 34) / 39) * 100;
+
+                                    return (
+                                        <div
+                                            key={idx}
+                                            className="absolute w-6 h-6 bg-pink-500/30 rounded-full blur-md animate-pulse"
+                                            style={{
+                                                left: `${Math.min(95, Math.max(5, x))}%`,
+                                                top: `${Math.min(95, Math.max(5, y))}%`,
+                                                animationDelay: `${idx * 100}ms`
+                                            }}
+                                        />
+                                    );
+                                })
+                            ) : (
+                                <div className="absolute inset-0 flex items-center justify-center text-zinc-400 font-bold text-xs uppercase tracking-widest">
+                                    Aguardando coordenadas...
+                                </div>
+                            )}
+
+                            {/* Legend */}
+                            <div className="absolute bottom-4 left-4 bg-white/80 backdrop-blur-sm px-3 py-1.5 rounded-lg border border-zinc-100 shadow-sm text-[8px] font-black uppercase text-zinc-500 tracking-tighter">
+                                Pontos de Calor Baseados em Perfis Ativos
+                            </div>
+                        </div>
+
+                        <div className="mt-6 flex justify-between items-center bg-zinc-50 p-4 rounded-2xl border border-zinc-100">
+                            <div>
+                                <p className="text-[10px] font-black text-zinc-400 uppercase">Amostra Global</p>
+                                <p className="font-bold text-zinc-900">{userCoords?.length || 0} Coordenadas Ativas</p>
+                            </div>
+                            <div className="flex gap-2">
+                                <div className="w-2 h-2 rounded-full bg-pink-500 animate-pulse" />
+                                <div className="w-2 h-2 rounded-full bg-violet-500 animate-pulse delay-75" />
+                                <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse delay-150" />
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                {/* Growth Quick Stats */}
-                <div className="bg-gradient-to-br from-violet-600 to-indigo-700 rounded-3xl p-8 text-white shadow-xl shadow-violet-200 relative overflow-hidden group">
-                    <div className="absolute -right-10 -bottom-10 w-48 h-48 bg-white/10 rounded-full blur-3xl group-hover:scale-110 transition-transform"></div>
-                    <h3 className="text-lg font-bold mb-6">Crescimento Semanal</h3>
-                    <div className="space-y-6 relative z-10">
-                        <div className="flex items-end justify-between">
-                            <div className="space-y-1">
-                                <p className="text-white/70 text-sm font-medium">Novos Perfis</p>
-                                <p className="text-3xl font-extrabold">+{stats?.newWeek || 0}</p>
-                            </div>
-                            <div className="h-10 w-1 bg-white/20 rounded-full"></div>
-                            <div className="space-y-1 text-right">
-                                <p className="text-white/70 text-sm font-medium">Conversão</p>
-                                <p className="text-3xl font-extrabold">98%</p>
-                            </div>
-                        </div>
-                        <div className="pt-6 border-t border-white/20">
-                            <p className="text-xs text-white/60 font-bold uppercase tracking-wider mb-2">Dica do sistema</p>
-                            <p className="text-sm font-medium leading-relaxed italic">
-                                "O volume de likes cresceu 15% na última hora. Ótimo momento para um Boost global."
-                            </p>
-                        </div>
-                    </div>
+                {/* Right Column: Activity Feed */}
+                <div className="relative">
+                    <ActivityFeed />
                 </div>
             </div>
         </div>

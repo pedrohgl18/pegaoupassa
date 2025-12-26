@@ -14,8 +14,10 @@ import DashboardPage from './pages/DashboardPage';
 import UsersPage from './pages/UsersPage';
 import ReportsPage from './pages/ReportsPage';
 import GeographyPage from './pages/GeographyPage';
+import VoucherPage from './pages/VoucherPage';
 import QuotaPage from './pages/QuotaPage';
 import LogsPage from './pages/LogsPage';
+import BroadcastPage from './pages/BroadcastPage';
 
 // Logic Hook
 import { useAdminActions } from './hooks/useAdminActions';
@@ -46,6 +48,8 @@ const AdminRouter: React.FC<AdminRouterProps> = ({ onClose }) => {
     const [databaseSizeBytes, setDatabaseSizeBytes] = useState<number>(0);
     const [storageData, setStorageData] = useState<StorageBucket[]>([]);
     const [totalStorageBytes, setTotalStorageBytes] = useState<number>(0);
+    const [vouchers, setVouchers] = useState<any[]>([]);
+    const [userCoords, setUserCoords] = useState<{ lat: number, lng: number }[]>([]);
 
     const isAdmin = user?.email === ADMIN_EMAIL;
     const actions = useAdminActions(user);
@@ -145,12 +149,30 @@ const AdminRouter: React.FC<AdminRouterProps> = ({ onClose }) => {
         setAdminLogs(data || []);
     };
 
+    const fetchVouchersData = async () => {
+        const data = await actions.fetchVouchers();
+        setVouchers(data || []);
+    };
+
+    const fetchCoords = async () => {
+        const data = await actions.fetchUserCoordinates();
+        setUserCoords(data || []);
+    };
+
     // Effects
     useEffect(() => { if (isAdmin) { fetchStats(); fetchQuotas(); setLoading(false); } }, [isAdmin]);
     useEffect(() => { if (isAdmin && activeTab === 'users') fetchUsers(); }, [activeTab, searchTerm, filterState, filterVip]);
     useEffect(() => { if (isAdmin && activeTab === 'geography') fetchGeoData(); }, [activeTab, geoGroupBy]);
     useEffect(() => { if (isAdmin && activeTab === 'reports') fetchReports(); }, [activeTab, reportsFilter]);
     useEffect(() => { if (isAdmin && activeTab === 'logs') fetchLogs(); }, [activeTab]);
+    useEffect(() => { if (isAdmin && activeTab === 'vouchers') fetchVouchersData(); }, [activeTab]);
+    useEffect(() => { if (isAdmin && (activeTab === 'dashboard' || activeTab === 'geography')) fetchCoords(); }, [activeTab]);
+
+    const handleImpersonate = (userId: string) => {
+        const url = new URL(window.location.origin);
+        url.searchParams.set('impersonate', userId);
+        window.open(url.toString(), '_blank');
+    };
 
     if (!isAdmin) {
         return (
@@ -182,6 +204,8 @@ const AdminRouter: React.FC<AdminRouterProps> = ({ onClose }) => {
                     onToggleVip={(id, val) => actions.toggleVip(id, val, fetchUsers)}
                     onToggleBan={(id, val) => actions.toggleBan(id, val, fetchUsers)}
                     onResetLikes={(id) => actions.resetLikes(id, fetchUsers)}
+                    onFetchEvidence={actions.fetchChatEvidence}
+                    onImpersonate={handleImpersonate}
                 />
             );
             case 'reports': return (
@@ -190,9 +214,10 @@ const AdminRouter: React.FC<AdminRouterProps> = ({ onClose }) => {
                     filter={reportsFilter}
                     setFilter={setReportsFilter}
                     onResolve={(rid, targetId, act, name) => actions.resolveReport(rid, targetId, act, name, fetchReports)}
+                    onFetchEvidence={actions.fetchChatEvidence}
                 />
             );
-            case 'geography': return <GeographyPage geoData={geoData} geoGroupBy={geoGroupBy} setGeoGroupBy={setGeoGroupBy} />;
+            case 'geography': return <GeographyPage geoData={geoData} geoGroupBy={geoGroupBy} setGeoGroupBy={setGeoGroupBy} userCoords={userCoords} />;
             case 'quota': return (
                 <QuotaPage
                     databaseSize={databaseSize}
@@ -204,7 +229,16 @@ const AdminRouter: React.FC<AdminRouterProps> = ({ onClose }) => {
                 />
             );
             case 'logs': return <LogsPage logs={adminLogs} />;
-            default: return <DashboardPage stats={stats} alerts={alerts} />;
+            case 'vouchers': return (
+                <VoucherPage
+                    vouchers={vouchers}
+                    onCreate={actions.createVoucher}
+                    onDelete={actions.deleteVoucher}
+                    refresh={fetchVouchersData}
+                />
+            );
+            case 'broadcast': return <BroadcastPage onSendBroadcast={actions.sendBroadcast} />;
+            default: return <DashboardPage stats={stats} alerts={alerts} userCoords={userCoords} />;
         }
     };
 

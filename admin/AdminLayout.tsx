@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, Users, MapPin, Database, Shield, FileText, TrendingUp, LogOut, Search, Bell } from 'lucide-react';
+import { LayoutDashboard, Users, MapPin, Database, Shield, FileText, TrendingUp, LogOut, Search, Bell, Send, Ticket } from 'lucide-react';
 import { AdminTab } from './types';
 
 interface LayoutProps {
@@ -19,6 +19,8 @@ const AdminLayout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab,
         { id: 'analytics', label: 'Métricas', icon: <TrendingUp size={20} /> },
         { id: 'quota', label: 'Infra/Quota', icon: <Database size={20} /> },
         { id: 'logs', label: 'Logs', icon: <FileText size={20} /> },
+        { id: 'vouchers', label: 'Vouchers', icon: <Ticket size={20} /> },
+        { id: 'broadcast', label: 'Broadcast', icon: <Send size={20} /> },
     ];
 
     return (
@@ -38,8 +40,8 @@ const AdminLayout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab,
                             key={item.id}
                             onClick={() => setActiveTab(item.id as AdminTab)}
                             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${activeTab === item.id
-                                    ? 'bg-violet-600 text-white shadow-lg shadow-violet-200'
-                                    : 'text-zinc-500 hover:bg-zinc-50 hover:text-zinc-900'
+                                ? 'bg-violet-600 text-white shadow-lg shadow-violet-200'
+                                : 'text-zinc-500 hover:bg-zinc-50 hover:text-zinc-900'
                                 }`}
                         >
                             <span className={`${activeTab === item.id ? 'text-white' : 'text-zinc-400 group-hover:text-zinc-900'}`}>

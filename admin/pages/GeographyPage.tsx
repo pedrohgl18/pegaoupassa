@@ -6,9 +6,10 @@ interface GeographyPageProps {
     geoData: GeoData[];
     geoGroupBy: 'state' | 'city' | 'neighborhood';
     setGeoGroupBy: (val: 'state' | 'city' | 'neighborhood') => void;
+    userCoords: { lat: number, lng: number }[];
 }
 
-const GeographyPage: React.FC<GeographyPageProps> = ({ geoData, geoGroupBy, setGeoGroupBy }) => {
+const GeographyPage: React.FC<GeographyPageProps> = ({ geoData, geoGroupBy, setGeoGroupBy, userCoords }) => {
     return (
         <div className="space-y-8 pb-20">
             <div className="bg-white p-8 rounded-3xl border border-zinc-100 shadow-sm flex flex-col md:flex-row justify-between items-center gap-6">
@@ -60,17 +61,64 @@ const GeographyPage: React.FC<GeographyPageProps> = ({ geoData, geoGroupBy, setG
                     </div>
                 </div>
 
-                {/* Map/Visual Area Placeholder */}
-                <div className="lg:col-span-2 bg-white p-8 rounded-3xl border border-zinc-100 shadow-sm flex flex-col items-center justify-center space-y-4 min-h-[500px] relative overflow-hidden">
-                    <div className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:24px_24px] opacity-20"></div>
-                    <div className="relative z-10 w-24 h-24 bg-blue-50 text-blue-600 rounded-3xl flex items-center justify-center animate-pulse">
-                        <Navigation size={48} />
+                {/* Map/Visual Area */}
+                <div className="lg:col-span-2 bg-white p-8 rounded-3xl border border-zinc-100 shadow-sm relative overflow-hidden min-h-[500px]">
+                    <div className="flex items-center justify-between mb-8">
+                        <div>
+                            <h3 className="text-lg font-bold text-zinc-900">Mapeamento Geográfico Direto</h3>
+                            <p className="text-zinc-500 text-xs font-medium mt-1">Coordenadas reais de perfis ativos no Brasil.</p>
+                        </div>
+                        <div className="px-3 py-1 bg-blue-50 text-blue-600 rounded-lg text-[10px] font-black uppercase tracking-widest border border-blue-100 flex items-center gap-2">
+                            <div className="w-1.5 h-1.5 bg-blue-600 rounded-full animate-pulse" /> GPS ATIVO
+                        </div>
                     </div>
-                    <div className="relative z-10 text-center">
-                        <h3 className="text-xl font-black text-zinc-900">Visualização de Mapa</h3>
-                        <p className="text-zinc-500 font-medium max-w-sm mt-2">
-                            A integração com MapBox/Google Maps para Heatmap de usuários está planejada para a próxima fase.
-                        </p>
+
+                    <div className="h-[400px] bg-zinc-50 rounded-[28px] border border-zinc-100 relative overflow-hidden">
+                        {/* Interactive Grid */}
+                        <div className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:40px_40px] opacity-50"></div>
+
+                        {/* Real Data Points */}
+                        {userCoords && userCoords.length > 0 ? (
+                            <div className="absolute inset-0">
+                                {userCoords.slice(0, 500).map((coord, idx) => {
+                                    const x = ((coord.lng + 74) / 40) * 100;
+                                    const y = (1 - (coord.lat + 34) / 39) * 100;
+                                    return (
+                                        <div
+                                            key={idx}
+                                            className="absolute w-2 h-2 bg-blue-600/40 rounded-full"
+                                            style={{
+                                                left: `${Math.min(98, Math.max(2, x))}%`,
+                                                top: `${Math.min(98, Math.max(2, y))}%`,
+                                            }}
+                                        />
+                                    );
+                                })}
+                            </div>
+                        ) : (
+                            <div className="absolute inset-0 p-10 flex flex-wrap gap-2 content-start opacity-70">
+                                {/* Fallback based on ranking clusters */}
+                                {geoData.slice(0, 5).map((loc, i) => (
+                                    <div
+                                        key={i}
+                                        className="bg-blue-500/20 border border-blue-500/50 rounded-full flex items-center justify-center p-8 animate-bounce"
+                                        style={{ width: `${60 + loc.count}px`, height: `${60 + loc.count}px`, animationDelay: `${i * 200}ms` }}
+                                    >
+                                        <span className="text-[10px] font-black text-blue-700 text-center">{loc.name}<br />{loc.count}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
+                        <div className="absolute bottom-8 right-8 bg-zinc-900 text-white p-6 rounded-3xl shadow-2xl max-w-[240px] space-y-3">
+                            <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-ping" />
+                                <span className="text-[10px] font-black uppercase tracking-widest opacity-60">Status de Rede</span>
+                            </div>
+                            <p className="text-xs font-bold leading-relaxed">
+                                Mapa dinâmico gerado a partir de {userCoords?.length || 0} coordenadas reais.
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>

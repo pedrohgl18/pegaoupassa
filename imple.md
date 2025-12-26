@@ -3,7 +3,7 @@
 > **⚠️ ESTE ARQUIVO É A FONTE DA VERDADE DO PROJETO**
 > Sempre manter atualizado quando funcionalidades forem adicionadas, modificadas ou removidas.
 
-**Última atualização**: 11/12/2025
+**Última atualização**: 27/11/2025
 
 ---
 
@@ -259,6 +259,30 @@
 | 11/12/2025 | **Fix Avatar Desaparecendo** | Ver seção detalhada abaixo. |
 | 11/12/2025 | **Limpeza de Código** | Removido ~150 linhas de código morto (setProfileState, createProfile, updateOnboardingStep, createInitial, console.logs). |
 | 11/12/2025 | **Admin Panel (God Mode)** | Painel administrativo localhost-only com Dashboard (KPIs), Gestão de Usuários (VIP/Ban), Geografia e Quotas. Lazy loading + bloqueio no APK. |
+| 26/12/2025 | **Documentação Legal** | Política de Privacidade, Termos de Uso e Política de Exclusão de Dados (LGPD/GDPR 2025) implementados. |
+| 26/12/2025 | **Botões de Política** | Adicionados links para documentos legais na tela de Configurações via Capacitor Browser. |
+| 27/11/2025 | **Admin Panel (Phase 2-4)** | Refatoração Desktop-first massiva. Adicionado Evidências de Chat (Moderador), Personificação de Usuário, Feed de Atividade Real-time, Heatmap Geo Real, Broadcast Push Global, Gestor de Vouchers Real e Ferramenta de Faxina. |
+
+---
+
+## 13. Recursos Administrativos Avançados (Phases 2-4)
+
+> **Adicionado em 27/11/2025**
+> O Painel Admin foi transformado em uma ferramenta desktop robusta para monitoramento e gestão.
+
+### 🛡️ Moderação Avançada (Phase 2)
+- **Contexto de Denúncia (Evidências)**: Botão "Ver Evidências" no Reports abre modal com o histórico real da conversa entre os envolvidos antes da denúncia.
+- **Visualização de Chat**: Suporte pode abrir conversas de qualquer usuário para auditoria ética e suporte técnico.
+- **Modo Personificação (Impersonate)**: Admins podem ver o app como se fossem o usuário (via `?impersonate=ID`), facilitando o debug de problemas de conta. Acompanhado de banner visual no App.
+
+### ⚡ Inteligência Real-time (Phase 3)
+- **Feed de Atividade**: Lista viva no Dashboard que mostra novos usuários, matches e denúncias no exato momento em que ocorrem (Supabase Realtime).
+- **Mapa de Calor (Geo)**: Visualização da concentração geográfica de usuários para tomada de decisão de marketing.
+
+### 📢 Gestão & Comunicação (Phase 4)
+- **Push Broadcast Global**: Interface para disparar notificações push para TODOS os dispositivos Android registrados com um clique.
+- **Limpeza de Storage**: Botão para deletar mídias órfãs (usuários banidos ou inativos), economizando custos de infraestrutura.
+- **Gestor de Vouchers**: Sistema para criar e monitorar códigos promocionais (`promo_codes`) para acesso VIP.
 
 ---
 

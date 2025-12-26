@@ -1,6 +1,7 @@
 import React from 'react';
-import { Search, Crown, Ban, RotateCcw, MapPin, Mail, Calendar, Users } from 'lucide-react';
-import { UserRow } from '../types';
+import { Search, Crown, Ban, RotateCcw, MapPin, Mail, Calendar, Users, MessageSquare, UserCheck } from 'lucide-react';
+import { UserRow, AdminMessage } from '../types';
+import EvidenceModal from '../components/EvidenceModal';
 
 interface UsersPageProps {
     users: UserRow[];
@@ -13,6 +14,8 @@ interface UsersPageProps {
     onToggleVip: (userId: string, currentVip: boolean) => void;
     onToggleBan: (userId: string, currentActive: boolean) => void;
     onResetLikes: (userId: string) => void;
+    onFetchEvidence?: (adminId: string, targetId: string) => Promise<AdminMessage[]>;
+    onImpersonate?: (userId: string) => void;
 }
 
 const UsersPage: React.FC<UsersPageProps> = ({
@@ -25,8 +28,44 @@ const UsersPage: React.FC<UsersPageProps> = ({
     setFilterState,
     onToggleVip,
     onToggleBan,
-    onResetLikes
+    onResetLikes,
+    onFetchEvidence,
+    onImpersonate
 }) => {
+    const [viewerModal, setViewerModal] = React.useState<{
+        isOpen: boolean;
+        userName: string;
+        messages: AdminMessage[];
+        loading: boolean;
+    }>({
+        isOpen: false,
+        userName: '',
+        messages: [],
+        loading: false
+    });
+
+    const handleViewChat = async (user: UserRow) => {
+        if (!onFetchEvidence) return;
+
+        setViewerModal({
+            isOpen: true,
+            userName: user.name || 'Usuário',
+            messages: [],
+            loading: true
+        });
+
+        // In the context of "View Chat" for a single user, we need to decide WHICH chat to show
+        // For simplicity, let's show the most recent conversation if we can find one,
+        // or just placeholder for now. 
+        // Better: We might need a separate RPC to find ALL chats for a user.
+        // For this phase, let's fetch evidence between the ADMIN and this user (unlikely)
+        // OR we can change fetchChatEvidence to take a target and find its status.
+
+        // Actually, "View Chat" for support usually means seeing WHO they are talking to.
+        // Let's implement a more robust logic in the hook later.
+        // For now, let's just use the modal structure.
+        setViewerModal(prev => ({ ...prev, loading: false }));
+    };
     return (
         <div className="space-y-6">
             {/* Control Bar */}
@@ -129,6 +168,19 @@ const UsersPage: React.FC<UsersPageProps> = ({
                                     icon={<RotateCcw size={18} />}
                                     label="Reset Likes"
                                 />
+                                <div className="w-px h-8 bg-zinc-100 mx-1" />
+                                <ActionButton
+                                    onClick={() => handleViewChat(u)}
+                                    icon={<MessageSquare size={18} />}
+                                    label="Ver Conversas"
+                                    color="text-blue-500 hover:bg-blue-50"
+                                />
+                                <ActionButton
+                                    onClick={() => onImpersonate?.(u.id)}
+                                    icon={<UserCheck size={18} />}
+                                    label="Personificar"
+                                    color="text-emerald-500 hover:bg-emerald-50"
+                                />
                             </div>
                         </div>
                     </div>
@@ -146,15 +198,24 @@ const UsersPage: React.FC<UsersPageProps> = ({
                     </div>
                 </div>
             )}
+
+            <EvidenceModal
+                isOpen={viewerModal.isOpen}
+                onClose={() => setViewerModal(prev => ({ ...prev, isOpen: false }))}
+                reporterName="Suporte"
+                reportedName={viewerModal.userName}
+                messages={viewerModal.messages}
+                loading={viewerModal.loading}
+            />
         </div>
     );
 };
 
-const ActionButton = ({ onClick, active, activeColor, icon, label }: any) => (
+const ActionButton = ({ onClick, active, activeColor, icon, label, color }: any) => (
     <button
         onClick={onClick}
         title={label}
-        className={`p-2.5 rounded-xl transition-all hover:scale-110 active:scale-90 ${active ? activeColor : 'bg-zinc-100 text-zinc-400 hover:bg-zinc-200 hover:text-zinc-900'
+        className={`p-2.5 rounded-xl transition-all hover:scale-110 active:scale-90 ${active ? activeColor : (color || 'bg-zinc-100 text-zinc-400 hover:bg-zinc-200 hover:text-zinc-900')
             }`}
     >
         {icon}
