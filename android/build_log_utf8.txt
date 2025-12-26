@@ -1,0 +1,205 @@
+﻿
+> Configure project :app
+WARNING: Using flatDir should be avoided because it doesn't support any meta-data formats.
+
+> Configure project :capacitor-cordova-android-plugins
+WARNING: Using flatDir should be avoided because it doesn't support any meta-data formats.
+
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :app:javaPreCompileDebug UP-TO-DATE
+> Task :capacitor-android:preBuild UP-TO-DATE
+> Task :capacitor-android:preDebugBuild UP-TO-DATE
+> Task :capacitor-android:writeDebugAarMetadata UP-TO-DATE
+> Task :capacitor-app:preBuild UP-TO-DATE
+> Task :capacitor-app:preDebugBuild UP-TO-DATE
+> Task :capacitor-app:writeDebugAarMetadata UP-TO-DATE
+> Task :capacitor-browser:preBuild UP-TO-DATE
+> Task :capacitor-browser:preDebugBuild UP-TO-DATE
+> Task :capacitor-browser:writeDebugAarMetadata UP-TO-DATE
+> Task :capacitor-camera:preBuild UP-TO-DATE
+> Task :capacitor-camera:preDebugBuild UP-TO-DATE
+> Task :capacitor-camera:writeDebugAarMetadata UP-TO-DATE
+> Task :capacitor-cordova-android-plugins:preBuild UP-TO-DATE
+> Task :capacitor-cordova-android-plugins:preDebugBuild UP-TO-DATE
+> Task :capacitor-cordova-android-plugins:writeDebugAarMetadata UP-TO-DATE
+> Task :capacitor-geolocation:preBuild UP-TO-DATE
+> Task :capacitor-geolocation:preDebugBuild UP-TO-DATE
+> Task :capacitor-geolocation:writeDebugAarMetadata UP-TO-DATE
+> Task :capacitor-preferences:preBuild UP-TO-DATE
+> Task :capacitor-preferences:preDebugBuild UP-TO-DATE
+> Task :capacitor-preferences:writeDebugAarMetadata UP-TO-DATE
+> Task :capacitor-push-notifications:preBuild UP-TO-DATE
+> Task :capacitor-push-notifications:preDebugBuild UP-TO-DATE
+> Task :capacitor-push-notifications:writeDebugAarMetadata UP-TO-DATE
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :app:generateDebugResValues UP-TO-DATE
+> Task :app:processDebugGoogleServices UP-TO-DATE
+> Task :capacitor-android:generateDebugResValues UP-TO-DATE
+> Task :capacitor-android:generateDebugResources UP-TO-DATE
+> Task :capacitor-android:packageDebugResources UP-TO-DATE
+> Task :capacitor-app:generateDebugResValues UP-TO-DATE
+> Task :capacitor-app:generateDebugResources UP-TO-DATE
+> Task :capacitor-app:packageDebugResources UP-TO-DATE
+> Task :capacitor-browser:generateDebugResValues UP-TO-DATE
+> Task :capacitor-browser:generateDebugResources UP-TO-DATE
+> Task :capacitor-browser:packageDebugResources UP-TO-DATE
+> Task :capacitor-camera:generateDebugResValues UP-TO-DATE
+> Task :capacitor-camera:generateDebugResources UP-TO-DATE
+> Task :capacitor-camera:packageDebugResources UP-TO-DATE
+> Task :capacitor-cordova-android-plugins:generateDebugResValues UP-TO-DATE
+> Task :capacitor-cordova-android-plugins:generateDebugResources UP-TO-DATE
+> Task :capacitor-cordova-android-plugins:packageDebugResources UP-TO-DATE
+> Task :capacitor-geolocation:generateDebugResValues UP-TO-DATE
+> Task :capacitor-geolocation:generateDebugResources UP-TO-DATE
+> Task :capacitor-geolocation:packageDebugResources UP-TO-DATE
+> Task :capacitor-preferences:generateDebugResValues UP-TO-DATE
+> Task :capacitor-preferences:generateDebugResources UP-TO-DATE
+> Task :capacitor-preferences:packageDebugResources UP-TO-DATE
+> Task :capacitor-push-notifications:generateDebugResValues UP-TO-DATE
+> Task :capacitor-push-notifications:generateDebugResources UP-TO-DATE
+> Task :capacitor-push-notifications:packageDebugResources UP-TO-DATE
+> Task :app:mapDebugSourceSetPaths UP-TO-DATE
+> Task :app:generateDebugResources UP-TO-DATE
+
+> Task :app:mergeDebugResources FAILED
+./gradlew : ERROR: 
+[mipmap-hdpi-v4/ic_launcher_foreground] C:\U
+sers\Administrator\Downloads\pega-ou-passa\a
+ndroid\app\src\main\res\mipmap-hdpi\ic_launc
+her_foreground.png 
+[mipmap-hdpi-v4/ic_launcher_foreground] C:\U
+sers\Administrator\Downloads\pega-ou-passa\a
+ndroid\app\src\main\res\mipmap-hdpi\ic_launc
+her_foreground.xml: Resource and asset 
+merger: Duplicate resources
+No linha:1 caractere:77
++ ... oid\Android Studio\jbr"; ./gradlew 
+assembleDebug > build_log.txt 2>&1
++                              
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: 
+    (ERROR: [mipmap-...icate resources:Str  
+  ing) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommand 
+   Error
+ 
+ERROR: 
+[mipmap-mdpi-v4/ic_launcher_foreground] C:\U
+sers\Administrator\Downloads\pega-ou-passa\a
+ndroid\app\src\main\res\mipmap-mdpi\ic_launc
+her_foreground.png 
+[mipmap-mdpi-v4/ic_launcher_foreground] C:\U
+sers\Administrator\Downloads\pega-ou-passa\a
+ndroid\app\src\main\res\mipmap-mdpi\ic_launc
+her_foreground.xml: Resource and asset 
+merger: Duplicate resources
+ERROR: 
+[mipmap-xhdpi-v4/ic_launcher_foreground] C:\
+Users\Administrator\Downloads\pega-ou-passa\
+android\app\src\main\res\mipmap-xhdpi\ic_lau
+ncher_foreground.png 
+[mipmap-xhdpi-v4/ic_launcher_foreground] C:\
+Users\Administrator\Downloads\pega-ou-passa\
+android\app\src\main\res\mipmap-xhdpi\ic_lau
+ncher_foreground.xml: Resource and asset 
+merger: Duplicate resources
+ERROR: 
+[mipmap-xxhdpi-v4/ic_launcher_foreground] C:
+\Users\Administrator\Downloads\pega-ou-passa
+\android\app\src\main\res\mipmap-xxhdpi\ic_l
+auncher_foreground.png 
+[mipmap-xxhdpi-v4/ic_launcher_foreground] C:
+\Users\Administrator\Downloads\pega-ou-passa
+\android\app\src\main\res\mipmap-xxhdpi\ic_l
+auncher_foreground.xml: Resource and asset 
+merger: Duplicate resources
+ERROR: 
+[mipmap-xxxhdpi-v4/ic_launcher_foreground] C
+:\Users\Administrator\Downloads\pega-ou-pass
+a\android\app\src\main\res\mipmap-xxxhdpi\ic
+_launcher_foreground.png 
+[mipmap-xxxhdpi-v4/ic_launcher_foreground] C
+:\Users\Administrator\Downloads\pega-ou-pass
+a\android\app\src\main\res\mipmap-xxxhdpi\ic
+_launcher_foreground.xml: Resource and 
+asset merger: Duplicate resources
+ERROR: [color/ic_launcher_background] C:\Use
+rs\Administrator\Downloads\pega-ou-passa\and
+roid\app\src\main\res\values\colors.xml 
+[color/ic_launcher_background] C:\Users\Admi
+nistrator\Downloads\pega-ou-passa\android\ap
+p\src\main\res\values\ic_launcher_background
+.xml: Resource and asset merger: Duplicate 
+resources
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task 
+':app:mergeDebugResources'.
+> [mipmap-hdpi-v4/ic_launcher_foreground] C:
+\Users\Administrator\Downloads\pega-ou-passa
+\android\app\src\main\res\mipmap-hdpi\ic_lau
+ncher_foreground.png	
+[mipmap-hdpi-v4/ic_launcher_foreground] C:\U
+sers\Administrator\Downloads\pega-ou-passa\a
+ndroid\app\src\main\res\mipmap-hdpi\ic_launc
+her_foreground.xml: Error: Duplicate 
+resources
+  [mipmap-mdpi-v4/ic_launcher_foreground] C:
+\Users\Administrator\Downloads\pega-ou-passa
+\android\app\src\main\res\mipmap-mdpi\ic_lau
+ncher_foreground.png	
+[mipmap-mdpi-v4/ic_launcher_foreground] C:\U
+sers\Administrator\Downloads\pega-ou-passa\a
+ndroid\app\src\main\res\mipmap-mdpi\ic_launc
+her_foreground.xml: Error: Duplicate 
+resources
+  [mipmap-xhdpi-v4/ic_launcher_foreground] C
+:\Users\Administrator\Downloads\pega-ou-pass
+a\android\app\src\main\res\mipmap-xhdpi\ic_l
+auncher_foreground.png	
+[mipmap-xhdpi-v4/ic_launcher_foreground] C:\
+Users\Administrator\Downloads\pega-ou-passa\
+android\app\src\main\res\mipmap-xhdpi\ic_lau
+ncher_foreground.xml: Error: Duplicate 
+resources
+  [mipmap-xxhdpi-v4/ic_launcher_foreground] 
+C:\Users\Administrator\Downloads\pega-ou-pas
+sa\android\app\src\main\res\mipmap-xxhdpi\ic
+_launcher_foreground.png	
+[mipmap-xxhdpi-v4/ic_launcher_foreground] C:
+\Users\Administrator\Downloads\pega-ou-passa
+\android\app\src\main\res\mipmap-xxhdpi\ic_l
+auncher_foreground.xml: Error: Duplicate 
+resources
+  
+[mipmap-xxxhdpi-v4/ic_launcher_foreground] C
+:\Users\Administrator\Downloads\pega-ou-pass
+a\android\app\src\main\res\mipmap-xxxhdpi\ic
+_launcher_foreground.png	
+[mipmap-xxxhdpi-v4/ic_launcher_foreground] C
+:\Users\Administrator\Downloads\pega-ou-pass
+a\android\app\src\main\res\mipmap-xxxhdpi\ic
+_launcher_foreground.xml: Error: Duplicate 
+resources
+  [color/ic_launcher_background] C:\Users\Ad
+ministrator\Downloads\pega-ou-passa\android\
+app\src\main\res\values\colors.xml	
+[color/ic_launcher_background] C:\Users\Admi
+nistrator\Downloads\pega-ou-passa\android\ap
+p\src\main\res\values\ic_launcher_background
+.xml: Error: Duplicate resources
+
+* Try:
+> Run with --stacktrace option to get the 
+stack trace.
+> Run with --info or --debug option to get 
+more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 3s
+39 actionable tasks: 1 executed, 38 up-to-date
