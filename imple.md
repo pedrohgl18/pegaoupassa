@@ -529,3 +529,64 @@ Admins não conseguiam ver o contexto da denúncia se o usuário desfizesse o ma
 2. **Login Persistente**: Faça login, feche o app totalmente e abra de novo. A sessão deve persistir (via Capacitor Preferences).
 3. **DB Metrics**: No painel admin (localhost), verifique se as queries de métricas continuam funcionando.
 
+---
+### 19. Remoção de Console Logs para Produção (26/12/2025)
+- **Status**: ✅ Concluído
+- **Objetivo**: Remover todos os `console.log`, `console.error` e `console.warn` do código para segurança em produção.
+
+#### ⚠️ Problema (Crítico)
+- **Exposição de Dados Sensíveis**: Statements de console podem expor informações sensíveis via `adb logcat` em dispositivos Android.
+- **Dados Expostos Anteriormente**:
+    - URLs de OAuth e tokens de autenticação
+    - IDs de usuários e perfis
+    - Detalhes de swipes e matches
+    - Erros de banco de dados e respostas de APIs
+    - URLs assinadas de storage
+
+#### ✅ Correção Implementada
+Removidas **50+ declarações de console** de todos os arquivos do projeto:
+
+**Services (`lib/services/`):**
+- `supabase.client.ts` - Removed init logs
+- `auth.service.ts` - Removed OAuth debug logs
+- `interaction.service.ts` - Removed swipe/match logs
+- `notification.service.ts` - Removed push debug logs
+- `profile.service.ts` - Removed profile fetch logs
+- `utility.service.ts` - Removed interest save logs
+
+**Libs (`lib/`):**
+- `r2.ts` - Removed upload progress logs
+- `pushNotifications.ts` - Removed token/registration logs
+
+**Hooks (`hooks/`):**
+- `useSwipeAction.ts` - Removed swipe error logs
+- `useNotifications.ts` - Removed push receive logs
+- `useMatchData.ts` - Removed message receive logs
+- `useGeolocation.ts` - Removed GPS/permission logs
+- `useFeed.ts` - Removed feed fetch logs
+- `useAuth.ts` - Removed profile/session logs
+
+**Components (`components/`):**
+- `ChatScreen.tsx` - Removed upload/push logs
+- `Settings.tsx` - Removed config save logs
+- `ReceivedLikesList.tsx` - Removed action logs
+- `ProfileViewer.tsx` - Removed swipe logs
+- `Onboarding.tsx` - Removed location logs
+- `FilterModal.tsx` - Removed filter save logs
+- `EditProfile.tsx` - Removed upload logs
+
+**Screens (`screens/`):**
+- `LoginScreen.tsx` - Removed login error logs
+
+**Core:**
+- `App.tsx` - Removed VIP purchase logs
+- `AdminRouter.tsx` - Removed stats/quota logs
+
+#### 🔍 Como Verificar
+1. **Build sem erros**: Execute `npm run build` - deve compilar sem warnings de console.
+2. **Grep test**: Execute `grep -r "console\." --include="*.ts" --include="*.tsx"` - não deve retornar resultados.
+3. **adb logcat**: Conecte um dispositivo e verifique que não há logs sensíveis da aplicação.
+
+#### 📋 Correção de Lint Adicional
+- **ReceivedLikesList.tsx**: Corrigido import de `calculateAge` - alterado de `../App` para `../utils` (onde a função está corretamente exportada).
+
