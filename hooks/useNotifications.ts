@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { matches } from '../lib/supabase';
 import { Chat } from '../types';
+import { Preferences } from '@capacitor/preferences';
 
 interface UseNotificationsProps {
     user: any;
@@ -18,7 +19,7 @@ export const useNotifications = ({ user, activeChatId, onOpenChat, onNavigateToC
             // Guardar os dados da notificação para processar quando o user estiver disponível
             if (data.type === 'message' && data.conversationId) {
                 // Salvar no localStorage para recuperar caso o app recarregue
-                localStorage.setItem('pendingNotification', JSON.stringify(data));
+                Preferences.set({ key: 'pendingNotification', value: JSON.stringify(data) });
 
                 // Se já temos o user, processar imediatamente
                 if (user) {
@@ -75,14 +76,14 @@ export const useNotifications = ({ user, activeChatId, onOpenChat, onNavigateToC
                     onOpenChat(chatObj);
 
                     // Limpar notificação pendente
-                    localStorage.removeItem('pendingNotification');
+                    Preferences.remove({ key: 'pendingNotification' });
                 }
             }
         };
 
         // Verificar se há notificação pendente (app foi aberto via notificação)
         const checkPendingNotification = async () => {
-            const pending = localStorage.getItem('pendingNotification');
+            const { value: pending } = await Preferences.get({ key: 'pendingNotification' });
             if (pending && user) {
                 const data = JSON.parse(pending);
                 if (data.conversationId) {

@@ -16,41 +16,45 @@ console.log('isNative:', isNative)
 console.log('supabaseUrl:', supabaseUrl)
 
 // Cliente sem tipagem genérica para evitar erros de never
+// Cliente sem tipagem genérica para evitar erros de never
+import { Preferences } from '@capacitor/preferences'
+
+const capacitorStorageAdapter = {
+  getItem: async (key: string) => {
+    try {
+      const { value } = await Preferences.get({ key })
+      // console.log(`[Storage] getItem(${key}):`, value ? 'exists' : 'null')
+      return value
+    } catch (e) {
+      // console.error('[Storage] getItem error:', e)
+      return null
+    }
+  },
+  setItem: async (key: string, value: string) => {
+    try {
+      await Preferences.set({ key, value })
+      // console.log(`[Storage] setItem(${key}): saved`)
+    } catch (e) {
+      // console.error('[Storage] setItem error:', e)
+    }
+  },
+  removeItem: async (key: string) => {
+    try {
+      await Preferences.remove({ key })
+      // console.log(`[Storage] removeItem(${key}): removed`)
+    } catch (e) {
+      // console.error('[Storage] removeItem error:', e)
+    }
+  },
+}
+
 export const supabase: SupabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: !isNative, // Desabilitar no nativo pois usamos deep links
     flowType: isNative ? 'implicit' : 'pkce', // Usar implicit no nativo para evitar problemas com PKCE
-    storage: {
-      // Usar localStorage com fallback - garantir que funciona no WebView
-      getItem: (key: string) => {
-        try {
-          const value = localStorage.getItem(key)
-          console.log(`[Storage] getItem(${key}):`, value ? 'exists' : 'null')
-          return value
-        } catch (e) {
-          console.error('[Storage] getItem error:', e)
-          return null
-        }
-      },
-      setItem: (key: string, value: string) => {
-        try {
-          localStorage.setItem(key, value)
-          console.log(`[Storage] setItem(${key}): saved`)
-        } catch (e) {
-          console.error('[Storage] setItem error:', e)
-        }
-      },
-      removeItem: (key: string) => {
-        try {
-          localStorage.removeItem(key)
-          console.log(`[Storage] removeItem(${key}): removed`)
-        } catch (e) {
-          console.error('[Storage] removeItem error:', e)
-        }
-      },
-    },
+    storage: capacitorStorageAdapter,
   },
 })
 
