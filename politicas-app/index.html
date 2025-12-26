@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Políticas - Pega ou Passa</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            min-height: 100vh;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .gradient-text {
+            background: linear-gradient(to right, #7c3aed, #2563eb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .btn-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+
+<body class="flex items-center justify-center p-6">
+    <div class="max-w-2xl w-full">
+        <!-- Header -->
+        <div class="text-center mb-12 animate-fade-in">
+            <h1 class="text-4xl md:text-5xl font-bold text-zinc-900 mb-4">
+                Pega ou <span class="gradient-text">Passa</span>
+            </h1>
+            <p class="text-zinc-500 text-lg">Central de Privacidade e Termos Legais</p>
+        </div>
+
+        <!-- Cards Container -->
+        <div class="grid gap-6">
+            <!-- Privacy Policy -->
+            <a href="privacy.html" class="glass p-6 rounded-2xl flex items-center justify-between group btn-hover">
+                <div class="flex items-center gap-5">
+                    <div
+                        class="w-12 h-12 bg-violet-100 rounded-xl flex items-center justify-center text-violet-600 transition-colors group-hover:bg-violet-600 group-hover:text-white">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-semibold text-zinc-800">Política de Privacidade</h2>
+                        <p class="text-sm text-zinc-500">Como cuidamos dos seus dados pessoais</p>
+                    </div>
+                </div>
+                <svg xmlns="http://www.w3.org/2000/svg"
+                    class="h-6 w-6 text-zinc-400 group-hover:text-violet-600 transition-colors" fill="none"
+                    viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+            </a>
+
+            <!-- Terms of Use -->
+            <a href="terms.html" class="glass p-6 rounded-2xl flex items-center justify-between group btn-hover">
+                <div class="flex items-center gap-5">
+                    <div
+                        class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600 transition-colors group-hover:bg-blue-600 group-hover:text-white">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-semibold text-zinc-800">Termos de Uso</h2>
+                        <p class="text-sm text-zinc-500">Regras de convivência e utilização</p>
+                    </div>
+                </div>
+                <svg xmlns="http://www.w3.org/2000/svg"
+                    class="h-6 w-6 text-zinc-400 group-hover:text-blue-600 transition-colors" fill="none"
+                    viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+            </a>
+
+            <!-- Data Deletion -->
+            <a href="deletion.html" class="glass p-6 rounded-2xl flex items-center justify-between group btn-hover">
+                <div class="flex items-center gap-5">
+                    <div
+                        class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center text-red-600 transition-colors group-hover:bg-red-600 group-hover:text-white">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-semibold text-zinc-800">Exclusão de Dados</h2>
+                        <p class="text-sm text-zinc-500">Solicite a remoção da sua conta</p>
+                    </div>
+                </div>
+                <svg xmlns="http://www.w3.org/2000/svg"
+                    class="h-6 w-6 text-zinc-400 group-hover:text-red-600 transition-colors" fill="none"
+                    viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+            </a>
+        </div>
+
+        <!-- Footer -->
+        <footer class="mt-12 text-center text-zinc-400 text-sm">
+            <p>&copy; 2025 Pega ou Passa Team. Todos os direitos reservados.</p>
+            <p class="mt-2">Contato: pedrohgl18@gmail.com</p>
+        </footer>
+    </div>
+</body>
+
+</html>

@@ -272,7 +272,7 @@ export function Settings({ onClose, onLogout }: SettingsProps) {
                             <button
                                 onClick={async () => {
                                     const { Browser } = await import('@capacitor/browser');
-                                    await Browser.open({ url: 'https://pedrohgl18.github.io/politicas-app/privacy-policy.md' });
+                                    await Browser.open({ url: 'https://pedrohgl18.github.io/politicas-app/privacy.html' });
                                 }}
                                 className="w-full p-4 flex items-center justify-between hover:bg-zinc-50 transition-colors border-b"
                             >
@@ -290,7 +290,7 @@ export function Settings({ onClose, onLogout }: SettingsProps) {
                             <button
                                 onClick={async () => {
                                     const { Browser } = await import('@capacitor/browser');
-                                    await Browser.open({ url: 'https://pedrohgl18.github.io/politicas-app/terms-of-use.md' });
+                                    await Browser.open({ url: 'https://pedrohgl18.github.io/politicas-app/terms.html' });
                                 }}
                                 className="w-full p-4 flex items-center justify-between hover:bg-zinc-50 transition-colors border-b"
                             >
@@ -308,7 +308,7 @@ export function Settings({ onClose, onLogout }: SettingsProps) {
                             <button
                                 onClick={async () => {
                                     const { Browser } = await import('@capacitor/browser');
-                                    await Browser.open({ url: 'https://pedrohgl18.github.io/politicas-app/data-deletion.md' });
+                                    await Browser.open({ url: 'https://pedrohgl18.github.io/politicas-app/deletion.html' });
                                 }}
                                 className="w-full p-4 flex items-center justify-between hover:bg-zinc-50 transition-colors"
                             >
