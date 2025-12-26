@@ -276,24 +276,6 @@ const Profile: React.FC<ProfileProps> = ({
                         </button>
                     )}
 
-                    {/* Admin Button - Only visible to admin on web */}
-                    {isAdmin && !isNative && (
-                        <button
-                            onClick={() => onNavigate(ScreenState.ADMIN)}
-                            className="w-full p-4 bg-gradient-to-r from-violet-50 to-purple-50 rounded-2xl border border-violet-200 shadow-sm flex items-center justify-between group transition-all active:scale-[0.98]"
-                        >
-                            <div className="flex items-center gap-4">
-                                <div className="w-10 h-10 rounded-full bg-violet-500 text-white flex items-center justify-center shadow-lg">
-                                    <Shield size={20} />
-                                </div>
-                                <div className="text-left">
-                                    <p className="font-bold text-zinc-800">Admin Panel</p>
-                                    <p className="text-xs text-zinc-500">Dashboard e gestão</p>
-                                </div>
-                            </div>
-                            <ChevronRight size={20} className="text-zinc-300 group-hover:text-violet-500 transition-colors" />
-                        </button>
-                    )}
                 </div>
 
                 {/* Logout */}

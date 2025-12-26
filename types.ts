@@ -42,8 +42,7 @@ export enum ScreenState {
   CHAT = 'CHAT',
   VIP = 'VIP',
   PROFILE = 'PROFILE',
-  EDIT_PROFILE = 'EDIT_PROFILE',
-  ADMIN = 'ADMIN'
+  EDIT_PROFILE = 'EDIT_PROFILE'
 }
 
 export type SwipeDirection = 'up' | 'down' | null;

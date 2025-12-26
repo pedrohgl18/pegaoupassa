@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin - Pega ou Passa</title>
+    <link rel="icon" type="image/png" href="/logoapp.png" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            },
+            colors: {
+              primary: '#002776',
+              secondary: '#009C3B',
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      body {
+        background-color: #f9fafb;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+      }
+    </style>
+    <script type="importmap">
+    {
+      "imports": {
+        "lucide-react": "https://aistudiocdn.com/lucide-react@^0.555.0",
+        "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+        "react/": "https://aistudiocdn.com/react@^19.2.0/",
+        "react": "https://aistudiocdn.com/react@^19.2.0"
+      }
+    }
+    </script>
+    <link rel="stylesheet" href="/index.css">
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/admin-index.tsx"></script>
+  </body>
+</html>

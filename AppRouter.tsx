@@ -17,8 +17,7 @@ import VipScreen from './components/VipScreen';
 import Profile from './components/Profile';
 import EditProfile from './components/EditProfile';
 
-// Lazy Admin
-const AdminRouter = React.lazy(() => import('./admin/AdminRouter'));
+// Lazy Admin - Removed from app to separate site
 const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || 'pedrohgl18@gmail.com'; // Fallback for dev
 
 interface AppRouterProps {
@@ -251,11 +250,7 @@ export const AppRouter: React.FC<AppRouterProps> = ({
                         />
                     )}
 
-                    {currentScreen === ScreenState.ADMIN && (
-                        <Suspense fallback={<LoadingScreen />}>
-                            <AdminRouter onClose={() => navigateTo(ScreenState.PROFILE)} />
-                        </Suspense>
-                    )}
+                    {/* Admin removed for separate hosting */}
 
                 </div>
 
