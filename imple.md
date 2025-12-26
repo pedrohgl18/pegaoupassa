@@ -495,3 +495,37 @@ Admins não conseguiam ver o contexto da denúncia se o usuário desfizesse o ma
 2. **Vibe**: Selecione uma vibe (ex: Encontro) e veja a borda do card ficar vermelha e o ícone de taças aparecer.
 3. **Info Button**: Toque no botão "i" para virar o card e ver detalhes.
 4. **Telas Pequenas**: Verifique que as tags e botão de info não estão cobertos pelo menu inferior.
+
+---
+### 18. Analysis Remediation & Optimization (26/12/2025)
+- **Status**: ✅ Concluído
+- **Objetivo**: Refatoração profunda focada em segurança, arquitetura e performance (Android).
+
+#### 🛡️ Segurança (Critical Fixes)
+- **Migração de Storage**: Removido uso inseguro de `localStorage` (que limpa com o OS). Agora usando `@capacitor/preferences` (SharedPreferences/NSUserDefaults) para sessão Supabase e notificações pendentes.
+- **Permissões Android**: Adicionado `CAMERA`, `READ_EXTERNAL_STORAGE`, `WRITE_EXTERNAL_STORAGE` explicitamente no `AndroidManifest.xml` para garantir funcionamento de uploads em Android 13+.
+- **Database Security**: Corrigido vulnerabilidade `search_path` em 3 funções SQL (`get_database_metrics`, etc) para prevenir hijacking.
+
+#### 🏗️ Arquitetura (Code Quality)
+- **Modularização (God Object)**: O arquivo monolítico `lib/supabase.ts` (1000+ linhas) foi quebrado em micro-serviços focados em `lib/services/`:
+    - `auth.service.ts`: Login, Session.
+    - `profile.service.ts`: Dados do usuário, Photos.
+    - `message.service.ts`: Chat, Realtime.
+    - `interaction.service.ts`: Swipes, Matches.
+    - `notification.service.ts`: Push, Channels.
+    - `utility.service.ts`: Reports, Blocks, Boosts.
+- **Retrocompatibilidade**: O arquivo `lib/supabase.ts` foi mantido como um *Facade* (Barrel File), reexportando os serviços para não quebrar imports existentes.
+
+#### ⚡ Performance (App & DB)
+- **Virtualização do Chat**: Substituído `.map()` simples por `react-virtuoso` no `ChatScreen.tsx`.
+    - *Antes*: Renderizava todas as mensagens do DOM (lento em conversas longas).
+    - *Agora*: Renderiza apenas o que está na tela (Windowing). Componente `MessageBubble` memoizado.
+- **Otimização de Banco de Dados (SQL Indexing)**:
+    - Criados 5 novos índices para chaves estrangeiras (fkeys) que estavam causando lentidão em `JOINs` (e.g., `messages.reply_to_id`, `notifications.sender_id`).
+    - Removido índice duplicado em `reports`.
+
+### Como Verificar
+1. **Chat Rápido**: Abra uma conversa longa e role rapidamente. Deve estar fluido (60fps).
+2. **Login Persistente**: Faça login, feche o app totalmente e abra de novo. A sessão deve persistir (via Capacitor Preferences).
+3. **DB Metrics**: No painel admin (localhost), verifique se as queries de métricas continuam funcionando.
+

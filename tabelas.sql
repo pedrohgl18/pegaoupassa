@@ -1371,3 +1371,30 @@ BEGIN
     OFFSET offset_count;
 END;
 $$;
+
+-- =============================================
+-- OTIMIZAÇÃO: Índices e Segurança (Advisors)
+-- Data: 26/12/2025
+-- Descrição: Índices faltantes para Chaves Estrangeiras e Fixes de Segurança
+-- =============================================
+
+-- 1. Criação de índices para Chaves Estrangeiras (Performance de JOINs)
+CREATE INDEX IF NOT EXISTS idx_admin_logs_target_user_id ON admin_logs(target_user_id);
+CREATE INDEX IF NOT EXISTS idx_message_reactions_user_id ON message_reactions(user_id);
+CREATE INDEX IF NOT EXISTS idx_messages_reply_to_id ON messages(reply_to_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_sender_id ON notifications(sender_id);
+CREATE INDEX IF NOT EXISTS idx_photos_user_id_v2 ON photos(user_id); -- idx_photos_user_id já existe, mas advisor apontou. Verificar duplicidade.
+CREATE INDEX IF NOT EXISTS idx_profile_views_viewer_id ON profile_views(viewer_id);
+CREATE INDEX IF NOT EXISTS idx_swipes_swiped_id_advisor ON swipes(swiped_id); -- idx_swipes_swiped_id já existe. Verificar.
+CREATE INDEX IF NOT EXISTS idx_swipes_swiper_id_advisor ON swipes(swiper_id); -- idx_swipes_swiper_id já existe. Verificar.
+CREATE INDEX IF NOT EXISTS idx_user_interests_interest_id ON user_interests(interest_id);
+CREATE INDEX IF NOT EXISTS idx_user_interests_user_id_advisor ON user_interests(user_id); -- idx_user_interests_user_id já existe. Verificar.
+
+-- 2. Remover índices duplicados identificados
+DROP INDEX IF EXISTS idx_reports_reported; -- Duplicado de idx_reports_reported_id ou similar
+
+-- 3. Fix: Search Path Mutável (Segurança)
+-- Força o search_path para 'public' para evitar sequestro de função
+ALTER FUNCTION get_database_metrics() SET search_path = public;
+ALTER FUNCTION protect_profile_fields() SET search_path = public;
+ALTER FUNCTION get_nearby_profiles(numeric, numeric, numeric, int4, int4, int4, text, int4, int4) SET search_path = public;
