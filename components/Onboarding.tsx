@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { ChevronRight, ChevronDown, MapPin, Calendar, User, Heart, MessageSquare, Loader2, Camera, Plus, X, Tag, Briefcase, GraduationCap, Ruler } from 'lucide-react';
 import Button from './Button';
 import { photos as photosApi, profiles, interests, zodiac } from '../lib/supabase';
+import { calculateAge } from '../utils';
 import type { Profile } from '../types/database';
 import InterestSelector from './InterestSelector';
 
@@ -70,6 +71,14 @@ const Onboarding: React.FC<OnboardingProps> = ({ userId, profile }) => {
   // Salvar step 3: Dados pessoais
   const handleStep3Complete = async () => {
     if (!birthDate || !gender || !interestedIn || !profession.trim() || !height || !education) return;
+
+    // Validação de idade (18+)
+    const age = calculateAge(birthDate);
+    if (age < 18) {
+      alert('Você deve ter pelo menos 18 anos para usar o Pega ou Passa.');
+      return;
+    }
+
     setSaving(true);
     const { error } = await profiles.updateOnboarding(userId, {
       birth_date: birthDate,

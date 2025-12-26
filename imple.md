@@ -43,7 +43,7 @@
 | Preferência de gênero | ✅ | Implementado ("Homens", "Mulheres", "Todes") |
 | Salvar no banco | ✅ | Integrado com Supabase |
 | Upload de fotos | ✅ | Step 2 - Supabase Storage (Signed URLs) |
-| Validação de idade (18+) | ⏳ | Precisa implementar |
+| Validação de idade (18+) | ✅ | Implementado em Onboarding.tsx (26/12) |
 | Barra de progresso | ✅ | 4 steps |
 | Seleção de interesses/tags | ✅ | Implementado (Onboarding + EditProfile) |
 | Persistência de progresso | ✅ | Salva cada step no banco |
@@ -261,6 +261,7 @@
 | 11/12/2025 | **Admin Panel (God Mode)** | Painel administrativo localhost-only com Dashboard (KPIs), Gestão de Usuários (VIP/Ban), Geografia e Quotas. Lazy loading + bloqueio no APK. |
 | 26/12/2025 | **Documentação Legal** | Política de Privacidade, Termos de Uso e Política de Exclusão de Dados (LGPD/GDPR 2025) implementados. |
 | 26/12/2025 | **Botões de Política** | Adicionados links para documentos legais na tela de Configurações via Capacitor Browser. |
+| 26/12/2025 | **Validação 18+** | Adicionado bloqueio no Onboarding para usuários menores de 18 anos. |
 | 27/11/2025 | **Admin Panel (Phase 2-4)** | Refatoração Desktop-first massiva. Adicionado Evidências de Chat (Moderador), Personificação de Usuário, Feed de Atividade Real-time, Heatmap Geo Real, Broadcast Push Global, Gestor de Vouchers Real e Ferramenta de Faxina. |
 
 ---
