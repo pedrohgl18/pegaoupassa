@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { User, Session } from '@supabase/supabase-js'
-import { supabase, profiles } from '../lib/supabase'
+import { supabase, profiles, auth } from '../lib/supabase'
 import { initPushNotifications, removePushToken, removePushListeners } from '../lib/pushNotifications'
 import { Capacitor } from '@capacitor/core'
 import type { Profile, ProfileWithAll } from '../types/database'
@@ -386,6 +386,48 @@ export function useAuth() {
     }
   }, [])
 
+  // Login com Email (Temporário para Google Play Review)
+  const signInWithEmail = useCallback(async (email: string, password: string) => {
+    setState(prev => ({ ...prev, loading: true, error: null }))
+
+    try {
+      const { data, error } = await auth.signInWithEmail(email, password)
+
+      if (error) {
+        setState(prev => ({ ...prev, loading: false, error: error.message }))
+        return { error }
+      }
+
+      if (!data.session || !data.user) {
+        setState(prev => ({ ...prev, loading: false, error: 'Sessão inválida' }))
+        return { error: new Error('Sessão inválida') }
+      }
+
+      // Carregar perfil
+      const profile = await loadProfile(data.user, data.session.access_token)
+
+      // Inicializar push se onboarding completo
+      if (profile?.onboarding_completed) {
+        initPushNotifications(data.user.id).catch(() => { })
+      }
+
+      if (isMountedRef.current) {
+        setState(prev => ({
+          ...prev,
+          user: data.user,
+          profile,
+          session: data.session,
+          loading: false,
+          error: profile ? null : 'Erro ao carregar perfil',
+        }))
+      }
+      return { error: null }
+    } catch (err: any) {
+      setState(prev => ({ ...prev, loading: false, error: err.message }))
+      return { error: err }
+    }
+  }, [loadProfile])
+
   // Logout
   const signOut = useCallback(async () => {
     setState(prev => ({ ...prev, loading: true }))
@@ -476,5 +518,6 @@ export function useAuth() {
         }
       }
     },
+    signInWithEmail,
   }
 }

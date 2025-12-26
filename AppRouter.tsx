@@ -29,6 +29,7 @@ interface AppRouterProps {
         isAuthenticated: boolean;
         signOut: () => Promise<void>;
         refreshProfile: () => Promise<void>;
+        signInWithEmail: (email: string, password: string) => Promise<{ error: any }>;
         isImpersonating?: boolean;
         stopImpersonation?: () => void;
     };
@@ -143,7 +144,7 @@ export const AppRouter: React.FC<AppRouterProps> = ({
 
                 {/* Main Content */}
                 <div className="flex-1 relative w-full overflow-hidden">
-                    {currentScreen === ScreenState.LOGIN && <LoginScreen onLogin={auth.signInWithGoogle} />}
+                    {currentScreen === ScreenState.LOGIN && <LoginScreen onLogin={auth.signInWithGoogle} onEmailLogin={auth.signInWithEmail} />}
 
                     {currentScreen === ScreenState.ONBOARDING && user && (
                         <Onboarding userId={user.id} profile={profile} />

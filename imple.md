@@ -29,6 +29,9 @@
 | Recuperação de senha | ⏳ | Se usar email/senha |
 | Hook useAuth | ✅ | hooks/useAuth.ts |
 | Loading inicial | ✅ | Tela de carregamento |
+| Google Play Access (Email) | ✅ | Login discreto para revisores (26/12) |
+| Política de Exclusão | ✅ | URL: /politicas-app/deletion.html (26/12) |
+| Data Safety Form | ✅ | Configurado conforme legislação (26/12) |
 
 ---
 

@@ -37,6 +37,15 @@ export const auth = {
         return { data, error }
     },
 
+    // Login com Email (Temporário para Google Play Review)
+    signInWithEmail: async (email: string, password: string) => {
+        const { data, error } = await supabase.auth.signInWithPassword({
+            email,
+            password
+        })
+        return { data, error }
+    },
+
     // Logout
     signOut: async () => {
         const { error } = await supabase.auth.signOut()
