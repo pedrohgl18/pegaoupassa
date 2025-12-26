@@ -23,7 +23,6 @@ export const isNativePlatform = () => {
 // Inicializar Push Notifications
 export const initPushNotifications = async (userId: string) => {
   if (!isNativePlatform()) {
-    console.log('Push Notifications: Ignorado (não é plataforma nativa)');
     return { success: false, reason: 'not-native' };
   }
 
@@ -51,7 +50,7 @@ export const initPushNotifications = async (userId: string) => {
 
     // Listener: Erro no registro
     PushNotifications.addListener('registrationError', (err) => {
-      console.error('Push Notifications: Erro no registro:', err.error);
+      // Silent fail - registration errors are handled via return value
     });
 
     // Listener: Notificação recebida (app em primeiro plano)
@@ -74,7 +73,6 @@ export const initPushNotifications = async (userId: string) => {
 
     return { success: true };
   } catch (error) {
-    console.error('Push Notifications: Erro na inicialização:', error);
     return { success: false, reason: 'error', error };
   }
 };
@@ -112,9 +110,9 @@ const createNotificationChannels = async () => {
       vibration: false, // Menos intrusivo
     });
 
-    console.log('Push Notifications: Canais criados com sucesso');
+    // Channels created successfully
   } catch (error) {
-    console.error('Push Notifications: Erro ao criar canais:', error);
+    // Silent fail for channel creation
   }
 };
 
@@ -133,10 +131,10 @@ const saveTokenToDatabase = async (userId: string, token: string) => {
       });
 
     if (error) {
-      console.error('Push Notifications: Erro ao salvar token:', error);
+      // Token save failed silently
     }
   } catch (err) {
-    console.error('Push Notifications: Exceção ao salvar token:', err);
+    // Silent exception handling
   }
 };
 
@@ -172,9 +170,9 @@ export const removePushToken = async (userId: string) => {
       .delete()
       .eq('user_id', userId);
 
-    console.log('Push Notifications: Token removido');
+    // Token removed successfully
   } catch (err) {
-    console.error('Push Notifications: Erro ao remover token:', err);
+    // Silent exception handling
   }
 };
 
@@ -183,5 +181,5 @@ export const removePushListeners = async () => {
   if (!isNativePlatform()) return;
 
   await PushNotifications.removeAllListeners();
-  console.log('Push Notifications: Listeners removidos');
+  // Listeners removed successfully
 };

@@ -13,7 +13,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
         setLoginLoading(true);
         const { error } = await onLogin();
         if (error) {
-            console.error('Erro no login:', error);
             alert('Erro ao fazer login. Tente novamente.');
         }
         setLoginLoading(false);

@@ -163,7 +163,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({ isOpen, onClose, user,
                                 });
 
                                 if (error) {
-                                    console.error('Erro ao salvar filtros:', error);
+                                    // Silent fail for filter save
                                 }
                             }
 

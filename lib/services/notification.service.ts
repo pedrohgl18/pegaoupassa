@@ -7,24 +7,17 @@ import { supabase } from './supabase.client'
 export const pushNotifications = {
     // Enviar push notification via Edge Function
     send: async (userId: string, title: string, body: string, type: 'match' | 'message' | 'like', data?: Record<string, string>) => {
-        console.log('📤 Enviando push notification:', { userId, title, body, type, data })
-
         try {
             const { data: result, error } = await supabase.functions.invoke('send-push-notification', {
                 body: { userId, title, body, type, data }
             })
 
-            console.log('📥 Resposta da Edge Function:', { result, error })
-
             if (error) {
-                console.error('❌ Erro ao enviar push:', error)
                 return { success: false, error }
             }
 
-            console.log('✅ Push enviado com sucesso:', result)
             return { success: true, data: result }
         } catch (err) {
-            console.error('❌ Erro ao chamar Edge Function:', err)
             return { success: false, error: err }
         }
     },

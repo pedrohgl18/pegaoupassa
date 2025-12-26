@@ -239,7 +239,7 @@ const AdminRouter: React.FC<AdminRouterProps> = ({ onClose }) => {
             // Buscar alertas automáticos
             await fetchAlerts();
         } catch (err) {
-            console.error('Erro ao buscar stats:', err);
+            // Silent fail
         } finally {
             setLoading(false);
         }
@@ -382,7 +382,6 @@ const AdminRouter: React.FC<AdminRouterProps> = ({ onClose }) => {
             const { data, error } = await supabase.rpc('get_database_metrics');
 
             if (error) {
-                console.error('Erro ao buscar métricas:', error);
                 return;
             }
 
@@ -413,7 +412,7 @@ const AdminRouter: React.FC<AdminRouterProps> = ({ onClose }) => {
                 }
             }
         } catch (err) {
-            console.error('Erro ao buscar quotas:', err);
+            // Silent fail
         }
     };
 

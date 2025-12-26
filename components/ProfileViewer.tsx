@@ -47,7 +47,6 @@ export const ProfileViewer: React.FC<ProfileViewerProps> = ({
     const triggerAction = async (direction: 'up' | 'down') => {
         // Prevent swiping on self (View Public Profile mode)
         if (viewingProfile.id === user?.id) {
-            console.log("Cannot swipe on yourself");
             return;
         }
 
@@ -60,7 +59,7 @@ export const ProfileViewer: React.FC<ProfileViewerProps> = ({
             await performSwipeAction(direction, viewingProfile);
             onActionComplete();
         } catch (e) {
-            console.error(e);
+            // Silent fail
         }
     };
 

@@ -17,8 +17,6 @@ export const interests = {
 
     // Salvar interesses do usuário
     saveUserInterests: async (userId: string, interestIds: string[]) => {
-        console.log('saveUserInterests:', userId, interestIds)
-
         try {
             // 1. Remover interesses antigos
             const { error: deleteError } = await supabase
@@ -27,7 +25,6 @@ export const interests = {
                 .eq('user_id', userId)
 
             if (deleteError) {
-                console.error('Erro ao limpar interesses:', deleteError)
                 return { error: deleteError }
             }
 
@@ -47,13 +44,11 @@ export const interests = {
                 )
 
             if (insertError) {
-                console.error('Erro ao salvar interesses:', insertError)
                 return { error: insertError }
             }
 
             return { error: null }
         } catch (err) {
-            console.error('Exceção em saveUserInterests:', err)
             return { error: err }
         }
     },

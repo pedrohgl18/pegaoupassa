@@ -39,7 +39,7 @@ export const useSwipeAction = ({
             if (!forceMatch) {
                 incrementSwipeCount();
                 // Persist increment
-                swipes.incrementLikeCount(user.id).catch(err => console.error('Failed to increment like count:', err));
+                swipes.incrementLikeCount(user.id).catch(() => { });
             }
         }
 
@@ -48,7 +48,6 @@ export const useSwipeAction = ({
             const { match, error } = await swipes.create(user.id, targetProfile.id, action);
 
             if (error) {
-                console.error('Erro no swipe:', error);
                 return false;
             }
 
@@ -73,11 +72,10 @@ export const useSwipeAction = ({
 
                                 if (conversation) {
                                     await messages.send(conversation.id, user.id, profile.bio, targetProfile.id);
-                                    console.log('Quebra-gelo enviado com sucesso!');
                                 }
                             }
                         } catch (err) {
-                            console.error('Error sending icebreaker:', err);
+                            // Silent fail for icebreaker
                         }
                     }, 1000);
                 }
@@ -85,7 +83,6 @@ export const useSwipeAction = ({
 
             return true; // Swipe successful
         } catch (err) {
-            console.error('Erro na requisição de swipe:', err);
             return false;
         }
     }, [user, profile, isVip, swipeCount, incrementSwipeCount, onVipGate, onMatch]);

@@ -7,22 +7,15 @@ import { supabase } from './supabase.client'
 export const profiles = {
     // Buscar perfil por ID
     getById: async (id: string) => {
-        console.log('profiles.getById - ID:', id)
-
         try {
-            const startTime = Date.now()
             const { data, error } = await supabase
                 .from('profiles')
                 .select('*')
                 .eq('id', id)
                 .maybeSingle()
 
-            console.log('profiles.getById - Tempo:', Date.now() - startTime, 'ms')
-            // console.log('profiles.getById - Data:', data ? 'found' : 'null')
-            // console.log('profiles.getById - Error:', error)
             return { data, error }
         } catch (err) {
-            console.error('profiles.getById - EXCEÇÃO:', err)
             return { data: null, error: err as any }
         }
     },
@@ -57,7 +50,6 @@ export const profiles = {
 
             return { data, error }
         } catch (err) {
-            console.error('profiles.upsertInitial - EXCEÇÃO:', err)
             return { data: null, error: err as any }
         }
     },
@@ -130,7 +122,6 @@ export const profiles = {
     }) => {
         // Se temos localização, usamos a RPC otimizada
         if (filters.userLocation) {
-            console.log('Using optimized RPC get_nearby_profiles');
 
             const rpcParams = {
                 lat: filters.userLocation.latitude,
@@ -150,7 +141,6 @@ export const profiles = {
                 .rpc('get_nearby_profiles', rpcParams);
 
             if (error) {
-                console.error('Error fetching feed via RPC:', error);
                 return { data: null, error };
             }
 
@@ -158,7 +148,6 @@ export const profiles = {
         }
 
         // Fallback: Se NÃO tem localização, usa a query antiga (sem filtro de distância)
-        console.log('No location provided, using legacy query');
         let query = supabase
             .from('profiles')
             .select('*, photos(*), user_interests(*, interest:interests(*))')
@@ -260,7 +249,6 @@ export const photos = {
             .upload(fileName, file, { upsert: true })
 
         if (uploadError) {
-            console.error('Erro no upload storage:', uploadError)
             return { url: null, error: uploadError }
         }
 
@@ -282,7 +270,6 @@ export const photos = {
             })
 
         if (dbError) {
-            console.error('Erro ao salvar no banco:', dbError)
             // Mesmo com erro no banco, retorna a URL pois o upload funcionou
             return { url: publicUrl, error: dbError }
         }

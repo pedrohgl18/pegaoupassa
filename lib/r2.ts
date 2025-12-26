@@ -10,8 +10,6 @@ export const r2Storage = {
      */
     uploadFile: async (bucketName: string, path: string, file: File): Promise<{ url: string | null; error: any }> => {
         try {
-            console.log('Solicitando URL assinada para:', path);
-
             // 0. Ensure User is Authenticated
             const { data: { session } } = await supabase.auth.getSession();
             if (!session?.access_token) {
@@ -32,15 +30,12 @@ export const r2Storage = {
             });
 
             if (fnError) {
-                console.error('Erro na Edge Function:', fnError);
                 throw fnError;
             }
 
             if (!data?.url) {
                 throw new Error('Falha ao gerar URL de upload (URL vazia retornada)');
             }
-
-            console.log('URL assinada recebida. Fazendo upload...');
 
             // 2. Upload to R2 using the Signed URL
             const uploadResponse = await fetch(data.url, {
@@ -55,8 +50,6 @@ export const r2Storage = {
                 throw new Error(`Erro no upload para R2: ${uploadResponse.status} ${uploadResponse.statusText}`);
             }
 
-            console.log('Upload concluído com sucesso!');
-
             // 3. Construct Public URL based on Bucket
             const publicDomain = bucketName === 'photos'
                 ? import.meta.env.VITE_R2_PUBLIC_URL_PHOTOS
@@ -67,10 +60,7 @@ export const r2Storage = {
             return { url: publicUrl, error: null };
 
         } catch (error: any) {
-            console.error('R2 Upload Error Details:', error);
             const msg = error?.message || (typeof error === 'object' ? JSON.stringify(error) : String(error));
-            // Alert for visibility during dev/beta
-            alert(`Erro no upload: ${msg}`);
             return { url: null, error: msg };
         }
     },
@@ -80,7 +70,7 @@ export const r2Storage = {
      * For now, deletion is not implemented in the secure client.
      */
     deleteFile: async (bucketName: string, path: string) => {
-        console.warn('Delete not implemented via Edge Function yet.');
+        // Delete not implemented via Edge Function yet
         return { error: null };
     },
 

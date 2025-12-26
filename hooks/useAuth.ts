@@ -52,7 +52,6 @@ export function useAuth() {
       const data = await response.json()
       return data.length > 0 ? data[0] as unknown as ProfileWithAll : null
     } catch (err: any) {
-      console.error('fetchProfileDirect error:', err)
       return null
     }
   }, [])
@@ -94,7 +93,6 @@ export function useAuth() {
       const data = await response.json()
       return data.length > 0 ? data[0] as unknown as ProfileWithAll : data as unknown as ProfileWithAll
     } catch (err: any) {
-      console.error('createProfileDirect error:', err)
       return null
     }
   }, [fetchProfileDirect])
@@ -125,7 +123,6 @@ export function useAuth() {
         const isNotFound = error.code === 'PGRST116' || error.code === '406' || error.message?.includes('rows returned');
 
         if (!isNotFound) {
-          console.error('Erro ao buscar perfil:', error)
           return null
         }
       }
@@ -138,7 +135,6 @@ export function useAuth() {
 
       return newProfile as unknown as ProfileWithAll
     } catch (err: any) {
-      console.error('loadProfile error:', err)
       return null
     } finally {
       profileLoadingRef.current = false
@@ -241,7 +237,7 @@ export function useAuth() {
             }
           }
         } catch (err: any) {
-          console.error('Deep link setup error:', err)
+          // Silent fail for deep link setup
         }
       }
 
@@ -384,7 +380,6 @@ export function useAuth() {
     const { data, error } = await profiles.update(state.user.id, updates)
 
     if (error) {
-      console.error('Erro ao atualizar perfil:', error)
       return { error }
     }
 

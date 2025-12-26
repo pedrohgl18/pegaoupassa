@@ -43,7 +43,7 @@ export const useMatchData = (user: any) => {
         if (!user) return;
         const { data, error } = await swipes.getReceivedLikes(user.id);
         if (error) {
-            console.error('Erro ao buscar likes recebidos:', error);
+            // Silent fail
         }
         if (data) {
             setReceivedLikes(data);
@@ -66,7 +66,6 @@ export const useMatchData = (user: any) => {
                 },
                 (payload) => {
                     const newMsg = payload.new as any;
-                    console.log('Nova mensagem recebida (chat list):', newMsg);
 
                     // Update the matchesList with the new message
                     setMatchesList(prev => {

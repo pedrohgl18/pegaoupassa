@@ -8,16 +8,10 @@ import { pushNotifications } from './notification.service'
 export const swipes = {
     // Registrar swipe (like/pass/super_like)
     create: async (swiperId: string, swipedId: string, action: 'like' | 'pass' | 'super_like') => {
-        console.log('=== SWIPES.CREATE DEBUG ===')
-        console.log('swiperId:', swiperId)
-        console.log('swipedId:', swipedId)
-        console.log('action:', action)
-
         // Verificar sessão antes do swipe
         const { data: { session } } = await supabase.auth.getSession()
 
         if (!session) {
-            console.error('ERRO: Sem sessão ativa!')
             return { data: null, error: { message: 'Usuário não autenticado' }, match: null }
         }
 
@@ -34,7 +28,6 @@ export const swipes = {
                 .single()
 
             if (error) {
-                console.error('Erro ao inserir swipe:', error)
                 return { data: null, error, match: null }
             }
 
@@ -44,7 +37,7 @@ export const swipes = {
                 const user1 = swiperId < swipedId ? swiperId : swipedId
                 const user2 = swiperId < swipedId ? swipedId : swiperId
 
-                console.log('Checking match - user1:', user1, 'user2:', user2)
+
 
                 const { data: match, error: matchError } = await supabase
                     .from('matches')
@@ -55,7 +48,6 @@ export const swipes = {
 
                 // Se houve match, enviar push notification para ambos
                 if (match) {
-                    console.log('🎉 MATCH ENCONTRADO!')
                     // Buscar nomes dos usuários para a notificação
                     const { data: swiper } = await supabase.from('profiles').select('name').eq('id', swiperId).single()
                     const { data: swiped } = await supabase.from('profiles').select('name').eq('id', swipedId).single()
@@ -70,7 +62,6 @@ export const swipes = {
                     }
                 } else {
                     // Se NÃO houve match, notificar o like recebido (apenas Like ou Super Like)
-                    console.log('👍 Like registrado (sem match). Enviando notificação...')
                     const { data: swiper } = await supabase.from('profiles').select('name').eq('id', swiperId).single()
 
                     if (swiper?.name) {
@@ -83,7 +74,6 @@ export const swipes = {
 
             return { data, error: null, match: null }
         } catch (err) {
-            console.error('EXCEÇÃO no swipe:', err)
             return { data: null, error: err as any, match: null }
         }
     },
@@ -111,9 +101,6 @@ export const swipes = {
 
     // Buscar likes recebidos (Quem curtiu você)
     getReceivedLikes: async (userId: string) => {
-        console.log('=== GET RECEIVED LIKES DEBUG ===')
-        console.log('userId:', userId)
-
         // 1. Buscar IDs de pessoas que eu já dei swipe (para não mostrar quem eu já curti ou passei)
         const { data: mySwipes } = await supabase
             .from('swipes')

@@ -32,12 +32,10 @@ export const useNotifications = ({ user, activeChatId, onOpenChat, onNavigateToC
 
         const handlePushNotificationReceived = (event: CustomEvent) => {
             const data = event.detail;
-            console.log('Push notification received in foreground:', data);
 
             // Lógica de Supressão In-App (Se já estiver no chat, não incomodar)
             // activeChatId relates to the conversation ID usually
             if (data.type === 'message' && activeChatId === data.data.conversationId) {
-                console.log('Notificação suprimida: Usuário já está no chat ativo.');
                 return;
             }
 

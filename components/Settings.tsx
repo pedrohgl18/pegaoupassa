@@ -48,7 +48,6 @@ export function Settings({ onClose, onLogout }: SettingsProps) {
             // Reload profile to sync
             await loadProfile();
         } catch (error) {
-            console.error('Erro ao atualizar configuração:', error);
             // Revert on error (could be improved)
             alert('Erro ao salvar configuração.');
         }
@@ -75,7 +74,6 @@ export function Settings({ onClose, onLogout }: SettingsProps) {
             alert('Sua conta foi deletada com sucesso.');
             onLogout();
         } catch (error) {
-            console.error('Erro ao deletar conta:', error);
             alert('Erro ao deletar conta. Tente novamente.');
         } finally {
             setLoading(false);
@@ -97,7 +95,7 @@ export function Settings({ onClose, onLogout }: SettingsProps) {
             setBlockedUsers(data || []);
             setShowBlocked(true);
         } catch (error) {
-            console.error('Erro ao carregar bloqueados:', error);
+            // Silent fail
         }
     };
 
@@ -112,7 +110,6 @@ export function Settings({ onClose, onLogout }: SettingsProps) {
 
             setBlockedUsers(prev => prev.filter(b => b.id !== blockId));
         } catch (error) {
-            console.error('Erro ao desbloquear:', error);
             alert('Erro ao desbloquear usuário.');
         }
     };

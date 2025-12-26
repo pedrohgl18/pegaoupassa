@@ -12,10 +12,6 @@ if (!supabaseUrl || !supabaseAnonKey) {
 // Detectar se está rodando no app nativo
 export const isNative = Capacitor.isNativePlatform()
 
-console.log('=== SUPABASE CLIENT INIT ===')
-console.log('isNative:', isNative)
-console.log('supabaseUrl:', supabaseUrl)
-
 const capacitorStorageAdapter = {
     getItem: async (key: string) => {
         try {

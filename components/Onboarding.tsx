@@ -121,7 +121,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ userId, profile }) => {
           longitude: position.coords.longitude,
         };
       } catch {
-        console.log('Localização não disponível');
+        // Location not available, continue without it
       }
     }
 

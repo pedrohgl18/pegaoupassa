@@ -180,7 +180,6 @@ const App: React.FC = () => {
       const { error } = await supabase.rpc('purchase_vip');
 
       if (error) {
-        console.error('Erro ao virar VIP:', error);
         alert('Erro ao processar VIP. Tente novamente.');
         return;
       }
@@ -192,7 +191,7 @@ const App: React.FC = () => {
       setActiveChat(null);
       nav.setCurrentScreen(ScreenState.HOME);
     } catch (err) {
-      console.error('Exception VIP:', err);
+      // Silent fail
     }
   };
 

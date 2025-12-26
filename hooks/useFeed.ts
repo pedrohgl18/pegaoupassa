@@ -61,7 +61,7 @@ export const useFeed = ({ user, profile, myLocation }: UseFeedProps) => {
             });
 
             if (error) {
-                console.error('Erro ao buscar feed:', error);
+                // Silent fail
             }
 
             if (data) {
@@ -93,7 +93,7 @@ export const useFeed = ({ user, profile, myLocation }: UseFeedProps) => {
                 });
             }
         } catch (err) {
-            console.error('Erro ao buscar feed:', err);
+            // Silent fail
         } finally {
             setLoadingFeed(false);
         }

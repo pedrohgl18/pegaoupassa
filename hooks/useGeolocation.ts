@@ -37,7 +37,6 @@ export const useGeolocation = (user?: any, profile?: Profile | null, isAuthentic
             try {
                 // Request permissions
                 const permission = await Geolocation.checkPermissions();
-                console.log('Permission status:', permission);
 
                 if (permission.location !== 'granted') {
                     const request = await Geolocation.requestPermissions();
@@ -99,7 +98,6 @@ export const useGeolocation = (user?: any, profile?: Profile | null, isAuthentic
                                     const distanceKm = R * c;
 
                                     if (distanceKm > 0.5) { // Only update if moved > 500m
-                                        console.log(`Moved ${distanceKm.toFixed(2)}km, updating location in DB...`);
                                         await profiles.update(user.id, {
                                             latitude,
                                             longitude,
@@ -107,18 +105,15 @@ export const useGeolocation = (user?: any, profile?: Profile | null, isAuthentic
                                             state: fetchedState,
                                             neighborhood: fetchedNeighborhood
                                         });
-                                    } else {
-                                        console.log(`Moved only ${distanceKm.toFixed(2)}km, skipping DB update.`);
                                     }
                                 }
                             } catch (geoErr) {
-                                console.error('Error in reverse geocoding:', geoErr);
-                                // For error fallback, we might still want to be careful, but preserving existing behavior for now
+                                // For error fallback, still try to update coordinates only
                                 await profiles.update(user.id, { latitude, longitude });
                             }
                         }
                     } catch (err) {
-                        console.error('Error getting specific location:', err);
+                        // Silent fail for location update
                     }
                 };
 
@@ -132,13 +127,11 @@ export const useGeolocation = (user?: any, profile?: Profile | null, isAuthentic
                 const { App: CapacitorApp } = await import('@capacitor/app');
                 appStateListener = await CapacitorApp.addListener('appStateChange', ({ isActive }) => {
                     if (isActive) {
-                        console.log('App resumed, updating location...');
                         updateLocation();
                     }
                 });
 
             } catch (err) {
-                console.error('Error getting location permission:', err);
                 setLocationDenied(true);
             }
         };

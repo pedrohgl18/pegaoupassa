@@ -106,7 +106,6 @@ const EditProfile: React.FC<EditProfileProps> = ({ userId, onBack, onSave, onLog
 
       if (error) {
         alert('Erro no upload R2.');
-        console.error(error);
       } else if (url) {
         // Now save metadata to Supabase
         // We need to create the photo object in DB
@@ -117,7 +116,7 @@ const EditProfile: React.FC<EditProfileProps> = ({ userId, onBack, onSave, onLog
         });
 
         if (dbError) {
-          console.error('DB Error:', dbError);
+          // Silent fail for metadata save
         }
 
         // Refresh profile

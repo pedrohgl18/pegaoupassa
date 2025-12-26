@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Heart, X, Loader2, MapPin, Ruler, Briefcase, GraduationCap, ChevronLeft, Ghost } from 'lucide-react';
 import { swipes, matches } from '../lib/supabase';
 import Button from './Button';
-import { calculateAge } from '../App';
+import { calculateAge } from '../utils';
 
 interface ReceivedLikesListProps {
     userId: string;
@@ -25,7 +25,7 @@ const ReceivedLikesList: React.FC<ReceivedLikesListProps> = ({ userId, onBack, o
         if (data) {
             setLikes(data);
         } else if (error) {
-            console.error('Error fetching likes:', error);
+            // Silent fail
         }
         setLoading(false);
     };
@@ -37,7 +37,6 @@ const ReceivedLikesList: React.FC<ReceivedLikesListProps> = ({ userId, onBack, o
             const { match, error } = await swipes.create(userId, swiperId, action);
 
             if (error) {
-                console.error('Error processing swipe:', error);
                 alert('Erro ao processar ação. Tente novamente.');
                 return;
             }
@@ -53,7 +52,7 @@ const ReceivedLikesList: React.FC<ReceivedLikesListProps> = ({ userId, onBack, o
             }
 
         } catch (err) {
-            console.error('Exception in handleAction:', err);
+            // Silent fail
         } finally {
             setProcessingId(null);
         }

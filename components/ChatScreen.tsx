@@ -320,7 +320,6 @@ const ChatScreen: React.FC<ChatScreenProps> = ({
     const { error } = await matchesApi.unmatch(matchId);
     if (error) {
       alert('Erro ao desfazer match');
-      console.error(error);
     } else {
       onUnmatch();
     }
@@ -603,9 +602,8 @@ const ChatScreen: React.FC<ChatScreenProps> = ({
 
       // Enviar push notification para o outro usuário (não bloqueia a UI)
       if (otherUserId && otherUserId !== currentUserId) {
-        console.log('Enviando push para:', otherUserId, 'De:', currentUserName);
         const preview = mediaType === 'image' ? '📷 Foto' : mediaType === 'audio' ? '🎤 Áudio' : (msgContent.length > 50 ? msgContent.substring(0, 50) + '...' : msgContent);
-        pushNotifications.notifyMessage(otherUserId, currentUserName, preview, conversationId, currentUserId).catch(console.error);
+        pushNotifications.notifyMessage(otherUserId, currentUserName, preview, conversationId, currentUserId).catch(() => { });
       }
     }
   };
@@ -642,23 +640,17 @@ const ChatScreen: React.FC<ChatScreenProps> = ({
       const fileName = `${currentUserId}/${Date.now()}.${fileExt}`;
       const bucketName = import.meta.env.VITE_R2_BUCKET_CHAT || 'chat-media';
 
-      console.log('Iniciando upload R2:', fileName);
-
       const { url, error: uploadError } = await r2Storage.uploadFile(bucketName, fileName, file);
 
       if (uploadError) {
-        console.error('Erro no upload R2:', uploadError);
         throw uploadError;
       }
-
-      console.log('Upload R2 concluído - URL:', url);
 
       if (url) {
         // Enviar com texto "📷 Foto" para aparecer na lista de conversas
         await handleSend('📷 Foto', url, 'image');
       }
     } catch (error) {
-      console.error('Erro no upload:', error);
       alert('Erro ao enviar foto.');
     } finally {
       setUploadingMedia(false);
@@ -707,7 +699,6 @@ const ChatScreen: React.FC<ChatScreenProps> = ({
         mediaRecorder.addEventListener('stop', () => clearInterval(interval));
 
       } catch (err) {
-        console.error('Erro ao acessar microfone:', err);
         alert('Permissão de microfone negada.');
       }
     }
@@ -725,12 +716,10 @@ const ChatScreen: React.FC<ChatScreenProps> = ({
 
       if (uploadError) throw uploadError;
 
-      console.log('Áudio enviado - URL:', url);
       if (url) {
         await handleSend('🎤 Áudio', url, 'audio');
       }
     } catch (error) {
-      console.error('Erro no upload de áudio:', error);
       alert('Erro ao enviar áudio.');
     } finally {
       setUploadingMedia(false);

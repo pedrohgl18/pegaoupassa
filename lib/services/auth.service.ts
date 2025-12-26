@@ -13,10 +13,6 @@ export const auth = {
             ? 'com.pegaoupassa.app://callback/'
             : window.location.origin + '/auth/callback'
 
-        console.log('=== SIGN IN WITH GOOGLE ===')
-        console.log('isNative:', isNative)
-        console.log('redirectUrl:', redirectUrl)
-
         const { data, error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
@@ -29,13 +25,8 @@ export const auth = {
             },
         })
 
-        console.log('signInWithOAuth resultado:')
-        console.log('- url:', data?.url)
-        console.log('- error:', error)
-
         // No app nativo, abrir o browser manualmente
         if (isNative && data?.url) {
-            console.log('Abrindo browser com URL:', data.url)
             const { Browser } = await import('@capacitor/browser')
             await Browser.open({
                 url: data.url,
